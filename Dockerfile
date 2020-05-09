@@ -1,9 +1,12 @@
 FROM golang:1.13
 
-WORKDIR /go/src/app
-COPY . .
+ENV WORKDIR /go/src/microgateway
+RUN mkdir ${WORKDIR}
+WORKDIR ${WORKDIR}
+ADD . . ${WORKDIR}/
 
-RUN go get -d -v ./...
-RUN go install -v ./...
+RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+RUN dep ensure -v
+RUN go install -v .
 
-CMD ["app"]
+CMD ["microgateway"]

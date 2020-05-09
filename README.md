@@ -2,9 +2,18 @@
 
 A simple, lightweight and blazingly fast Microgateway written in Go
 
-## building and running with docker
+## Development
+
+Install [golang/dep](https://github.com/golang/dep) for dependency management and then run:
 
 ```
-docker build -t go-microgateway .
-docker run -it --name go-microgateway -p 8080:8080 go-microgateway
+$ dep ensure
+$ go run .
+```
+
+## Production
+
+```
+$ docker build -t microgateway .
+$ docker run -it --name microgateway -p 8080:8080 -d microgateway
 ```
