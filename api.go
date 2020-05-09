@@ -3,16 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
-)
 
-var (
-	address = "0.0.0.0:8080"
-	baseurl = "/api"
+	"github.com/gorilla/mux"
 )
 
 type apiError struct {
@@ -26,15 +23,17 @@ func (apiError apiError) LogError() string {
 	return apiError.Error.Error() + ";" + apiError.Message + ";" + strconv.Itoa(apiError.Code) + ";" + apiError.Request
 }
 
-//APIInit Starts a new HTTP server
-func APIInit() {
+//NewAPI Starts a new HTTP server
+func NewAPI() {
 	router := mux.NewRouter()
-	router.HandleFunc(baseurl+"/salute", getSalute).Methods("GET")
-	log.Println("Server listening at", address)
-	log.Fatal(http.ListenAndServe(":8080", router))
+	router.HandleFunc("/api/salute", saluteHandler).Methods("GET")
+	router.HandleFunc("/api/health", healthHandler).Methods("GET")
+	port := getEnv("PORT", ":8080")
+	log.Println("Server listening on port", port)
+	log.Fatal(http.ListenAndServe(port, router))
 }
 
-func getSalute(w http.ResponseWriter, r *http.Request) {
+func saluteHandler(w http.ResponseWriter, r *http.Request) {
 	if rand.Intn(2)%2 == 0 {
 		apiError := apiError{errors.New("not found"), "No salute found for this request", 404, r.URL.String()}
 		log.Println(apiError.LogError())
@@ -42,4 +41,15 @@ func getSalute(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintf(w, "Hello\n")
 	}
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
+func getEnv(key string, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultValue
 }
