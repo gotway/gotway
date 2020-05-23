@@ -1,4 +1,4 @@
-.PHONY: clean deps format build run
+.PHONY: clean deps format build install run release deploy-pre deploy-pro
 
 all: build
 clean:
@@ -9,7 +9,7 @@ format:
 	go fmt .
 build: clean deps format
 	go build -o bin/microgateway -v .
-install: deps format
+install: deps
 	go install -v .
 run: build
 	./bin/microgateway
