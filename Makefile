@@ -1,4 +1,5 @@
 .PHONY: clean deps format build run
+
 all: build
 clean:
 	rm -rf bin/
@@ -14,5 +15,7 @@ run: build
 	./bin/microgateway
 release:
 	./scripts/release.sh
-deploy:
-	./scripts/deploy.sh
+deploy-pre:
+	./scripts/deploy.sh "preproduction"
+deploy-pro:
+	./scripts/deploy.sh "production"

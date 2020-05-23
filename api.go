@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/gosmo-devs/microgateway/config"
 	"go.uber.org/zap"
 )
 
@@ -25,15 +25,16 @@ func (apiError apiError) LogError() string {
 	return apiError.Error.Error() + ";" + apiError.Message + ";" + strconv.Itoa(apiError.Code) + ";" + apiError.Request
 }
 
-//NewAPI Starts a new HTTP server
+// NewAPI Starts a new HTTP server
 func NewAPI() {
 	initializeLogger()
 	router := mux.NewRouter()
 	router.HandleFunc("/api/salute", saluteHandler).Methods("GET")
 	router.HandleFunc("/api/health", healthHandler).Methods("GET")
-	port := getEnv("PORT", ":8080")
-	logger.Info("Server listening on port ", port)
-	logger.Fatal(http.ListenAndServe(port, router))
+	logger.Info("Server listening on port ", config.PORT)
+	logger.Info("Environment: ", config.ENV)
+	addr := fmt.Sprintf(":%s", config.PORT)
+	logger.Fatal(http.ListenAndServe(addr, router))
 }
 
 func initializeLogger() {
@@ -54,11 +55,4 @@ func saluteHandler(w http.ResponseWriter, r *http.Request) {
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-}
-
-func getEnv(key string, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
 }
