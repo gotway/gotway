@@ -13,5 +13,5 @@ $ make run
 
 ```
 $ make release
-$ make deploy
+$ make deploy-pro
 ```
