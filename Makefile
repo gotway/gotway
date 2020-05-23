@@ -4,7 +4,7 @@ all: build
 clean:
 	rm -rf bin/
 deps:
-	dep ensure -v
+	go get -u -v
 format:
 	go fmt .
 build: clean deps format
