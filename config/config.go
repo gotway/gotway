@@ -10,7 +10,7 @@ func getEnv(key string, defaultValue string) string {
 }
 
 var (
-	// PORT indicates the Microgateway API service port. It uses default K8s service port env variable.
+	// PORT indicates the Microgateway API service port. It uses default K8s service port env variable
 	PORT = getEnv("MICROGATEWAY_SERVICE_PORT", "8000")
 	// ENV indicates the environment name
 	ENV = getEnv("ENV", "development")

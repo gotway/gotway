@@ -5,9 +5,11 @@ clean:
 	rm -rf bin/
 deps:
 	go get -u -v
+sync-deps:
+	go mod vendor
 format:
 	go fmt .
-build: clean deps format
+build: clean format
 	go build -o bin/microgateway -v .
 install: deps
 	go install -v .
