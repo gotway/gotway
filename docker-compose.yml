@@ -1,0 +1,21 @@
+version: "3.3"
+
+services:
+  microgateway:
+    image: microgateway
+    ports:
+      - "8080:8080"
+    networks:
+      - microgateway-net
+
+  redis:
+    image: redis
+    ports:
+        - "6379:6379"
+    networks:
+        - microgateway-net
+
+networks:
+    default:
+        - microgateway-net
+  
