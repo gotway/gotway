@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/gosmo-devs/microgateway/config"
@@ -17,35 +15,24 @@ import (
 // NewAPI Starts a new HTTP server
 func NewAPI() {
 	router := createRouting()
-	addr := fmt.Sprintf(":%s", config.PORT)
-	log.Info("Server listening on port ", config.PORT)
-	log.Info("Environment: ", config.ENV)
+	addr := fmt.Sprintf(":%s", config.Port)
+	log.Info("Server listening on port ", config.Port)
+	log.Info("Environment: ", config.Env)
 	log.Fatal(http.ListenAndServe(addr, router))
 }
 
 func createRouting() *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/api/salute", saluteHandler).Methods("GET")
 	router.HandleFunc("/api/health", healthHandler).Methods("GET")
-	router.HandleFunc("/api/register", registerHandler).Methods("POST")
+	router.HandleFunc("/api/register", registerServiceHandler).Methods("POST")
 	return router
-}
-
-func saluteHandler(w http.ResponseWriter, r *http.Request) {
-	if rand.Intn(2)%2 == 0 {
-		apiError := apiError{errors.New("not found"), "No salute found for this request", 404, r.URL.String()}
-		log.Error(apiError.Formatted())
-		http.Error(w, "No salute for you", http.StatusNotFound)
-	} else {
-		fmt.Fprintf(w, "Hello\n")
-	}
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request) {
+func registerServiceHandler(w http.ResponseWriter, r *http.Request) {
 	decoded := json.NewDecoder(r.Body)
 
 	var json Register
@@ -54,33 +41,29 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 	if json.Key == nil {
 		http.Error(w, "Missing field 'Key' from JSON", http.StatusBadRequest)
+		return
 	}
 
-	if json.Url == nil {
+	if json.URL == nil {
 		http.Error(w, "Missing field 'Url' from JSON", http.StatusBadRequest)
+		return
 	}
 
-	if json.HealthEndpoint == nil {
+	if json.HealthURL == nil {
 		http.Error(w, "Missing field 'HealthEndpoint' from JSON", http.StatusBadRequest)
+		return
 	}
 
-	// TODO not sure if this fits here or in the controller
-	if json.TTL == nil {
-		*json.TTL, err = strconv.Atoi(config.DEFAULT_SERVICE_TTL)
-		if err != nil {
-			http.Error(w, "Invalid format for field 'TTL'", http.StatusBadRequest)
+	err = controller.RegisterService(*json.Key, *json.URL, *json.HealthURL)
+	if err != nil {
+		if errors.Is(err, controller.ErrAlreadyRegistered) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
-	}
 
-	registered := controller.RegisterEndpoint(*json.Key, *json.Url, *json.HealthEndpoint, *json.TTL)
-	if registered == false {
-		http.Error(w, "Error registering service", http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
-
-	// TODO improve the errors given to the client (e.g. "Service already registered", "Internal Server Error"...)
 }
-
-// curl -X POST -d "{\"key\":\"stock\",\"url\":\"http://stock.microservice.com\",\"healthEndpoint\":\"http://stock.microsrevice.com/api/health\",\"ttl\":1}" http://localhost:8000/api/register

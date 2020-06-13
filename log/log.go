@@ -10,7 +10,7 @@ var logger *zap.SugaredLogger
 // InitLogger initializes the logger instance
 func InitLogger() {
 	var zapLogger *zap.Logger
-	if config.ENV == "development" {
+	if config.Env == "development" {
 		zapLogger, _ = zap.NewDevelopment()
 	} else {
 		zapLogger, _ = zap.NewProduction()
