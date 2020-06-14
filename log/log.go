@@ -13,7 +13,9 @@ func InitLogger() {
 	if config.Env == "development" {
 		zapLogger, _ = zap.NewDevelopment()
 	} else {
-		zapLogger, _ = zap.NewProduction()
+		config := zap.NewProductionConfig()
+		config.DisableCaller = true
+		zapLogger, _ = config.Build()
 	}
 	defer zapLogger.Sync()
 	logger = zapLogger.Sugar()
