@@ -9,15 +9,15 @@ var ServiceDao ServiceDaoI
 
 // Init Initialize the databases configured
 func Init() {
+	initDatabase()
+	initHealthcheck()
+}
+
+func initDatabase() {
 	switch config.Database {
 	case "redis":
-		ServiceDao = RedisServiceDao()
+		ServiceDao = redisServiceDao()
 	default:
 		panic("Database configuration value not recognized")
 	}
-}
-
-// StoreService stores a service
-func StoreService(key string, url string, healthURL string) {
-	ServiceDao.StoreService(key, url, healthURL)
 }
