@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: microgateway
-  namespace: microgateway
+  namespace: pre-microgateway
   labels:
     app: microgateway
     tier: api-gateway
@@ -10,16 +10,14 @@ spec:
   selector:
     app: microgateway
     tier: api-gateway
-  type: NodePort
   ports:
     - port: 80
-      nodePort: 30080
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: microgateway
-  namespace: microgateway
+  namespace: pre-microgateway
   labels:
     app: microgateway
     tier: api-gateway

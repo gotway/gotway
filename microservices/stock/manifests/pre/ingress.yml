@@ -1,0 +1,32 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: pre-stock-ms
+  namespace: kube-system
+  labels:
+    app: stock
+    tier: reverse-proxy
+spec:
+  type: ExternalName
+  externalName: stock.pre-stock-ms
+  ports:
+    - port: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: pre-stock-ms
+  namespace: kube-system
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  labels:
+    app: stock
+    tier: reverse-proxy
+spec:
+  rules:
+    - host: pre-stock.gosmo-devs.duckdns.org
+      http:
+        paths:
+          - backend:
+              serviceName: pre-stock-ms
+              servicePort: 80

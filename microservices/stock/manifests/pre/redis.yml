@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis
+  namespace: pre-stock-ms
+  labels:
+    app: stock
+    tier: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: pre-stock-ms
+  labels:
+    app: stock
+    tier: database
+spec:
+  selector:
+    app: stock
+    tier: database
+  ports:
+    - port: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: pre-stock-ms
+  labels:
+    app: stock
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      app: stock
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: stock
+        tier: database
+    spec:
+      containers:
+        - name: redis
+          image: redis
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 75m
+            limits:
+              memory: 64Mi
+              cpu: 125m
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: storage
+              mountPath: /data
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: redis
