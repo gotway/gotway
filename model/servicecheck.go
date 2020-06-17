@@ -40,16 +40,20 @@ func getServicesToChangeStatus() (setToHealthy []string, setToIdle []string) {
 	var idleServices []string
 
 	services := ServiceDao.getAllServices()
-	for _, service := range services {
-		status, healthURL := ServiceDao.getStatusAndHealthURL(service)
-		_, err := http.Get(healthURL)
+	for _, serviceKey := range services {
+		service, serviceErr := ServiceDao.GetService(serviceKey)
+		if serviceErr != nil {
+			log.Error(serviceErr)
+			continue
+		}
+		_, err := http.Get(service.HealthURL)
 		if err != nil {
-			if status == Healthy.String() {
-				idleServices = append(idleServices, service)
+			if service.Status == Healthy {
+				idleServices = append(idleServices, service.Key)
 			}
 		} else {
-			if status == Idle.String() {
-				healthyServices = append(healthyServices, service)
+			if service.Status == Idle {
+				healthyServices = append(healthyServices, service.Key)
 			}
 		}
 	}
