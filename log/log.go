@@ -10,13 +10,14 @@ var logger *zap.SugaredLogger
 // InitLogger initializes the logger instance
 func InitLogger() {
 	var zapLogger *zap.Logger
+	var zapConfig zap.Config
 	if config.Env == "development" {
-		zapLogger, _ = zap.NewDevelopment()
+		zapConfig = zap.NewDevelopmentConfig()
 	} else {
-		config := zap.NewProductionConfig()
-		config.DisableCaller = true
-		zapLogger, _ = config.Build()
+		zapConfig = zap.NewProductionConfig()
 	}
+	zapConfig.DisableCaller = true
+	zapLogger, _ = zapConfig.Build()
 	defer zapLogger.Sync()
 	logger = zapLogger.Sugar()
 }
