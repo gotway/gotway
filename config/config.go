@@ -18,4 +18,6 @@ var (
 	Database = getEnv("DATABASE", "redis")
 	// RedisServer indicates the URL for the redis client
 	RedisServer = getEnv("REDIS_SERVER", "127.0.0.1:6379")
+	// ServiceCheckInterval seconds between service health checks
+	ServiceCheckInterval = getEnv("SERVICE_CHECK_INTERVAL", "10")
 )
