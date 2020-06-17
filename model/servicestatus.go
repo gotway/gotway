@@ -10,5 +10,5 @@ const (
 )
 
 func (status serviceStatus) String() string {
-	return [...]string{"healty", "idle"}[status]
+	return [...]string{"healthy", "idle"}[status]
 }

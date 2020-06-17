@@ -48,9 +48,9 @@ func (dao ServiceDaoRedis) StoreService(key string, url string, healthURL string
 
 func (dao ServiceDaoRedis) getAllServices() []string {
 	keyPattern := "service:*"
-	healthUrls := client.Keys(context.Background(), keyPattern)
+	services := client.Keys(context.Background(), keyPattern)
 
-	return healthUrls.Val()
+	return services.Val()
 }
 
 func (dao ServiceDaoRedis) getStatusAndHealthURL(redisKey string) (status string, health string) {
