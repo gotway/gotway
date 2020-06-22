@@ -12,7 +12,7 @@ jobs:
         - sudo service docker start
       install:
         - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      script: make release
+      script: ./scripts/release.sh
       skip_cleanup: true
       on:
         tags: true

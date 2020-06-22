@@ -2,11 +2,16 @@ version: "3.3"
 
 services:
   microgateway:
-    image: microgateway
+    image: microgateway:0.0.1
     depends_on:
       - redis
+    environment: 
+      - MICROGATEWAY_SERVICE_PORT=8000
+      - ENV=development
+      - DATABASE=redis
+      - REDIS_SERVER=redis:6379
     ports:
-      - "8080:8080"
+      - "8000:8000"
     networks:
       - webnet
 
@@ -17,5 +22,29 @@ services:
     networks:
       - webnet
 
+  catalog:
+    image: catalog:0.0.1
+    depends_on:
+      - microgateway
+    environment:
+      - CATALOG_SERVICE_PORT=9000
+    ports:
+      - "9000:9000"
+    networks:
+      - webnet
+
+  stock:
+    image: stock:0.0.1
+    depends_on:
+      - microgateway
+      - redis
+    environment:
+      - STOCK_SERVICE_PORT=10000
+      - REDIS_URL=redis:6379
+    ports:
+      - "10000:10000"
+    networks:
+      - webnet
+
 networks:
-    webnet:
+  webnet:

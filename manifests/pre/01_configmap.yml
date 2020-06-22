@@ -2,9 +2,11 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: microgateway
-  namespace: microgateway
+  namespace: pre-microgateway
   labels:
     app: microgateway
     tier: api-gateway
 data:
+  DATABASE: redis
   ENV: preproduction
+  REDIS_SERVER: redis:6379

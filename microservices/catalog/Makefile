@@ -10,8 +10,8 @@ deps-sync:
 format:
 	go fmt .
 build: clean format
-	go build -o bin/microgateway -v .
+	go build -o bin/catalog -v .
 install:
 	go install -v .
 run: build
-	./bin/microgateway
+	./bin/catalog

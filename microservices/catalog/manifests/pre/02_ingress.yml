@@ -1,0 +1,32 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: pre-catalog-ms
+  namespace: kube-system
+  labels:
+    app: catalog
+    tier: reverse-proxy
+spec:
+  type: ExternalName
+  externalName: catalog.pre-catalog-ms
+  ports:
+    - port: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: pre-catalog-ms
+  namespace: kube-system
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  labels:
+    app: catalog
+    tier: reverse-proxy
+spec:
+  rules:
+    - host: pre-catalog.gosmo-devs.duckdns.org
+      http:
+        paths:
+          - backend:
+              serviceName: pre-catalog-ms
+              servicePort: 80
