@@ -9,14 +9,14 @@ import (
 
 // ProductDAO access to product data
 type ProductDAO struct {
-	rw       sync.RWMutex
+	mux      sync.Mutex
 	products []Product
 }
 
 // GetProducts obtains products in batches
 func (dao *ProductDAO) GetProducts(offset int, limit int) (*ProductPage, *ProductError) {
-	dao.rw.Lock()
-	defer dao.rw.Unlock()
+	dao.mux.Lock()
+	defer dao.mux.Unlock()
 	if dao.products == nil || len(dao.products) == 0 || offset > len(dao.products) {
 		return nil, notFoundError
 	}
@@ -40,8 +40,8 @@ func (dao *ProductDAO) GetProducts(offset int, limit int) (*ProductPage, *Produc
 
 // FindProduct finds a product by id
 func (dao *ProductDAO) FindProduct(id int) (*Product, *ProductError) {
-	dao.rw.Lock()
-	defer dao.rw.Unlock()
+	dao.mux.Lock()
+	defer dao.mux.Unlock()
 	index := dao.findProductIndex(id)
 	if index == -1 {
 		return nil, notFoundError
@@ -52,16 +52,16 @@ func (dao *ProductDAO) FindProduct(id int) (*Product, *ProductError) {
 
 // AddProduct adds a product
 func (dao *ProductDAO) AddProduct(p *Product) {
-	dao.rw.RLock()
-	defer dao.rw.RUnlock()
+	dao.mux.Lock()
+	defer dao.mux.Unlock()
 	p.ID = rand.Intn(math.MaxInt32)
 	dao.products = append(dao.products, *p)
 }
 
 // DeleteProduct deletes a product
 func (dao *ProductDAO) DeleteProduct(id int) (bool, *ProductError) {
-	dao.rw.RLock()
-	defer dao.rw.RUnlock()
+	dao.mux.Lock()
+	defer dao.mux.Unlock()
 	index := dao.findProductIndex(id)
 	if index == -1 {
 		return false, notFoundError
@@ -72,8 +72,8 @@ func (dao *ProductDAO) DeleteProduct(id int) (bool, *ProductError) {
 
 // UpdateProduct updates a product
 func (dao *ProductDAO) UpdateProduct(id int, p *Product) (bool, *ProductError) {
-	dao.rw.RLock()
-	defer dao.rw.RUnlock()
+	dao.mux.Lock()
+	defer dao.mux.Unlock()
 	index := dao.findProductIndex(id)
 	if index == -1 {
 		return false, notFoundError
