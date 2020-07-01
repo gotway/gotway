@@ -39,8 +39,8 @@ $ ./scripts/deploy.sh <environment>
 
 ## Services
 
-|Service|DockerHub|PRE|
-|-------|---------|---|
+|Service|Image|PRE|
+|-------|-----|---|
 |Microgateway|[gosmogolang/microgateway](https://hub.docker.com/r/gosmogolang/microgateway)|https://pre-microgateway.gosmo-devs.duckdns.org|
-|Catalog|[gosmogolang/catalog](https://hub.docker.com/r/gosmogolang/catalog)|https://pre-catalog.gosmo-devs.duckdns.org|
-|Stock|[gosmogolang/stock](https://hub.docker.com/r/gosmogolang/stock)|https://pre-stock.gosmo-devs.duckdns.org|
+|Catalog|[gosmogolang/catalog](https://hub.docker.com/r/gosmogolang/catalog)|[/api/catalog](https://pre-microgateway.gosmo-devs.duckdns.org/api/catalog/health)|
+|Stock|[gosmogolang/stock](https://hub.docker.com/r/gosmogolang/stock)|[/api/stock](https://pre-microgateway.gosmo-devs.duckdns.org/api/stock/health)|
