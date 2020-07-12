@@ -1,7 +1,7 @@
 # microgateway
 [![Build Status](https://travis-ci.org/gosmo-devs/microgateway.svg)](https://travis-ci.org/gosmo-devs/microgateway)
 
-A simple, lightweight and blazingly fast API gateway written in Go
+A simple, lightweight and blazingly fast API microgateway written in Go
 
 ## Development
 
