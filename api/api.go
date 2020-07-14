@@ -19,14 +19,22 @@ func NewAPI() {
 	addr := fmt.Sprintf(":%s", config.Port)
 	log.Info("Server listening on port ", config.Port)
 	log.Info("Environment: ", config.Env)
-	log.Fatal(http.ListenAndServe(addr, router))
+	var err error
+	if config.TLS {
+		err = http.ListenAndServeTLS(addr, config.TLScert, config.TLSkey, router)
+	} else {
+		err = http.ListenAndServe(addr, router)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func createRouting() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/health", healthHandler).Methods("GET")
 	router.HandleFunc("/api/register", registerServiceHandler).Methods("POST")
-	router.PathPrefix("/api/{service}").HandlerFunc(proxyHandler)
+	router.PathPrefix("/{service}").HandlerFunc(proxyHandler)
 	return router
 }
 
@@ -37,28 +45,19 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 func registerServiceHandler(w http.ResponseWriter, r *http.Request) {
 	decoded := json.NewDecoder(r.Body)
 
-	var json Register
-	err := decoded.Decode(&json)
+	var service model.Service
+	err := decoded.Decode(&service)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if json.Key == nil {
-		http.Error(w, "Missing field 'key' from JSON", http.StatusBadRequest)
+	err = service.Validate()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if json.URL == nil {
-		http.Error(w, "Missing field 'url' from JSON", http.StatusBadRequest)
-		return
-	}
-
-	if json.HealthURL == nil {
-		http.Error(w, "Missing field 'healthURL' from JSON", http.StatusBadRequest)
-		return
-	}
-
-	err = controller.RegisterService(*json.Key, *json.URL, *json.HealthURL)
+	err = controller.RegisterService(service)
 	if err != nil {
 		if errors.Is(err, model.ErrServiceAlreadyRegistered) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -88,8 +87,8 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	proxyErr := controller.ReverseProxy(w, r, service)
-	if proxyErr != nil {
+	err = controller.ReverseProxy(w, r, service)
+	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}

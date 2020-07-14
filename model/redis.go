@@ -11,13 +11,12 @@ import (
 
 var client *redis.Client
 
-// ServiceDaoRedis struct implementing ServiceDaoI
-type ServiceDaoRedis struct {
+type serviceDaoRedis struct {
 }
 
 func redisServiceDao() ServiceDaoI {
 	initializeClient()
-	return ServiceDaoRedis{}
+	return serviceDaoRedis{}
 }
 
 func initializeClient() {
@@ -36,9 +35,20 @@ func initializeClient() {
 }
 
 // StoreService stores a service into redis
-func (dao ServiceDaoRedis) StoreService(key string, url string, healthURL string) error {
-	redisKey := getRedisKey(key)
-	saved, err := client.HSet(context.Background(), redisKey, "url", url, "healthUrl", healthURL, "status", Healthy).Result()
+func (dao serviceDaoRedis) StoreService(service Service) error {
+	redisKey := getRedisKey(service.Path)
+	healthPath, err := service.HealthPathForType()
+	if err != nil {
+		return err
+	}
+	serviceMap := map[string]interface{}{
+		"type":       service.Type,
+		"url":        service.URL,
+		"path":       service.Path,
+		"healthPath": *healthPath,
+		"status":     Healthy,
+	}
+	saved, err := client.HSet(context.Background(), redisKey, serviceMap).Result()
 	if err != nil {
 		log.Error(err)
 		return err
@@ -50,20 +60,21 @@ func (dao ServiceDaoRedis) StoreService(key string, url string, healthURL string
 }
 
 // GetService gets a service from redis
-func (dao ServiceDaoRedis) GetService(key string) (*Service, error) {
+func (dao serviceDaoRedis) GetService(key string) (*Service, error) {
 	redisKey := getRedisKey(key)
 	values := client.HGetAll(context.Background(), redisKey).Val()
 	if len(values) == 0 {
 		return nil, ErrServiceNotFound
 	}
-	service, err := newService(key, values)
+	service, err := newService(values)
 	if err != nil {
 		return nil, err
 	}
 	return service, nil
 }
 
-func (dao ServiceDaoRedis) getAllServices() []string {
+// GetAllServices gets all service keys
+func (dao serviceDaoRedis) GetAllServices() []string {
 	keyPattern := "service:*"
 	servicesKeys := client.Keys(context.Background(), keyPattern)
 	var keys []string
@@ -73,7 +84,8 @@ func (dao ServiceDaoRedis) getAllServices() []string {
 	return keys
 }
 
-func (dao ServiceDaoRedis) updateServiceStatus(key string, status ServiceStatus) {
+// UpdateServiceStatus updates the status of a service
+func (dao serviceDaoRedis) UpdateServiceStatus(key string, status ServiceStatus) {
 	redisKey := getRedisKey(key)
 	if err := status.validate(); err != nil {
 		log.Error(err)
@@ -93,10 +105,20 @@ func getKey(redisKey string) string {
 	return strings.Split(redisKey, ":")[1]
 }
 
-func newService(key string, values map[string]string) (*Service, error) {
+func newService(values map[string]string) (*Service, error) {
+	serviceType := ServiceType(values["type"])
+	if err := serviceType.validate(); err != nil {
+		return nil, err
+	}
 	serviceStatus := ServiceStatus(values["status"])
 	if err := serviceStatus.validate(); err != nil {
 		return nil, err
 	}
-	return &Service{Key: key, URL: values["url"], HealthURL: values["healthUrl"], Status: serviceStatus}, nil
+	return &Service{
+		Type:       serviceType,
+		URL:        values["url"],
+		Path:       values["path"],
+		HealthPath: values["healthPath"],
+		Status:     serviceStatus,
+	}, nil
 }

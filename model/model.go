@@ -7,13 +7,8 @@ import (
 // ServiceDao implementation
 var ServiceDao ServiceDaoI
 
-// Init Initialize the databases configured
+// Init initializes the databases configured
 func Init() {
-	initDatabase()
-	initHealthcheck()
-}
-
-func initDatabase() {
 	switch config.Database {
 	case "redis":
 		ServiceDao = redisServiceDao()

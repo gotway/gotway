@@ -2,58 +2,45 @@ package proxy
 
 import (
 	"net/http"
-	"net/http/httputil"
 	"net/url"
-	"strings"
 
 	"github.com/gosmo-devs/microgateway/log"
 	"github.com/gosmo-devs/microgateway/model"
 )
 
-// Proxy object
-type Proxy struct {
-	service *model.Service
+// Proxy interface
+type Proxy interface {
+	getTargetURL(r *http.Request) (*url.URL, error)
+	ReverseProxy(w http.ResponseWriter, r *http.Request) error
 }
 
-// ReverseProxy forwards traffic to a service
-func (p *Proxy) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
-	target, err := getTargetURL(r, p.service)
-	if err != nil {
-		return err
+func getDirector(target *url.URL) func(r *http.Request) {
+	return func(r *http.Request) {
+		r.Header.Add("X-Forwarded-Host", r.Host)
+		r.Header.Add("X-Origin-Host", target.Host)
+		r.URL.Scheme = target.Scheme
+		r.URL.Host = target.Host
+		r.URL.Path = target.Path
 	}
-
-	proxy := &httputil.ReverseProxy{
-		Director: func(r *http.Request) {
-			r.Header.Add("X-Forwarded-Host", r.Host)
-			r.Header.Add("X-Origin-Host", target.Host)
-			r.URL.Scheme = target.Scheme
-			r.URL.Host = target.Host
-			r.URL.Path = target.Path
-		},
-		ModifyResponse: func(res *http.Response) error {
-			log.Infof("%s %s => %s %d", r.Method, r.URL, target, res.StatusCode)
-			return nil
-		},
-		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
-			log.Error(err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-		},
-	}
-	proxy.ServeHTTP(w, r)
-
-	return nil
 }
 
-// NewProxy returns a new Proxy
-func NewProxy(service *model.Service) *Proxy {
-	return &Proxy{service}
+func logProxy(req *http.Request, res *http.Response, target *url.URL) {
+	log.Infof("%s %s => %s %d", req.Method, req.URL, target, res.StatusCode)
 }
 
-func getTargetURL(r *http.Request, service *model.Service) (*url.URL, error) {
-	path := strings.Split(r.URL.String(), service.Key)[1]
-	target, err := url.Parse(service.URL + path)
-	if err != nil {
-		return nil, err
+func handleError(w http.ResponseWriter, err error) {
+	log.Error(err)
+	http.Error(w, "Internal server error", http.StatusInternalServerError)
+}
+
+// NewProxy instanciates a new Proxy
+func NewProxy(service *model.Service) (Proxy, error) {
+	switch service.Type {
+	case model.REST:
+		return restProxy{service}, nil
+	case model.GRPC:
+		return grpcProxy{service}, nil
+	default:
+		return nil, model.ErrInvalidServiceType
 	}
-	return target, nil
 }

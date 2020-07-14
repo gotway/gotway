@@ -9,4 +9,9 @@ metadata:
 data:
   DATABASE: redis
   ENV: preproduction
-  REDIS_SERVER: redis:6379
+  REDIS_SERVER: redis-microgateway:6379
+  HEALTH_CHECK_INTERVAL_SECONDS: "10"
+  HEALTH_CHECK_TIMEOUT_SECONDS: "5"
+  TLS: "true"
+  TLS_CERT: "/etc/ssl/tls.crt"
+  TLS_KEY: "/etc/ssl/tls.key"

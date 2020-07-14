@@ -7,11 +7,14 @@ metadata:
     app: microgateway
     tier: api-gateway
 spec:
+  type: NodePort
   selector:
     app: microgateway
     tier: api-gateway
   ports:
-    - port: 80
+    - port: 443
+      nodePort: 30000
+      name: https
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -34,7 +37,7 @@ spec:
     spec:
       containers:
         - name: microgateway
-          image: gosmogolang/microgateway:0.0.1
+          image: gosmogolang/microgateway:0.0.2
           imagePullPolicy: Always
           resources:
             requests:
@@ -45,9 +48,10 @@ spec:
               cpu: "500m"
           ports:
             - name: service-port
-              containerPort: 80
+              containerPort: 443
           readinessProbe:
             httpGet:
+              scheme: HTTPS
               path: /api/health
               port: service-port
             initialDelaySeconds: 10
@@ -55,6 +59,7 @@ spec:
             periodSeconds: 15
           livenessProbe:
             httpGet:
+              scheme: HTTPS
               path: /api/health
               port: service-port
             initialDelaySeconds: 10
@@ -63,3 +68,11 @@ spec:
           envFrom:
             - configMapRef:
                 name: microgateway
+          volumeMounts:
+          - name: tls
+            mountPath: "/etc/ssl"
+            readOnly: true
+      volumes:
+      - name: tls
+        secret:
+          secretName: microgateway
