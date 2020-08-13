@@ -8,13 +8,13 @@ A simple, lightweight and blazingly fast API microgateway 🚀
 - API composition and dynamic routing for **REST** and **gRPC** microservices
 - Service discovery by registering in microgateway API
 - Service health checking 
+- Service management via microgateway API
 - ~10MB [Docker image](https://hub.docker.com/repository/registry-1.docker.io/gosmogolang/microgateway/tags?page=1) available for multiple architectures
 
 [Upcoming features](https://github.com/gosmo-devs/microgateway/milestone/1) 🚧
 - Centralized auth via OAuth2
 - Cache management
 - Rate limiting
-- Microgateway API enhancements
 
 # Service discovery 🔭
 
@@ -25,7 +25,7 @@ Services can be discovered in runtime by registering them in the microgateway AP
 We will register [catalog](./microservices/catalog) as an example:
 
 ```
-curl --request POST 'https://<microgateway>/api/register' \
+curl --request POST 'https://<microgateway>/api/service' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "type": "rest",
@@ -48,7 +48,7 @@ After executing that command, our service will be available at
 We will register [route](./microservices/route) as an example:
 
 ```
-curl --request POST 'https://<microgateway>/api/register' \
+curl --request POST 'https://<microgateway>/api/service' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "type": "grpc",
