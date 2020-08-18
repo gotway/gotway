@@ -1,4 +1,4 @@
-.PHONY: clean deps deps-sync format build install run
+.PHONY: clean deps deps-sync format build install run test
 
 all: build
 clean:
@@ -15,3 +15,5 @@ install:
 	go install -v .
 run: build
 	./bin/microgateway
+test:
+	go test -v ./...

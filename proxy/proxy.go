@@ -4,14 +4,44 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/gosmo-devs/microgateway/core"
 	"github.com/gosmo-devs/microgateway/log"
-	"github.com/gosmo-devs/microgateway/model"
 )
 
 // Proxy interface
 type Proxy interface {
 	getTargetURL(r *http.Request) (*url.URL, error)
 	ReverseProxy(w http.ResponseWriter, r *http.Request) error
+}
+
+// ResponseHandler is a function hook for handling responses
+type ResponseHandler = func(serviceKey string, res *http.Response) error
+
+type proxy struct {
+	service        core.Service
+	handleResponse ResponseHandler
+}
+
+// NewProxy instanciates a new Proxy
+func NewProxy(service core.Service, handleResponse ResponseHandler) (Proxy, error) {
+	switch service.Type {
+	case core.ServiceTypeREST:
+		return proxyREST{
+			proxy: proxy{
+				service,
+				handleResponse,
+			},
+		}, nil
+	case core.ServiceTypeGRPC:
+		return proxyGRPC{
+			proxy: proxy{
+				service,
+				handleResponse,
+			},
+		}, nil
+	default:
+		return nil, core.ErrInvalidServiceType
+	}
 }
 
 func getDirector(target *url.URL) func(r *http.Request) {
@@ -25,22 +55,10 @@ func getDirector(target *url.URL) func(r *http.Request) {
 }
 
 func logProxy(req *http.Request, res *http.Response, target *url.URL) {
-	log.Infof("%s %s => %s %d", req.Method, req.URL, target, res.StatusCode)
+	log.Logger.Infof("%s %s => %s %d", req.Method, req.URL, target, res.StatusCode)
 }
 
 func handleError(w http.ResponseWriter, err error) {
-	log.Error(err)
+	log.Logger.Error(err)
 	http.Error(w, "Internal server error", http.StatusInternalServerError)
-}
-
-// NewProxy instanciates a new Proxy
-func NewProxy(service *model.Service) (Proxy, error) {
-	switch service.Type {
-	case model.REST:
-		return restProxy{service}, nil
-	case model.GRPC:
-		return grpcProxy{service}, nil
-	default:
-		return nil, model.ErrInvalidServiceType
-	}
 }

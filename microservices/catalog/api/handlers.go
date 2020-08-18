@@ -19,20 +19,29 @@ func health(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProducts(w http.ResponseWriter, r *http.Request) {
+	setHeaders := func(w http.ResponseWriter) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Cache-Tags", "ecommerce")
+	}
 	q := r.URL.Query()
 	offsetStr := q.Get("offset")
 	limitStr := q.Get("limit")
 	offset, limit, err := processPaginationParams(offsetStr, limitStr)
+
 	if err != nil {
+		setHeaders(w)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	productPage, productErr := productService.GetProducts(offset, limit)
 	if productErr != nil {
+		setHeaders(w)
 		handleError(w, productErr)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+
+	setHeaders(w)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(productPage)
 }
 
@@ -45,23 +54,33 @@ func createProduct(w http.ResponseWriter, r *http.Request) {
 	}
 	productService.AddProduct(&product)
 	res := m.ProductCreated{ID: product.ID}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(res)
 }
 
 func getProduct(w http.ResponseWriter, r *http.Request) {
+	setHeaders := func(w http.ResponseWriter) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "s-maxage=10")
+	}
 	id, err := getIDparam(r)
+
 	if err != nil {
+		setHeaders(w)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	p, productErr := productService.FindProduct(id)
 	if productErr != nil {
+		setHeaders(w)
 		handleError(w, productErr)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+
+	setHeaders(w)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(p)
 }
 
@@ -76,6 +95,7 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) {
 		handleError(w, productErr)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -95,6 +115,7 @@ func updateProduct(w http.ResponseWriter, r *http.Request) {
 		handleError(w, productErr)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 }
 

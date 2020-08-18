@@ -19,12 +19,14 @@ func health(w http.ResponseWriter, r *http.Request) {
 func upsertStock(w http.ResponseWriter, r *http.Request) {
 	productID, err := getProductID(r)
 	if err != nil {
+		setHeaders(w)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	var stockData m.StockData
 	_ = json.NewDecoder(r.Body).Decode(&stockData)
 	if !stockData.IsValid() {
+		setHeaders(w)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -34,7 +36,7 @@ func upsertStock(w http.ResponseWriter, r *http.Request) {
 		handleError(w, stockError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	setHeaders(w)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(resultStock)
 }
@@ -43,15 +45,17 @@ func upsertStockList(w http.ResponseWriter, r *http.Request) {
 	var stockList m.StockList
 	_ = json.NewDecoder(r.Body).Decode(&stockList)
 	if !stockList.IsValid() {
+		setHeaders(w)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	resultStockList := s.UpsertStockList(stockList.Stock)
 	if !resultStockList.HasStock() {
+		setHeaders(w)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	setHeaders(w)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(&resultStockList)
 }
@@ -59,6 +63,7 @@ func upsertStockList(w http.ResponseWriter, r *http.Request) {
 func getStock(w http.ResponseWriter, r *http.Request) {
 	productID, err := getProductID(r)
 	if err != nil {
+		setHeaders(w)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -67,7 +72,7 @@ func getStock(w http.ResponseWriter, r *http.Request) {
 		handleError(w, stockErr)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	setHeaders(w)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(stock)
 }
@@ -75,15 +80,17 @@ func getStock(w http.ResponseWriter, r *http.Request) {
 func getStockList(w http.ResponseWriter, r *http.Request) {
 	productIDs := getProductIDs(r)
 	if productIDs == nil {
+		setHeaders(w)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	stockList := s.GetStockList(productIDs)
 	if !stockList.HasStock() {
+		setHeaders(w)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	setHeaders(w)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&stockList)
 }
@@ -121,5 +128,11 @@ func getProductIDs(r *http.Request) []int {
 
 func handleError(w http.ResponseWriter, err *m.StockError) {
 	log.Print(err)
+	setHeaders(w)
 	w.WriteHeader(err.Code)
+}
+
+func setHeaders(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "s-maxage=0")
 }

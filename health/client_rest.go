@@ -6,19 +6,19 @@ import (
 	"net/url"
 
 	"github.com/gosmo-devs/microgateway/config"
-	"github.com/gosmo-devs/microgateway/model"
+	"github.com/gosmo-devs/microgateway/core"
 )
 
-type restClient struct {
-	service *model.Service
+type clientREST struct {
+	service core.Service
 }
 
-func (c restClient) getHealthURL() (*url.URL, error) {
+func (c clientREST) getHealthURL() (*url.URL, error) {
 	healthPath, err := c.service.HealthPathForType()
 	if err != nil {
 		return nil, err
 	}
-	urlString := fmt.Sprintf("%s/%s", c.service.URL, *healthPath)
+	urlString := fmt.Sprintf("%s/%s", c.service.URL, healthPath)
 	url, err := url.Parse(urlString)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (c restClient) getHealthURL() (*url.URL, error) {
 }
 
 // HealthCheck performs health check
-func (c restClient) HealthCheck() error {
+func (c clientREST) HealthCheck() error {
 	healthURL, err := c.getHealthURL()
 	if err != nil {
 		return err

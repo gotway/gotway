@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gosmo-devs/microgateway/controller"
-	"github.com/gosmo-devs/microgateway/model"
+	"github.com/gosmo-devs/microgateway/core"
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func getServicesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	servicePage, err := controller.GetServices(offset, limit)
+	servicePage, err := controller.Service.GetServices(offset, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -37,43 +37,44 @@ func getServicesHandler(w http.ResponseWriter, r *http.Request) {
 func registerServiceHandler(w http.ResponseWriter, r *http.Request) {
 	decoded := json.NewDecoder(r.Body)
 
-	var service model.Service
-	err := decoded.Decode(&service)
+	var serviceDetail core.ServiceDetail
+	err := decoded.Decode(&serviceDetail)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = service.Validate()
+	err = serviceDetail.Validate()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = controller.RegisterService(service)
+	err = controller.Service.RegisterService(serviceDetail)
 	if err != nil {
-		if errors.Is(err, model.ErrServiceAlreadyRegistered) {
+		if errors.Is(err, core.ErrServiceAlreadyRegistered) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func getServiceHandler(w http.ResponseWriter, r *http.Request) {
 	key := getServiceKey(r)
-	service, err := controller.GetService(key)
+	serviceDetail, err := controller.Service.GetServiceDetail(key)
 	if err != nil {
 		handleServiceError(err, w, r)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(service)
+	json.NewEncoder(w).Encode(serviceDetail)
 }
 
 func deleteServiceHandler(w http.ResponseWriter, r *http.Request) {
 	key := getServiceKey(r)
-	err := controller.DeleteService(key)
+	err := controller.Service.DeleteService(key)
 	if err != nil {
 		handleServiceError(err, w, r)
 		return
@@ -81,9 +82,66 @@ func deleteServiceHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func deleteCacheHandler(w http.ResponseWriter, r *http.Request) {
+	decoded := json.NewDecoder(r.Body)
+
+	var payload core.DeleteCache
+	err := decoded.Decode(&payload)
+	if err != nil {
+		http.Error(w, core.ErrInvalidDeleteCache.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = payload.Validate()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if len(payload.Paths) > 0 {
+		err := controller.Cache.DeleteCacheByPath(payload.Paths)
+		if err != nil {
+			if _, ok := err.(*core.ErrCachePathNotFound); ok {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if len(payload.Tags) > 0 {
+		err := controller.Cache.DeleteCacheByTags(payload.Tags)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func getCacheHandler(w http.ResponseWriter, r *http.Request) {
+	servicePath := getServiceKey(r)
+
+	cacheDetail, err := controller.Cache.GetCacheDetail(r, servicePath)
+	if err != nil {
+		if errors.Is(err, core.ErrCacheNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(cacheDetail)
+}
+
 func proxyHandler(w http.ResponseWriter, r *http.Request) {
 	key := getServiceKey(r)
-	service, err := controller.GetService(key)
+	service, err := controller.Service.GetService(key)
 	if err != nil {
 		handleServiceError(err, w, r)
 		return
@@ -94,7 +152,7 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = controller.ReverseProxy(w, r, service)
+	err = controller.Service.ReverseProxy(w, r, service)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
@@ -108,7 +166,7 @@ func getServiceKey(r *http.Request) string {
 
 func handleServiceError(err error, w http.ResponseWriter, r *http.Request) {
 	key := getServiceKey(r)
-	if errors.Is(err, model.ErrServiceNotFound) {
+	if errors.Is(err, core.ErrServiceNotFound) {
 		http.Error(w, fmt.Sprintf("'%s' service not found", key), http.StatusNotFound)
 		return
 	}
