@@ -114,3 +114,9 @@ var ErrServiceNotFound = errors.New("Service not found")
 
 // ErrServiceAlreadyRegistered error for service already registered
 var ErrServiceAlreadyRegistered = errors.New("Service is already registered")
+
+// ServicePage model
+type ServicePage struct {
+	Services   []Service `json:"services"`
+	TotalCount int       `json:"totalCount"`
+}

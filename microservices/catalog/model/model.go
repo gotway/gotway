@@ -39,5 +39,5 @@ var notFoundError = &ProductError{Code: http.StatusNotFound, Message: "Not found
 // ProductPage model
 type ProductPage struct {
 	Products   []Product `json:"products"`
-	TotalCount int       `json:"totatCount"`
+	TotalCount int       `json:"totalCount"`
 }

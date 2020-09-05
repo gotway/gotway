@@ -39,7 +39,7 @@ func getServicesToChangeStatus() (setToHealthy []string, setToIdle []string) {
 	var healthyServices []string
 	var idleServices []string
 
-	services := model.ServiceDao.GetAllServices()
+	services := model.ServiceDao.GetAllServiceKeys()
 	var wg sync.WaitGroup
 	for _, serviceKey := range services {
 		wg.Add(1)
