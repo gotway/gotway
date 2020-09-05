@@ -7,8 +7,8 @@ import (
 
 var logger *zap.SugaredLogger
 
-// InitLogger initializes the logger instance
-func InitLogger() {
+// Init initializes the logger instance
+func Init() {
 	var zapLogger *zap.Logger
 	var zapConfig zap.Config
 	if config.Env == "development" {

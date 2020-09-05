@@ -1,12 +1,42 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+	"time"
+
+	"github.com/gosmo-devs/microgateway/cert"
+)
 
 func getEnv(key string, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
 	return defaultValue
+}
+
+func getBoolEnv(key string, defaultValue bool) bool {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+	boolVal, err := strconv.ParseBool(value)
+	if err != nil {
+		return defaultValue
+	}
+	return boolVal
+}
+
+func getIntEnv(key string, defaultValue int) int {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return defaultValue
+	}
+	intVal, err := strconv.Atoi(value)
+	if err != nil {
+		return defaultValue
+	}
+	return intVal
 }
 
 var (
@@ -18,6 +48,14 @@ var (
 	Database = getEnv("DATABASE", "redis")
 	// RedisServer indicates the URL for the redis client
 	RedisServer = getEnv("REDIS_SERVER", "127.0.0.1:6379")
-	// ServiceCheckInterval seconds between service health checks
-	ServiceCheckInterval = getEnv("SERVICE_CHECK_INTERVAL", "10")
+	// HealthCheckInterval is the interval between health checks
+	HealthCheckInterval = time.Duration(getIntEnv("HEALTH_CHECK_INTERVAL_SECONDS", 10)) * time.Second
+	// HealthCheckTimeout is the timeout for health check
+	HealthCheckTimeout = time.Duration(getIntEnv("HEALTH_CHECK_TIMEOUT_SECONDS", 5)) * time.Second
+	// TLS indicates if TLS is enabled
+	TLS = getBoolEnv("TLS", true)
+	// TLScert is the certificate file for TLS
+	TLScert = getEnv("TLS_CERT", cert.Path("server.pem"))
+	// TLSkey is the key file for TLS
+	TLSkey = getEnv("TLS_KEY", cert.Path("server.key"))
 )

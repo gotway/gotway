@@ -9,18 +9,21 @@ services:
       - MICROGATEWAY_SERVICE_PORT=8000
       - ENV=development
       - DATABASE=redis
-      - REDIS_SERVER=redis:6379
+      - REDIS_SERVER=redis:6379 
+      - HEALTH_CHECK_INTERVAL_SECONDS=10
+      - HEALTH_CHECK_TIMEOUT_SECONDS=5
+      - TLS=true
+      - TLS_CERT=/etc/ssl/server.pem
+      - TLS_KEY=/etc/ssl/server.key
     ports:
       - "8000:8000"
-    networks:
-      - webnet
+    volumes:
+      - "./cert:/etc/ssl"
 
   redis:
     image: redis
     ports:
-      - "6379:6379"
-    networks:
-      - webnet
+      - "6379"
 
   catalog:
     image: catalog:0.0.1
@@ -29,9 +32,7 @@ services:
     environment:
       - CATALOG_SERVICE_PORT=9000
     ports:
-      - "9000:9000"
-    networks:
-      - webnet
+      - "9000"
 
   stock:
     image: stock:0.0.1
@@ -42,9 +43,13 @@ services:
       - STOCK_SERVICE_PORT=10000
       - REDIS_URL=redis:6379
     ports:
-      - "10000:10000"
-    networks:
-      - webnet
+      - "10000"
 
-networks:
-  webnet:
+  route:
+    image: route:0.0.1
+    depends_on:
+      - microgateway
+    environment:
+      - ROUTE_SERVICE_PORT=11000
+    ports:
+      - "11000"

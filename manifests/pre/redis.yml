@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: redis
+  name: redis-microgateway
   namespace: pre-microgateway
   labels:
-    app: stock
+    app: microgateway
     tier: database
 spec:
   accessModes:
@@ -16,14 +16,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis
+  name: redis-microgateway
   namespace: pre-microgateway
   labels:
-    app: stock
+    app: microgateway
     tier: database
 spec:
   selector:
-    app: stock
+    app: microgateway
     tier: database
   ports:
     - port: 6379
@@ -31,24 +31,24 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis
+  name: redis-microgateway
   namespace: pre-microgateway
   labels:
-    app: stock
+    app: microgateway
     tier: database
 spec:
   selector:
     matchLabels:
-      app: stock
+      app: microgateway
       tier: database
   template:
     metadata:
       labels:
-        app: stock
+        app: microgateway
         tier: database
     spec:
       containers:
-        - name: redis
+        - name: redis-microgateway
           image: redis
           imagePullPolicy: Always
           resources:
@@ -66,4 +66,4 @@ spec:
       volumes:
         - name: storage
           persistentVolumeClaim:
-            claimName: redis
+            claimName: redis-microgateway

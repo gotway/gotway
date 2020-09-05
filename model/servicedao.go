@@ -2,8 +2,8 @@ package model
 
 // ServiceDaoI interface
 type ServiceDaoI interface {
-	StoreService(key string, url string, healthURL string) error
+	StoreService(service Service) error
 	GetService(key string) (*Service, error)
-	getAllServices() []string
-	updateServiceStatus(key string, status ServiceStatus)
+	GetAllServices() []string
+	UpdateServiceStatus(key string, status ServiceStatus)
 }
