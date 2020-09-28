@@ -2,7 +2,7 @@
 
 set -e
 
-docker-compose -f docker-compose.dev.yml up -d
+docker-compose -f docker-compose.redis.yml up -d
 
 tmux new-session -d -s mgw
 tab=0

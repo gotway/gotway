@@ -2,12 +2,12 @@ version: "3.3"
 
 services:
   microgateway:
-    image: microgateway:0.0.1
+    image: gosmogolang/microgateway:0.0.2
     depends_on:
       - redis
     environment: 
       - MICROGATEWAY_SERVICE_PORT=8000
-      - ENV=development
+      - ENV=production
       - DATABASE=redis
       - REDIS_SERVER=redis:6379 
       - HEALTH_CHECK_INTERVAL_SECONDS=10
@@ -19,37 +19,3 @@ services:
       - "8000:8000"
     volumes:
       - "./cert:/etc/ssl"
-
-  redis:
-    image: redis
-    ports:
-      - "6379"
-
-  catalog:
-    image: catalog:0.0.1
-    depends_on:
-      - microgateway
-    environment:
-      - CATALOG_SERVICE_PORT=9000
-    ports:
-      - "9000"
-
-  stock:
-    image: stock:0.0.1
-    depends_on:
-      - microgateway
-      - redis
-    environment:
-      - STOCK_SERVICE_PORT=10000
-      - REDIS_URL=redis:6379
-    ports:
-      - "10000"
-
-  route:
-    image: route:0.0.1
-    depends_on:
-      - microgateway
-    environment:
-      - ROUTE_SERVICE_PORT=11000
-    ports:
-      - "11000"

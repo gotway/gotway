@@ -8,11 +8,11 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/gosmo-devs/microgateway/config"
-	"github.com/gosmo-devs/microgateway/model"
+	"github.com/gosmo-devs/microgateway/core"
 )
 
-type grpcClient struct {
-	service *model.Service
+type clientGRPC struct {
+	service core.Service
 }
 
 func getConn(server string) (*grpc.ClientConn, error) {
@@ -24,7 +24,7 @@ func getConn(server string) (*grpc.ClientConn, error) {
 	return grpc.Dial(server, opts...)
 }
 
-func (c grpcClient) getHealthURL() (*url.URL, error) {
+func (c clientGRPC) getHealthURL() (*url.URL, error) {
 	url, err := url.Parse(c.service.URL)
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (c grpcClient) getHealthURL() (*url.URL, error) {
 }
 
 // HealthCheck performs health check
-func (c grpcClient) HealthCheck() error {
+func (c clientGRPC) HealthCheck() error {
 	healthURL, err := c.getHealthURL()
 	if err != nil {
 		return err

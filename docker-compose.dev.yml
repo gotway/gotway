@@ -1,7 +1,50 @@
 version: "3.3"
 
 services:
-  redis:
-    image: redis
+  microgateway:
+    build: .
+    depends_on:
+      - redis
+    environment: 
+      - MICROGATEWAY_SERVICE_PORT=8000
+      - ENV=development
+      - DATABASE=redis
+      - REDIS_SERVER=redis:6379 
+      - HEALTH_CHECK_INTERVAL_SECONDS=10
+      - HEALTH_CHECK_TIMEOUT_SECONDS=5
+      - TLS=true
+      - TLS_CERT=/etc/ssl/server.pem
+      - TLS_KEY=/etc/ssl/server.key
     ports:
-      - "6379:6379"
+      - "8000:8000"
+    volumes:
+      - "./cert:/etc/ssl"
+      
+  catalog:
+    build: microservices/catalog
+    depends_on:
+      - microgateway
+    environment:
+      - CATALOG_SERVICE_PORT=9000
+    ports:
+      - "9000:9000"
+
+  stock:
+    build: microservices/stock
+    depends_on:
+      - microgateway
+      - redis
+    environment:
+      - STOCK_SERVICE_PORT=10000
+      - REDIS_URL=redis:6379
+    ports:
+      - "10000:10000"
+
+  route:
+    build: microservices/route
+    depends_on:
+      - microgateway
+    environment:
+      - ROUTE_SERVICE_PORT=11000
+    ports:
+      - "11000:11000"

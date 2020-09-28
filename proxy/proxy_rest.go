@@ -4,17 +4,16 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 
-	"github.com/gosmo-devs/microgateway/model"
+	"github.com/gosmo-devs/microgateway/util"
 )
 
-type restProxy struct {
-	service *model.Service
+type proxyREST struct {
+	proxy
 }
 
-func (p restProxy) getTargetURL(r *http.Request) (*url.URL, error) {
-	path := strings.Split(r.URL.String(), p.service.Path)[1]
+func (p proxyREST) getTargetURL(r *http.Request) (*url.URL, error) {
+	path := util.GetServiceRelativePath(r, p.service.Path)
 	target, err := url.Parse(p.service.URL + path)
 	if err != nil {
 		return nil, err
@@ -23,7 +22,7 @@ func (p restProxy) getTargetURL(r *http.Request) (*url.URL, error) {
 }
 
 // ReverseProxy forwards traffic to a service
-func (p restProxy) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
+func (p proxyREST) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
 	target, err := p.getTargetURL(r)
 	if err != nil {
 		return err
@@ -33,7 +32,7 @@ func (p restProxy) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
 		Director: getDirector(target),
 		ModifyResponse: func(res *http.Response) error {
 			logProxy(r, res, target)
-			return nil
+			return p.handleResponse(p.service.Path, res)
 		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			handleError(w, err)

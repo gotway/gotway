@@ -4,14 +4,23 @@ import (
 	"github.com/gosmo-devs/microgateway/config"
 )
 
-// ServiceDao implementation
-var ServiceDao ServiceDaoI
+// ServiceRepository implementation
+var ServiceRepository ServiceRepositoryI
+
+// CacheConfigRepository implementation
+var CacheConfigRepository CacheConfigRepositoryI
+
+// CacheRepository implementation
+var CacheRepository CacheRepositoryI
 
 // Init initializes the databases configured
 func Init() {
 	switch config.Database {
 	case "redis":
-		ServiceDao = redisServiceDao()
+		initRedisClient()
+		ServiceRepository = serviceRepositoryRedis{}
+		CacheConfigRepository = cacheConfigRepositoryRedis{}
+		CacheRepository = cacheRepositoryRedis{}
 	default:
 		panic("Database configuration value not recognized")
 	}

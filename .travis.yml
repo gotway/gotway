@@ -1,7 +1,13 @@
+language: go
+go:
+  - 1.14.x
 stages:
+  - test
   - release
 jobs:
   include:
+    - stage: test
+      script: make test
     - stage: release
       if: tag IS present
       before_install:

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/gosmo-devs/microgateway/model"
+	"github.com/gosmo-devs/microgateway/core"
 )
 
 // Client interface
@@ -13,16 +13,16 @@ type Client interface {
 	HealthCheck() error
 }
 
-var errServiceNotAvailable = errors.New("Service not available")
-
 // NewClient instanciates a new client
-func NewClient(service *model.Service) (Client, error) {
+func NewClient(service core.Service) (Client, error) {
 	switch service.Type {
-	case model.REST:
-		return restClient{service}, nil
-	case model.GRPC:
-		return grpcClient{service}, nil
+	case core.ServiceTypeREST:
+		return clientREST{service}, nil
+	case core.ServiceTypeGRPC:
+		return clientGRPC{service}, nil
 	default:
-		return nil, model.ErrInvalidServiceType
+		return nil, core.ErrInvalidServiceType
 	}
 }
+
+var errServiceNotAvailable = errors.New("Service not available")

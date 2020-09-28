@@ -7,15 +7,14 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/gosmo-devs/microgateway/model"
 	"golang.org/x/net/http2"
 )
 
-type grpcProxy struct {
-	service *model.Service
+type proxyGRPC struct {
+	proxy
 }
 
-func (p grpcProxy) getTargetURL(r *http.Request) (*url.URL, error) {
+func (p proxyGRPC) getTargetURL(r *http.Request) (*url.URL, error) {
 	url, err := url.Parse(p.service.URL)
 	if err != nil {
 		return nil, err
@@ -25,7 +24,7 @@ func (p grpcProxy) getTargetURL(r *http.Request) (*url.URL, error) {
 	return url, nil
 }
 
-func (p grpcProxy) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
+func (p proxyGRPC) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
 	target, err := p.getTargetURL(r)
 	if err != nil {
 		return err
@@ -40,7 +39,7 @@ func (p grpcProxy) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
 		},
 		ModifyResponse: func(res *http.Response) error {
 			logProxy(r, res, target)
-			return nil
+			return p.handleResponse(p.service.Path, res)
 		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			handleError(w, err)

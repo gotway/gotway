@@ -11,10 +11,10 @@ import (
 
 // NewAPI Starts a new HTTP server
 func NewAPI() {
-	router := createRouting()
+	router := createRouter()
 	addr := fmt.Sprintf(":%s", config.Port)
-	log.Info("Server listening on port ", config.Port)
-	log.Info("Environment: ", config.Env)
+	log.Logger.Info("Server listening on port ", config.Port)
+	log.Logger.Info("Environment: ", config.Env)
 	var err error
 	if config.TLS {
 		err = http.ListenAndServeTLS(addr, config.TLScert, config.TLSkey, router)
@@ -22,28 +22,48 @@ func NewAPI() {
 		err = http.ListenAndServe(addr, router)
 	}
 	if err != nil {
-		log.Fatal(err)
+		log.Logger.Fatal(err)
 	}
 }
 
-func createRouting() *mux.Router {
+func createRouter() *mux.Router {
 	router := mux.NewRouter()
-	apiRouter := router.PathPrefix("/api").Subrouter()
 
-	apiRouter.HandleFunc("/health", healthHandler).Methods("GET")
-	createServiceRouting(apiRouter)
-	router.PathPrefix("/{service}").HandlerFunc(proxyHandler)
+	api := router.PathPrefix("/api").Subrouter()
+	api.HandleFunc("/health", healthHandler).Methods(http.MethodGet)
+	addServiceRouter(api)
+	addCacheRouter(api)
+
+	proxy := router.PathPrefix("/{service}").Subrouter()
+	proxy.Use(cacheMiddleware)
+	proxy.Schemes(getSchemes()...).HandlerFunc(proxyHandler)
 
 	return router
 }
 
-func createServiceRouting(rootRouter *mux.Router) {
-	rootRouter.HandleFunc("/services", getServicesHandler).Methods("GET")
+func addServiceRouter(root *mux.Router) {
+	root.HandleFunc("/services", getServicesHandler).Methods(http.MethodGet)
 
-	serviceRouter := rootRouter.PathPrefix("/service").Subrouter()
-	serviceRouter.Methods("POST").HandlerFunc(registerServiceHandler)
+	service := root.PathPrefix("/service").Subrouter()
+	service.Methods(http.MethodPost).HandlerFunc(registerServiceHandler)
 
-	idRouter := serviceRouter.PathPrefix("/{service}").Subrouter()
-	idRouter.Methods("GET").HandlerFunc(getServiceHandler)
-	idRouter.Methods("DELETE").HandlerFunc(deleteServiceHandler)
+	serviceID := service.PathPrefix("/{service}").Subrouter()
+	serviceID.Methods(http.MethodGet).HandlerFunc(getServiceHandler)
+	serviceID.Methods(http.MethodDelete).HandlerFunc(deleteServiceHandler)
+}
+
+func addCacheRouter(root *mux.Router) {
+	cache := root.PathPrefix("/cache").Subrouter()
+
+	cache.PathPrefix("/{service}").Methods(http.MethodGet).HandlerFunc(getCacheHandler)
+
+	cache.Methods(http.MethodDelete).HandlerFunc(deleteCacheHandler)
+}
+
+func getSchemes() []string {
+	var schemes = []string{"http"}
+	if config.TLS {
+		schemes = append(schemes, "https")
+	}
+	return schemes
 }
