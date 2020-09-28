@@ -1,4 +1,4 @@
-.PHONY: clean deps deps-sync format build install run test
+.PHONY: clean deps deps-sync format build install run test cover
 
 all: build
 clean:
@@ -16,4 +16,6 @@ install:
 run: build
 	./bin/microgateway
 test:
-	go test -v ./...
+	go test -v ./... -coverprofile=cover.out
+cover: test
+	go tool cover -html=cover.out

@@ -1,5 +1,6 @@
 # microgateway
 [![Build Status](https://travis-ci.org/gosmo-devs/microgateway.svg)](https://travis-ci.org/gosmo-devs/microgateway)
+[![Coverage Status](https://coveralls.io/repos/github/gosmo-devs/microgateway/badge.svg?branch=tests)](https://coveralls.io/github/gosmo-devs/microgateway?branch=tests)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gosmo-devs/microgateway)](https://goreportcard.com/report/github.com/gosmo-devs/microgateway)
 
 A simple, lightweight and blazingly fast API microgateway 🚀
