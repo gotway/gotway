@@ -5,6 +5,6 @@ import "testing"
 func TestLoggerInit(t *testing.T) {
 	Init()
 	if Logger == nil {
-		t.Error("Initialization failed")
+		t.Error("Expected logger to be initialized")
 	}
 }

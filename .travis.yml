@@ -7,7 +7,10 @@ stages:
 jobs:
   include:
     - stage: test
+      before_script: go get -u -v github.com/mattn/goveralls
       script: make test
+      after_script: $HOME/gopath/bin/goveralls -coverprofile=cover.out -service=travis-ci
+    
     - stage: release
       if: tag IS present
       before_install:

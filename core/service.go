@@ -44,6 +44,10 @@ func (s Service) Validate() error {
 	if err != nil {
 		return err
 	}
+	err = s.Status.Validate()
+	if err != nil {
+		return err
+	}
 	if s.URL == "" {
 		return errInvalidField("url")
 	}
