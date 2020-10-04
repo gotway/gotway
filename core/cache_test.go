@@ -90,7 +90,7 @@ func TestDeleteValidate(t *testing.T) {
 			name: "Validate delete with paths and tags",
 			delete: DeleteCache{
 				Paths: []CachePath{
-					CachePath{
+					{
 						ServicePath: "catalog",
 						Path:        "/products",
 					},
