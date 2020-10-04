@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   gotway:
-    image: gotway/gotway:0.0.2
+    image: gotwaygateway/gotway
     depends_on:
       - redis
     environment: 

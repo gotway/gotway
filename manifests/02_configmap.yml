@@ -8,7 +8,7 @@ metadata:
     tier: api-gateway
 data:
   DATABASE: redis
-  ENV: preproduction
+  ENV: production
   REDIS_SERVER: redis-gotway:6379
   HEALTH_CHECK_INTERVAL_SECONDS: "10"
   HEALTH_CHECK_TIMEOUT_SECONDS: "5"
