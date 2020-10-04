@@ -12,7 +12,7 @@ import (
 
 var client *redis.Client
 
-// Init initalizes redis client
+// Init initializes redis client
 func Init() {
 	client = redis.NewClient(&redis.Options{
 		Addr: conf.RedisURL,

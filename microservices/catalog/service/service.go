@@ -4,7 +4,7 @@ import (
 	m "github.com/gosmo-devs/microsamples/catalog/model"
 )
 
-// ProductService manages product bussiness logic
+// ProductService manages product business logic
 type ProductService struct {
 	dao m.ProductDAO
 }

@@ -62,6 +62,9 @@ func (s *routeServer) RecordRoute(stream pb.Route_RecordRouteServer) error {
 		}
 		pointCount++
 		feature, err := s.findFeature(point)
+		if err != nil {
+			return err
+		}
 		if feature != nil {
 			featureCount++
 		}
