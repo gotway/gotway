@@ -1,6 +1,6 @@
 # gotway
 [![Build Status](https://travis-ci.org/gotway/gotway.svg)](https://travis-ci.org/gotway/gotway)
-[![Coverage Status](https://coveralls.io/repos/github/gotway/gotway/badge.svg?branch=tests)](https://coveralls.io/github/gotway/gotway?branch=develop)
+[![Coverage Status](https://coveralls.io/repos/github/gotway/gotway/badge.svg?branch=develop)](https://coveralls.io/github/gotway/gotway?branch=develop)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gotway/gotway)](https://goreportcard.com/report/github.com/gotway/gotway)
 
 A simple, lightweight and blazingly fast API gateway 🚀
