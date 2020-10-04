@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gosmo-devs/microgateway/cert"
+	"github.com/gotway/gotway/cert"
 )
 
 func getEnv(key string, defaultValue string) string {
@@ -40,8 +40,8 @@ func getIntEnv(key string, defaultValue int) int {
 }
 
 var (
-	// Port indicates the Microgateway API service port. It uses default K8s service port env variable
-	Port = getEnv("MICROGATEWAY_SERVICE_PORT", "8000")
+	// Port indicates the gotway API service port. It uses default K8s service port env variable
+	Port = getEnv("gotway_SERVICE_PORT", "8000")
 	// Env indicates the environment name
 	Env = getEnv("ENV", "development")
 	// Database indicates which database is used for data storage

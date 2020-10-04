@@ -21,8 +21,8 @@ github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5y
 github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
 github.com/gorilla/mux v1.7.4 h1:VuZ8uybHlWmqV03+zRzdwKL4tUnIp1MAQtp1mIFE1bc=
 github.com/gorilla/mux v1.7.4/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
-github.com/gosmo-devs/microgateway v0.0.0-20200523184907-ee6e61fbbf33 h1:m9yRXE9fUlkP1UyUvCpqEQjI7/Cx3loKISMyEbBJLyk=
-github.com/gosmo-devs/microgateway v0.0.0-20200523184907-ee6e61fbbf33/go.mod h1:5MV31/h3bY/OgJNIjeAb9Z5FGUsOCM/yPxY46WMzA+4=
+github.com/gotway/gotway v0.0.0-20200523184907-ee6e61fbbf33 h1:m9yRXE9fUlkP1UyUvCpqEQjI7/Cx3loKISMyEbBJLyk=
+github.com/gotway/gotway v0.0.0-20200523184907-ee6e61fbbf33/go.mod h1:5MV31/h3bY/OgJNIjeAb9Z5FGUsOCM/yPxY46WMzA+4=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

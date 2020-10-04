@@ -1,6 +1,6 @@
 package controller
 
-import "github.com/gosmo-devs/microgateway/model"
+import "github.com/gotway/gotway/model"
 
 // Service controller instance
 var Service ServiceController

@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/gosmo-devs/microgateway/core"
-	"github.com/gosmo-devs/microgateway/log"
+	"github.com/gotway/gotway/core"
+	"github.com/gotway/gotway/log"
 )
 
 // Proxy interface

@@ -1,12 +1,12 @@
 version: "3.3"
 
 services:
-  microgateway:
+  gotway:
     build: .
     depends_on:
       - redis
     environment: 
-      - MICROGATEWAY_SERVICE_PORT=8000
+      - GOTWAY_SERVICE_PORT=8000
       - ENV=development
       - DATABASE=redis
       - REDIS_SERVER=redis:6379 
@@ -23,7 +23,7 @@ services:
   catalog:
     build: microservices/catalog
     depends_on:
-      - microgateway
+      - gotway
     environment:
       - CATALOG_SERVICE_PORT=9000
     ports:
@@ -32,7 +32,7 @@ services:
   stock:
     build: microservices/stock
     depends_on:
-      - microgateway
+      - gotway
       - redis
     environment:
       - STOCK_SERVICE_PORT=10000
@@ -43,7 +43,7 @@ services:
   route:
     build: microservices/route
     depends_on:
-      - microgateway
+      - gotway
     environment:
       - ROUTE_SERVICE_PORT=11000
     ports:

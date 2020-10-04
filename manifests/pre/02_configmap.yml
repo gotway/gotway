@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: microgateway
-  namespace: pre-microgateway
+  name: gotway
+  namespace: gotway
   labels:
-    app: microgateway
+    app: gotway
     tier: api-gateway
 data:
   DATABASE: redis
   ENV: preproduction
-  REDIS_SERVER: redis-microgateway:6379
+  REDIS_SERVER: redis-gotway:6379
   HEALTH_CHECK_INTERVAL_SECONDS: "10"
   HEALTH_CHECK_TIMEOUT_SECONDS: "5"
   TLS: "true"

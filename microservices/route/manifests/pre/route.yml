@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: route
-  namespace: pre-microgateway
+  namespace: gotway
   labels:
     app: route
     tier: back
@@ -17,7 +17,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: route
-  namespace: pre-microgateway
+  namespace: gotway
   labels:
     app: route
     tier: back
@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: route
-          image: gosmogolang/route:0.0.2
+          image: gotway/route:0.0.2
           imagePullPolicy: Always
           resources:
             requests:

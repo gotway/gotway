@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/gosmo-devs/microgateway/config"
+	"github.com/gotway/gotway/config"
 )
 
 // ServiceRepository implementation

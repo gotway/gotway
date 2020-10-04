@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/gosmo-devs/microgateway/config"
-	"github.com/gosmo-devs/microgateway/log"
+	"github.com/gotway/gotway/config"
+	"github.com/gotway/gotway/log"
 )
 
 var client *redis.Client

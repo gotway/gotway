@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gosmo-devs/microgateway/controller"
-	"github.com/gosmo-devs/microgateway/core"
-	"github.com/gosmo-devs/microgateway/log"
+	"github.com/gotway/gotway/controller"
+	"github.com/gotway/gotway/core"
+	"github.com/gotway/gotway/log"
 )
 
 func cacheMiddleware(next http.Handler) http.Handler {

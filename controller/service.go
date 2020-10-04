@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gosmo-devs/microgateway/core"
-	"github.com/gosmo-devs/microgateway/model"
-	"github.com/gosmo-devs/microgateway/proxy"
+	"github.com/gotway/gotway/core"
+	"github.com/gotway/gotway/model"
+	"github.com/gotway/gotway/proxy"
 )
 
 // ServiceController controller

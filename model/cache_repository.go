@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/gosmo-devs/microgateway/core"
+	"github.com/gotway/gotway/core"
 )
 
 type deleteItem struct {

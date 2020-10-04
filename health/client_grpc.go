@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
-	"github.com/gosmo-devs/microgateway/config"
-	"github.com/gosmo-devs/microgateway/core"
+	"github.com/gotway/gotway/config"
+	"github.com/gotway/gotway/core"
 )
 
 type clientGRPC struct {

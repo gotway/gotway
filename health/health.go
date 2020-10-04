@@ -4,11 +4,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gosmo-devs/microgateway/controller"
-	"github.com/gosmo-devs/microgateway/core"
+	"github.com/gotway/gotway/controller"
+	"github.com/gotway/gotway/core"
 
-	"github.com/gosmo-devs/microgateway/config"
-	"github.com/gosmo-devs/microgateway/log"
+	"github.com/gotway/gotway/config"
+	"github.com/gotway/gotway/log"
 )
 
 // Init initializes service health check

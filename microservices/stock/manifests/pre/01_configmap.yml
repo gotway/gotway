@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: stock
-  namespace: pre-microgateway
+  namespace: gotway
   labels:
     app: stock
     tier: back

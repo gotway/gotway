@@ -3,9 +3,9 @@ package controller
 import (
 	"net/http"
 
-	"github.com/gosmo-devs/microgateway/core"
-	"github.com/gosmo-devs/microgateway/model"
-	"github.com/gosmo-devs/microgateway/util"
+	"github.com/gotway/gotway/core"
+	"github.com/gotway/gotway/model"
+	"github.com/gotway/gotway/util"
 )
 
 // CacheController controller

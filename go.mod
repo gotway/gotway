@@ -1,4 +1,4 @@
-module github.com/gosmo-devs/microgateway
+module github.com/gotway/gotway
 
 go 1.14
 

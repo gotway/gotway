@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/gosmo-devs/microgateway/core"
-	"github.com/gosmo-devs/microgateway/log"
+	"github.com/gotway/gotway/core"
+	"github.com/gotway/gotway/log"
 )
 
 var serviceSet = "service"

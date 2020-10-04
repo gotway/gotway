@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/gosmo-devs/microgateway/config"
-	"github.com/gosmo-devs/microgateway/log"
+	"github.com/gotway/gotway/config"
+	"github.com/gotway/gotway/log"
 )
 
 // NewAPI Starts a new HTTP server

@@ -1,12 +1,12 @@
 version: "3.3"
 
 services:
-  microgateway:
-    image: gosmogolang/microgateway:0.0.2
+  gotway:
+    image: gotway/gotway:0.0.2
     depends_on:
       - redis
     environment: 
-      - MICROGATEWAY_SERVICE_PORT=8000
+      - GOTWAY_SERVICE_PORT=8000
       - ENV=production
       - DATABASE=redis
       - REDIS_SERVER=redis:6379 

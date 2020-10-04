@@ -3,7 +3,7 @@ package log
 import (
 	"testing"
 
-	"github.com/gosmo-devs/microgateway/config"
+	"github.com/gotway/gotway/config"
 )
 
 func TestInit(t *testing.T) {

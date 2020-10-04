@@ -13,11 +13,11 @@ vet:
 	go vet ./...
 lint: fmt vet
 build: lint clean
-	go build -o bin/microgateway -v .
+	go build -o bin/gotway -v .
 install:
 	go install -v .
 run: build
-	./bin/microgateway
+	./bin/gotway
 test: lint
 	go test -v ./... -coverprofile=cover.out
 cover: test

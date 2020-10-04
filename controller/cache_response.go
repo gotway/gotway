@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gosmo-devs/microgateway/core"
-	"github.com/gosmo-devs/microgateway/log"
+	"github.com/gotway/gotway/core"
+	"github.com/gotway/gotway/log"
 	"github.com/pquerna/cachecontrol/cacheobject"
 )
 

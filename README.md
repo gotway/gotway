@@ -1,24 +1,24 @@
-# microgateway
-[![Build Status](https://travis-ci.org/gosmo-devs/microgateway.svg)](https://travis-ci.org/gosmo-devs/microgateway)
-[![Coverage Status](https://coveralls.io/repos/github/gosmo-devs/microgateway/badge.svg?branch=tests)](https://coveralls.io/github/gosmo-devs/microgateway?branch=tests)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gosmo-devs/microgateway)](https://goreportcard.com/report/github.com/gosmo-devs/microgateway)
+# gotway
+[![Build Status](https://travis-ci.org/gotway/gotway.svg)](https://travis-ci.org/gotway/gotway)
+[![Coverage Status](https://coveralls.io/repos/github/gotway/gotway/badge.svg?branch=tests)](https://coveralls.io/github/gotway/gotway?branch=develop)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gotway/gotway)](https://goreportcard.com/report/github.com/gotway/gotway)
 
-A simple, lightweight and blazingly fast API microgateway 🚀
+A simple, lightweight and blazingly fast API gateway 🚀
 
 - API composition and dynamic routing
 - Support for **REST** and **gRPC** microservices
-- Configuration and object management via **Microgateway REST API**
-- **Discover services** dynamically in runtime by registering them in Microgateway API
+- Configuration and object management via **gotway REST API**
+- **Discover services** dynamically in runtime by registering them in gotway API
 - **Health checking** to make sure everything is up and running
-- **Cache** your service responses temporarily in Microgateway's Redis for improving your API response time
-- **Cache invalidation** using tags and paths via Microgateway API
-- ~10MB [Docker image](https://hub.docker.com/r/gosmogolang/microgateway/tags) available for multiple architectures
+- **Cache** your service responses temporarily in gotway's Redis for improving your API response time
+- **Cache invalidation** using tags and paths via gotway API
+- ~10MB [Docker image](https://hub.docker.com/r/gotway/gotway/tags) available for multiple architectures
 
 ---
 
 - [Installation 🌱](#installation-)
 - [Example 🙌](#example-)
-- [Roadmap 🛣️](https://github.com/gosmo-devs/microgateway/milestone/1)
+- [Roadmap 🛣️](https://github.com/gotway/gotway/milestone/1)
 - [Features ⚡](#features-)
     - [API 🌎](#api-) 
     - [Service discovery 🔭](#service-discovery-)
@@ -31,7 +31,7 @@ A simple, lightweight and blazingly fast API microgateway 🚀
 ## Installation 🌱
 
 ###### Environment variables
-Set up this [env variables](./config/config.go) for configuring your Microgateway instance.
+Set up this [env variables](./config/config.go) for configuring your gotway instance.
 
 
 ###### Install from source
@@ -49,7 +49,7 @@ $ docker-compose -f docker-compose.redis.yml -f docker-compose.yml up -d
 
 ## Example 🙌
 
-Let's try a real world scenario by testing a few [microservices](./microservices) with Microgateway. Choose one of the following alternatives:
+Let's try a real world scenario by testing a few [microservices](./microservices) with gotway. Choose one of the following alternatives:
 
 ###### Docker
 ```bash
@@ -73,18 +73,18 @@ You are now ready for start testing [Features ⚡](#features-).
 
 #### API 🌎
 
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2e80e5165001548d7d43#?env%5BMicrogateway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2e80e5165001548d7d43#?env%5Bgotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)
 
 #### Service discovery 🔭
 
-Services can be discovered in runtime by registering them in the Microgateway API.
+Services can be discovered in runtime by registering them in the gotway API.
 
 ###### REST
 
 We will register [catalog](./microservices/catalog) as an example:
 
 ```bash
-curl --request POST 'https://<microgateway>/api/service' \
+curl --request POST 'https://<gotway>/api/service' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "type": "rest",
@@ -94,20 +94,20 @@ curl --request POST 'https://<microgateway>/api/service' \
 ```
 
 After executing that command, our service will be available at
-`https://<microgateway>/<path>`. The following endpoints will be routed through microgateway:
+`https://<gotway>/<path>`. The following endpoints will be routed through gotway:
 
-- `GET https://<microgateway>/catalog/products`
-- `POST https://<microgateway>/catalog/product`
-- `GET https://<microgateway>/catalog/product/<id>`
-- `DELETE https://<microgateway>/catalog/product/<id>`
-- `PUT https://<microgateway>/catalog/product/<id>`
+- `GET https://<gotway>/catalog/products`
+- `POST https://<gotway>/catalog/product`
+- `GET https://<gotway>/catalog/product/<id>`
+- `DELETE https://<gotway>/catalog/product/<id>`
+- `PUT https://<gotway>/catalog/product/<id>`
 
 ###### gRPC
 
 We will register [route](./microservices/route) as an example:
 
 ```bash
-curl --request POST 'https://<microgateway>/api/service' \
+curl --request POST 'https://<gotway>/api/service' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "type": "grpc",
@@ -122,12 +122,12 @@ Where `route.Route` represents the package and the service name of your gRPC ser
 
 This will be defined in your [.proto](./microservices/route/pb/route.proto) file and will be used as path in the dynamic routing.
 
-In this case, the RPC methods routed through microgateway will be:
+In this case, the RPC methods routed through gotway will be:
 
-- `https://<microgateway>/route.Route/GetFeature`
-- `https://<microgateway>/route.Route/ListFeatures`
-- `https://<microgateway>/route.Route/RecordRoute`
-- `https://<microgateway>/route.Route/RouteChat`
+- `https://<gotway>/route.Route/GetFeature`
+- `https://<gotway>/route.Route/ListFeatures`
+- `https://<gotway>/route.Route/RecordRoute`
+- `https://<gotway>/route.Route/RouteChat`
 
 For testing them, we have a [gRPC go client](./microservices/route/client/client.go):
 ```bash
@@ -137,7 +137,7 @@ $ make cli
 
 #### Health checking 🚑
 
-Microgateway will make a health probe to check that our services are responding. In other case, a `502 Bad Gateway` will be returned.
+gotway will make a health probe to check that our services are responding. In other case, a `502 Bad Gateway` will be returned.
 
 ###### REST
 
@@ -153,10 +153,10 @@ An example of gRPC health checking protocol implementation can be found [here](.
 
 #### Cache 💾
 
-Store microservice responses temporarily in Microgateway for improving your API response time. You will need to specify the cache policy when registring your service:
+Store microservice responses temporarily in gotway for improving your API response time. You will need to specify the cache policy when registring your service:
 
 ```bash
-curl --request POST 'https://<microgateway>/api/service' \
+curl --request POST 'https://<gotway>/api/service' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "type": "rest",
@@ -186,7 +186,7 @@ Set `X-Cache-Tags: <tag>` custom headers from your microservice response to over
 Any cache tagged with `<tag>` can be invalidated with:
 
 ```bash
-curl --request POST 'https://<microgateway>/api/cache' \
+curl --request POST 'https://<gotway>/api/cache' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "tags": ["<tag>"]
@@ -194,7 +194,7 @@ curl --request POST 'https://<microgateway>/api/cache' \
 ```
 You can also provide a path to be invalidated:
 ```bash
-curl --request POST 'https://<microgateway>/api/cache' \
+curl --request POST 'https://<gotway>/api/cache' \
 --header 'Content-Type: application/json' \
 --data-raw '{
 {
@@ -211,7 +211,7 @@ curl --request POST 'https://<microgateway>/api/cache' \
 
 |Service|Client|Image|
 |-------|------|-----|
-|Microgateway|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2e80e5165001548d7d43#?env%5BMicrogateway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gosmogolang/microgateway](https://hub.docker.com/r/gosmogolang/microgateway/tags)|
-|[Catalog](./microservices/catalog)|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/ac7596f337b868ab0e6c#?env%5BMicrogateway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gosmogolang/catalog](https://hub.docker.com/r/gosmogolang/catalog/tags)|
-|[Stock](./microservices/stock)|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/bdb7fe928c1e93fb15e5#?env%5BMicrogateway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gosmogolang/stock](https://hub.docker.com/r/gosmogolang/stock/tags)|
-|[Route](./microservices/route)|[Go client](./microservices/route/client)|[gosmogolang/route](https://hub.docker.com/r/gosmogolang/route/tags)|
+|gotway|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2e80e5165001548d7d43#?env%5BGotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gotwaygateway/gotway](https://hub.docker.com/r/gotwaygateway/gotway/tags)|
+|[Catalog](./microservices/catalog)|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/ac7596f337b868ab0e6c#?env%5BGotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gotwaygateway/catalog](https://hub.docker.com/r/gotwaygateway/catalog/tags)|
+|[Stock](./microservices/stock)|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/bdb7fe928c1e93fb15e5#?env%5BGotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gotwaygateway/stock](https://hub.docker.com/r/gotwaygateway/stock/tags)|
+|[Route](./microservices/route)|[Go client](./microservices/route/client)|[gotwaygateway/route](https://hub.docker.com/r/gotwaygateway/route/tags)|

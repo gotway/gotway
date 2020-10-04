@@ -1,6 +1,6 @@
 package model
 
-import "github.com/gosmo-devs/microgateway/core"
+import "github.com/gotway/gotway/core"
 
 // ServiceRepositoryI interface
 type ServiceRepositoryI interface {

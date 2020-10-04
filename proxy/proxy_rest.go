@@ -5,7 +5,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/gosmo-devs/microgateway/util"
+	"github.com/gotway/gotway/util"
 )
 
 type proxyREST struct {

@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/gosmo-devs/microgateway/controller"
-	"github.com/gosmo-devs/microgateway/core"
+	"github.com/gotway/gotway/controller"
+	"github.com/gotway/gotway/core"
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {

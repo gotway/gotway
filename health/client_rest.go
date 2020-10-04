@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/gosmo-devs/microgateway/config"
-	"github.com/gosmo-devs/microgateway/core"
+	"github.com/gotway/gotway/config"
+	"github.com/gotway/gotway/core"
 )
 
 type clientREST struct {

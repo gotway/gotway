@@ -1,7 +1,7 @@
 package log
 
 import (
-	"github.com/gosmo-devs/microgateway/config"
+	"github.com/gotway/gotway/config"
 	"go.uber.org/zap"
 )
 

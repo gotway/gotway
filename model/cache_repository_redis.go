@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/gosmo-devs/microgateway/core"
+	"github.com/gotway/gotway/core"
 )
 
 type cacheRepositoryRedis struct{}

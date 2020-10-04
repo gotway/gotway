@@ -22,7 +22,7 @@ function deploy() {
     kubectl apply -f "$manifests"
 }
 
-deploy "microgateway" "$env" .
+deploy "gotway" "$env" .
 
 for ms in $(ls -d microservices/*); do
     name=$(basename "$ms")

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/gosmo-devs/microgateway/api"
-	"github.com/gosmo-devs/microgateway/controller"
-	"github.com/gosmo-devs/microgateway/health"
-	"github.com/gosmo-devs/microgateway/log"
-	"github.com/gosmo-devs/microgateway/model"
+	"github.com/gotway/gotway/api"
+	"github.com/gotway/gotway/controller"
+	"github.com/gotway/gotway/health"
+	"github.com/gotway/gotway/log"
+	"github.com/gotway/gotway/model"
 )
 
 func main() {

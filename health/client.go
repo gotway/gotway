@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/gosmo-devs/microgateway/core"
+	"github.com/gotway/gotway/core"
 )
 
 // Client interface

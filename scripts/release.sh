@@ -10,7 +10,7 @@ function release() {
     name="$1"
     tag="$2"
     path="$3"
-    image="gosmogolang/$name:$tag"
+    image="gotwaygateway/$name:$tag"
     platform="linux/amd64,linux/arm64,linux/arm"
 
     echo "🏗    Building '$image'. Context: '$path'"
@@ -19,7 +19,7 @@ function release() {
     docker buildx imagetools inspect "$image"
 }
 
-release "microgateway" "$tag" .
+release "gotway" "$tag" .
 
 for ms in $(ls -d microservices/*); do
     name=$(basename "$ms")

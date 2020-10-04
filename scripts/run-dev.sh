@@ -15,7 +15,7 @@ function new_tab() {
     tmux send-keys -t mgw:"$tab" "cd $path; make run" enter
 }
 
-new_tab "microgateway" .
+new_tab "gotway" .
 
 for ms in $(ls -d microservices/*); do
     name=$(basename "$ms")

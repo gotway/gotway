@@ -1,4 +1,4 @@
-module github.com/gosmo-devs/microsamples/catalog
+module github.com/gotway/microsamples/catalog
 
 go 1.14
 
