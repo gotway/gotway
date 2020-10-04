@@ -10,13 +10,13 @@ function release() {
     name="$1"
     tag="$2"
     path="$3"
-    image="gotwaygateway/$name:$tag"
+    image="gotwaygateway/$name"
     platform="linux/amd64,linux/arm64,linux/arm"
 
     echo "🏗    Building '$image'. Context: '$path'"
     docker buildx create --name "$name" --use --append
-    docker buildx build --platform "$platform" -t "$image" --push "$path"
-    docker buildx imagetools inspect "$image"
+    docker buildx build --platform "$platform" -t "$image:$tag" -t "$image:latest" --push "$path"
+    docker buildx imagetools inspect "$image:latest"
 }
 
 release "gotway" "$tag" .

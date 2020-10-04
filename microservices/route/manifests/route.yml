@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: stock
+  name: route
   namespace: gotway
   labels:
-    app: stock
+    app: route
     tier: back
 spec:
   selector:
-    app: stock
+    app: route
     tier: back
   ports:
     - port: 80
@@ -16,25 +16,25 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: stock
+  name: route
   namespace: gotway
   labels:
-    app: stock
+    app: route
     tier: back
 spec:
   selector:
     matchLabels:
-      app: stock
+      app: route
       tier: back
   template:
     metadata:
       labels:
-        app: stock
+        app: route
         tier: back
     spec:
       containers:
-        - name: stock
-          image: gotway/stock:0.0.2
+        - name: route
+          image: gotwaygateway/route
           imagePullPolicy: Always
           resources:
             requests:
@@ -46,20 +46,3 @@ spec:
           ports:
             - name: service-port
               containerPort: 80
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: service-port
-            initialDelaySeconds: 10
-            timeoutSeconds: 3
-            periodSeconds: 15
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: service-port
-            initialDelaySeconds: 10
-            timeoutSeconds: 3
-            periodSeconds: 15
-          envFrom:
-            - configMapRef:
-                name: stock

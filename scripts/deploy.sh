@@ -2,30 +2,23 @@
 
 set -e
 
-env=$1
-if [ -z "$env" ]; then
-    echo "❌    Environment argument is mandatory"
-    exit 1
-fi
-
 function deploy() {
     name="$1"
-    env="$2"
-    path="$3"
-    manifests="$path/manifests/$env"
+    path="$2"
+    manifests="$path/manifests/"
 
     if [ ! -d "$manifests" ]; then
         echo "❌    Manifests not found: '$manifests'"
         exit 1
     fi
-    echo "🚀    Deploying '$name' to '$env'. Context: '$path'"
+    echo "🚀    Deploying '$name'. Context: '$path'"
     kubectl apply -f "$manifests"
 }
 
-deploy "gotway" "$env" .
+deploy "gotway" .
 
 for ms in $(ls -d microservices/*); do
     name=$(basename "$ms")
     path="$ms"
-    deploy "$name" "$env" "$path"
+    deploy "$name" "$path"
 done

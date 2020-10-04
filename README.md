@@ -12,7 +12,7 @@ A simple, lightweight and blazingly fast API gateway 🚀
 - **Health checking** to make sure everything is up and running
 - **Cache** your service responses temporarily in gotway's Redis for improving your API response time
 - **Cache invalidation** using tags and paths via gotway API
-- ~10MB [Docker image](https://hub.docker.com/r/gotway/gotway/tags) available for multiple architectures
+- ~10MB [Docker image](https://hub.docker.com/r/gotwaygateway/gotway/tags) available for multiple architectures
 
 ---
 
@@ -47,23 +47,28 @@ $ make run
 $ docker-compose -f docker-compose.redis.yml -f docker-compose.yml up -d
 ```
 
+###### Kubernetes
+```bash
+$ kubectl apply -f manifests
+```
+
 ## Example 🙌
 
 Let's try a real world scenario by testing a few [microservices](./microservices) with gotway. Choose one of the following alternatives:
+
+###### Local + tmux
+```bash
+$ ./scripts/run-dev.sh
+```
 
 ###### Docker
 ```bash
 $ docker-compose -f docker-compose.redis.yml -f docker-compose.dev.yml up -d
 ```
 
-###### Docker + tmux
-```bash
-$ ./scripts/run-dev.sh
-```
-
 ###### Kubernetes
 ```
-$ ./scripts/deploy.sh <dev | pre>
+$ ./scripts/deploy.sh
 ```
 
 You are now ready for start testing [Features ⚡](#features-).
