@@ -1,4 +1,4 @@
-module github.com/mmontes11/go-grpc-routes
+module github.com/gotway/gotway/microservices/route
 
 go 1.14
 

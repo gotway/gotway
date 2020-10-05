@@ -1,7 +1,7 @@
 .PHONY: clean deps deps-sync fmt-srv fmt-cli fmt proto build srv run cli cli.mgw
 
 MGW_LOCAL_ARGS = -server localhost:8000 -tls true
-MGW_PRE_ARGS = -server gotway.duckdns.org:30000 -tls true
+MGW_PRO_ARGS = -server gotway.duckdns.org:30000 -tls true
 
 all: build
 clean:
@@ -24,5 +24,5 @@ srv: build
 run: srv
 cli: fmt-cli
 	go run client/*.go $(MGW_LOCAL_ARGS)
-cli-pre: fmt-cli
-	go run client/*.go $(MGW_PRE_ARGS)
+cli-pro: fmt-cli
+	go run client/*.go $(MGW_PRO_ARGS)

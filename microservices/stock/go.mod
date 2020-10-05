@@ -1,4 +1,4 @@
-module github.com/gotway/microsamples/stock
+module github.com/gotway/gotway/microservices/stock
 
 go 1.14
 

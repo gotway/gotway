@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	pb "github.com/mmontes11/go-grpc-routes/pb"
+	pb "github.com/gotway/gotway/microservices/route/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"

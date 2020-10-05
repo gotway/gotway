@@ -1,4 +1,4 @@
-module github.com/gotway/microsamples/catalog
+module github.com/gotway/gotway/microservices/catalog
 
 go 1.14
 

@@ -5,8 +5,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/mmontes11/go-grpc-routes/config"
-	"github.com/mmontes11/go-grpc-routes/server"
+	"github.com/gotway/gotway/microservices/route/config"
+	"github.com/gotway/gotway/microservices/route/server"
 )
 
 func main() {

@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"sync"
 
-	m "github.com/gotway/microsamples/stock/model"
-	"github.com/gotway/microsamples/stock/redis"
+	m "github.com/gotway/gotway/microservices/stock/model"
+	"github.com/gotway/gotway/microservices/stock/redis"
 )
 
 // UpsertStock upserts the stock of a product
