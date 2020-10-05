@@ -5,8 +5,18 @@ import (
 
 	"github.com/gotway/gotway/core"
 	"github.com/gotway/gotway/model"
-	"github.com/gotway/gotway/util"
 )
+
+// CacheControllerI interface
+type CacheControllerI interface {
+	IsCacheableRequest(r *http.Request) bool
+	GetCache(r *http.Request, serviceKey string) (core.Cache, error)
+	GetCacheDetail(r *http.Request, serviceKey string) (core.CacheDetail, error)
+	DeleteCacheByPath(paths []core.CachePath) error
+	DeleteCacheByTags(tags []string) error
+	ListenResponses()
+	HandleResponse(serviceKey string, r *http.Response) error
+}
 
 // CacheController controller
 type CacheController struct {
@@ -32,7 +42,10 @@ func (c CacheController) IsCacheableRequest(r *http.Request) bool {
 
 // GetCache gets a cached response for a request
 func (c CacheController) GetCache(r *http.Request, serviceKey string) (core.Cache, error) {
-	path := util.GetServiceRelativePath(r, serviceKey)
+	path, err := core.GetServiceRelativePath(r, serviceKey)
+	if err != nil {
+		return core.Cache{}, err
+	}
 	cache, err := c.cacheRepository.GetCache(path, serviceKey)
 	if err != nil {
 		return core.Cache{}, err
@@ -42,7 +55,10 @@ func (c CacheController) GetCache(r *http.Request, serviceKey string) (core.Cach
 
 // GetCacheDetail gets a cache with extra info
 func (c CacheController) GetCacheDetail(r *http.Request, serviceKey string) (core.CacheDetail, error) {
-	path := util.GetServiceRelativePath(r, serviceKey)
+	path, err := core.GetServiceRelativePath(r, serviceKey)
+	if err != nil {
+		return core.CacheDetail{}, err
+	}
 	cacheDetail, err := c.cacheRepository.GetCacheDetail(path, serviceKey)
 	if err != nil {
 		return core.CacheDetail{}, err

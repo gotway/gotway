@@ -5,7 +5,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/gotway/gotway/util"
+	"github.com/gotway/gotway/core"
 )
 
 type proxyREST struct {
@@ -13,7 +13,10 @@ type proxyREST struct {
 }
 
 func (p proxyREST) getTargetURL(r *http.Request) (*url.URL, error) {
-	path := util.GetServiceRelativePath(r, p.service.Path)
+	path, err := core.GetServiceRelativePath(r, p.service.Path)
+	if err != nil {
+		return nil, err
+	}
 	target, err := url.Parse(p.service.URL + path)
 	if err != nil {
 		return nil, err
