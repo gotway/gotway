@@ -20,7 +20,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gotway
-  namespace: pre-gotway
+  namespace: gotway
   labels:
     app: gotway
     tier: api-gateway
