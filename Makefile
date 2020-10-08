@@ -1,4 +1,4 @@
-.PHONY: clean deps deps-sync fmt vet lint build install run test cover
+.PHONY: clean deps deps-sync fmt vet lint build install run test cover mocks
 
 all: build
 clean:
@@ -22,3 +22,5 @@ test: lint
 	go test -v ./... -coverprofile=cover.out
 cover: test
 	go tool cover -html=cover.out
+mocks:
+	mockery --all --keeptree

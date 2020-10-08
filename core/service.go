@@ -3,6 +3,9 @@ package core
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 // Service defines the relevant info about a microservice
@@ -79,8 +82,26 @@ type ServicePage struct {
 	TotalCount int       `json:"totalCount"`
 }
 
-func errInvalidField(f string) error {
-	return fmt.Errorf("Invalid field '%s'", f)
+// GetServiceRelativePath retrieves the relative path of a service
+func GetServiceRelativePath(r *http.Request, servicePath string) (string, error) {
+	var b strings.Builder
+	if r.URL.Scheme != "" && r.URL.Host != "" {
+		root := fmt.Sprintf("%s://%s", r.URL.Scheme, r.URL.Host)
+		b.WriteString(root)
+	}
+	if servicePath != "" {
+		path := fmt.Sprintf("/%s", servicePath)
+		b.WriteString(path)
+	}
+
+	urlString := r.URL.String()
+	prefix := b.String()
+
+	if !strings.HasPrefix(urlString, prefix) {
+		return "", &ErrServiceNotFoundInURL{URL: r.URL, ServicePath: servicePath}
+	}
+
+	return strings.TrimPrefix(urlString, prefix), nil
 }
 
 // ErrServiceNotFound error for not found service
@@ -88,3 +109,17 @@ var ErrServiceNotFound = errors.New("Service not found")
 
 // ErrServiceAlreadyRegistered error for service already registered
 var ErrServiceAlreadyRegistered = errors.New("Service is already registered")
+
+// ErrServiceNotFoundInURL is returned when a service is not found in a URL
+type ErrServiceNotFoundInURL struct {
+	URL         *url.URL
+	ServicePath string
+}
+
+func (e *ErrServiceNotFoundInURL) Error() string {
+	return fmt.Sprintf("Service path '%s' not found in URL: %s", e.ServicePath, e.URL.String())
+}
+
+func errInvalidField(f string) error {
+	return fmt.Errorf("Invalid field '%s'", f)
+}

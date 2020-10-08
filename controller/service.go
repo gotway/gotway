@@ -9,6 +9,18 @@ import (
 	"github.com/gotway/gotway/proxy"
 )
 
+// ServiceControllerI interface
+type ServiceControllerI interface {
+	GetServices(offset, limit int) (core.ServicePage, error)
+	GetAllServiceKeys() []string
+	RegisterService(serviceDetail core.ServiceDetail) error
+	GetService(key string) (core.Service, error)
+	GetServiceDetail(key string) (core.ServiceDetail, error)
+	DeleteService(key string) error
+	UpdateServiceStatus(key string, status core.ServiceStatus)
+	ReverseProxy(w http.ResponseWriter, r *http.Request, service core.Service) error
+}
+
 // ServiceController controller
 type ServiceController struct {
 	serviceRepository     model.ServiceRepositoryI
@@ -26,7 +38,7 @@ func NewServiceController(serviceRepository model.ServiceRepositoryI,
 
 // GetServices get services paginated
 func (c ServiceController) GetServices(offset, limit int) (core.ServicePage, error) {
-	keys := c.serviceRepository.GetAllServiceKeys()
+	keys := c.GetAllServiceKeys()
 	if len(keys) == 0 || offset > len(keys) {
 		return core.ServicePage{}, core.ErrServiceNotFound
 	}
@@ -113,7 +125,7 @@ func (c ServiceController) UpdateServiceStatus(key string, status core.ServiceSt
 
 // ReverseProxy forwards traffic to a service
 func (c ServiceController) ReverseProxy(w http.ResponseWriter, r *http.Request, service core.Service) error {
-	p, err := proxy.NewProxy(service, Cache.handleResponse)
+	p, err := proxy.NewProxy(service, Cache.HandleResponse)
 	if err != nil {
 		return err
 	}

@@ -19,8 +19,8 @@ type response struct {
 	body         *io.ReadCloser
 }
 
-// Listen starts listening for responses
-func (c CacheController) Listen() {
+// ListenResponses starts listening for responses
+func (c CacheController) ListenResponses() {
 	go func() {
 		for {
 			select {
@@ -35,7 +35,8 @@ func (c CacheController) Listen() {
 	}()
 }
 
-func (c CacheController) handleResponse(serviceKey string, r *http.Response) error {
+// HandleResponse handles a response ans sends it to the channel
+func (c CacheController) HandleResponse(serviceKey string, r *http.Response) error {
 	if !c.isCacheableResponse(r, serviceKey) {
 		return nil
 	}
@@ -59,6 +60,7 @@ func (c CacheController) handleResponse(serviceKey string, r *http.Response) err
 	return nil
 }
 
+// IsCacheableResponse checks if a response is cacheable
 func (c CacheController) isCacheableResponse(r *http.Response, serviceKey string) bool {
 	if !c.IsCacheableRequest(r.Request) || headersDisallowCaching(r) {
 		return false

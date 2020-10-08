@@ -1,6 +1,9 @@
 package core
 
 import (
+	"fmt"
+	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -229,6 +232,65 @@ func TestValidateServiceDetail(t *testing.T) {
 			assert.Equal(t, err, tt.wantErr)
 		})
 	}
+}
+
+func TestGetServiceRelativePath(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/catalog/products", nil)
+	pathReq, _ := http.NewRequest(http.MethodGet, "/catalog/products", nil)
+
+	tests := []struct {
+		name             string
+		req              *http.Request
+		servicePath      string
+		wantRelativePath string
+		wantErr          error
+	}{
+		{
+			name:             "Service not found in URL error",
+			req:              req,
+			servicePath:      "foo",
+			wantRelativePath: "",
+			wantErr: &ErrServiceNotFoundInURL{
+				URL:         req.URL,
+				ServicePath: "foo",
+			},
+		},
+		{
+			name:             "Relative path with full URL",
+			req:              req,
+			servicePath:      "catalog",
+			wantRelativePath: "/products",
+			wantErr:          nil,
+		},
+		{
+			name:             "Relative path with path URL",
+			req:              pathReq,
+			servicePath:      "catalog",
+			wantRelativePath: "/products",
+			wantErr:          nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			relativePath, err := GetServiceRelativePath(tt.req, tt.servicePath)
+
+			assert.Equal(t, tt.wantRelativePath, relativePath)
+			assert.Equal(t, tt.wantErr, err)
+		})
+	}
+}
+
+func TestErrServiceNotFoundInURLFormat(t *testing.T) {
+	urlString := "http://api.gotway.com/catalog/products"
+	url, _ := url.Parse(urlString)
+	servicePath := "foo"
+	err := &ErrServiceNotFoundInURL{
+		URL:         url,
+		ServicePath: servicePath,
+	}
+
+	assert.EqualError(t, err, fmt.Sprintf("Service path '%s' not found in URL: %s", servicePath, urlString))
 }
 
 func TestStatusMarshal(t *testing.T) {

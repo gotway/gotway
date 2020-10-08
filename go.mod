@@ -6,6 +6,10 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/go-redis/redis/v8 v8.0.0-beta.7
 	github.com/gorilla/mux v1.7.4
+	github.com/gotway/gotway/microservices/catalog v0.0.0-20201005180910-6c2c9022606b // indirect
+	github.com/gotway/gotway/microservices/route v0.0.0-20201005180910-6c2c9022606b // indirect
+	github.com/gotway/gotway/microservices/stock v0.0.0-20201005180910-6c2c9022606b // indirect
+	github.com/jarcoal/httpmock v1.0.6
 	github.com/pquerna/cachecontrol v0.0.0-20200819021114-67c6ae64274f
 	github.com/stretchr/testify v1.6.1
 	go.opentelemetry.io/otel v0.10.0 // indirect
