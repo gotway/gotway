@@ -30,10 +30,16 @@ func updateServiceStatus() {
 	setToHealthy, setToIdle := getServicesToChangeStatus()
 
 	for _, service := range setToHealthy {
-		controller.Service.UpdateServiceStatus(service, core.ServiceStatusHealthy)
+		err := controller.Service.UpdateServiceStatus(service, core.ServiceStatusHealthy)
+		if err != nil {
+			log.Logger.Error(err)
+		}
 	}
 	for _, service := range setToIdle {
-		controller.Service.UpdateServiceStatus(service, core.ServiceStatusIdle)
+		err := controller.Service.UpdateServiceStatus(service, core.ServiceStatusIdle)
+		if err != nil {
+			log.Logger.Error(err)
+		}
 	}
 }
 

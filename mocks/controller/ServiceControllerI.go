@@ -137,6 +137,15 @@ func (_m *ServiceControllerI) ReverseProxy(w http.ResponseWriter, r *http.Reques
 }
 
 // UpdateServiceStatus provides a mock function with given fields: key, status
-func (_m *ServiceControllerI) UpdateServiceStatus(key string, status core.ServiceStatus) {
-	_m.Called(key, status)
+func (_m *ServiceControllerI) UpdateServiceStatus(key string, status core.ServiceStatus) error {
+	ret := _m.Called(key, status)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, core.ServiceStatus) error); ok {
+		r0 = rf(key, status)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }

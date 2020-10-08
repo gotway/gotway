@@ -16,80 +16,81 @@ import (
 	"github.com/gotway/gotway/core"
 )
 
-type cacheRepositoryRedis struct{}
+// CacheRepositoryRedis is a redis implementation for cache repo
+type CacheRepositoryRedis struct {
+	client *redis.Client
+}
 
-func (r cacheRepositoryRedis) StoreCache(cache core.CacheDetail, serviceKey string) error {
+func newCacheRepositoryRedis(client *redis.Client) CacheRepositoryRedis {
+	return CacheRepositoryRedis{client}
+}
+
+// StoreCache stores a cache
+func (r CacheRepositoryRedis) StoreCache(cache core.CacheDetail, serviceKey string) error {
 	cacheMap, err := newCacheMap(cache.StatusCode, cache.Body)
 	if err != nil {
 		return nil
 	}
-	cacheKey := getCacheRedisKey(cache.Path, serviceKey)
+	headersMap := newCacheHeadersMap(cache.Headers)
 	ttl := time.Duration(cache.TTL)
-	err = hsetTTL(cacheKey, cacheMap, ttl)
-	if err != nil {
-		return err
+
+	cacheKey := getCacheRedisKey(cache.Path, serviceKey)
+	headersKey := getCacheHeadersRedisKey(cache.Path, serviceKey)
+	tagsKey := getCacheTagsRedisKey(cache.Path, serviceKey)
+	keys := []string{cacheKey, headersKey, tagsKey}
+
+	pipe := r.client.TxPipeline()
+
+	pipe.HSet(ctx, cacheKey, cacheMap)
+	pipe.HSet(ctx, headersKey, headersMap)
+	pipe.SAdd(ctx, tagsKey, cache.Tags)
+	for _, key := range keys {
+		pipe.Expire(ctx, key, ttl)
 	}
 
-	cacheHeadersKey := getCacheHeadersRedisKey(cache.Path, serviceKey)
-	cacheHeadersMap := newCacheHeadersMap(cache.Headers)
-	err = hsetTTL(cacheHeadersKey, cacheHeadersMap, ttl)
-	if err != nil {
-		return err
-	}
+	_, err = pipe.Exec(ctx)
 
-	cacheTagsKey := getCacheTagsRedisKey(cache.Path, serviceKey)
-	err = saddTTL(cacheTagsKey, ttl, cache.Tags)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-func (r cacheRepositoryRedis) GetCache(path string, serviceKey string) (core.Cache, error) {
+// GetCache gets a cache
+func (r CacheRepositoryRedis) GetCache(path string, serviceKey string) (core.Cache, error) {
 	cacheKey := getCacheRedisKey(path, serviceKey)
-	cacheHeadersKey := getCacheHeadersRedisKey(path, serviceKey)
-	keys := []string{cacheKey, cacheHeadersKey}
+	headersKey := getCacheHeadersRedisKey(path, serviceKey)
 
-	pipe := client.Pipeline()
-	var cmds []*redis.StringStringMapCmd
-	for _, key := range keys {
-		cmd := pipe.HGetAll(context.Background(), key)
-		cmds = append(cmds, cmd)
-	}
+	pipe := r.client.TxPipeline()
 
-	_, err := pipe.Exec(context.Background())
-	if err != nil {
-		return core.Cache{}, nil
-	}
+	getCache := pipe.HGetAll(ctx, cacheKey)
+	getHeaders := pipe.HGetAll(ctx, headersKey)
 
-	cacheMap, headersMap := cmds[0].Val(), cmds[1].Val()
-	if len(cacheMap) == 0 || len(headersMap) == 0 {
-		return core.Cache{}, core.ErrCacheNotFound
-	}
-
-	cache, err := newCache(path, cacheMap, headersMap)
+	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return core.Cache{}, err
 	}
 
-	return cache, nil
+	cacheMap, headersMap := getCache.Val(), getHeaders.Val()
+	if len(cacheMap) == 0 || len(headersMap) == 0 {
+		return core.Cache{}, core.ErrCacheNotFound
+	}
+
+	return newCache(path, cacheMap, headersMap)
 }
 
-func (r cacheRepositoryRedis) GetCacheDetail(path string, serviceKey string) (core.CacheDetail, error) {
+// GetCacheDetail gets a extended version of a cache
+func (r CacheRepositoryRedis) GetCacheDetail(path string, serviceKey string) (core.CacheDetail, error) {
 	cache, err := r.GetCache(path, serviceKey)
 	if err != nil {
 		return core.CacheDetail{}, err
 	}
 
 	cacheKey := getCacheRedisKey(path, serviceKey)
-	ttl, err := client.TTL(context.Background(), cacheKey).Result()
+	ttl, err := r.client.TTL(context.Background(), cacheKey).Result()
 	if err != nil {
 		return core.CacheDetail{}, err
 	}
 
 	cacheTagsKey := getCacheTagsRedisKey(path, serviceKey)
-	tags, err := client.SMembers(context.Background(), cacheTagsKey).Result()
+	tags, err := r.client.SMembers(context.Background(), cacheTagsKey).Result()
 	if err != nil {
 		return core.CacheDetail{}, err
 	}
@@ -103,13 +104,14 @@ func (r cacheRepositoryRedis) GetCacheDetail(path string, serviceKey string) (co
 	return cacheDetail, nil
 }
 
-func (r cacheRepositoryRedis) DeleteCacheByPath(paths []core.CachePath) error {
+// DeleteCacheByPath deletes caches by specifying its path
+func (r CacheRepositoryRedis) DeleteCacheByPath(paths []core.CachePath) error {
 	cacheKeys := make([]string, len(paths))
 	for index, item := range paths {
 		cacheKeys[index] = getCacheRedisKey(item.Path, item.ServicePath)
 	}
 
-	ok, notFoundIndex, err := indexedExists(cacheKeys...)
+	ok, notFoundIndex, err := allExists(r.client, cacheKeys...)
 	if err != nil {
 		return err
 	}
@@ -119,17 +121,18 @@ func (r cacheRepositoryRedis) DeleteCacheByPath(paths []core.CachePath) error {
 		}
 	}
 
-	return deleteCaches(cacheKeys...)
+	return deleteCaches(r.client, cacheKeys...)
 }
 
-func (r cacheRepositoryRedis) DeleteCacheByTags(tags []string) error {
+// DeleteCacheByTags deletes caches by specifying its tags
+func (r CacheRepositoryRedis) DeleteCacheByTags(tags []string) error {
 	tmpTagsToDeleteKey := fmt.Sprintf("tmp:tags:delete:%d", time.Now().UnixNano())
-	err := client.SAdd(context.Background(), tmpTagsToDeleteKey, tags).Err()
+	err := r.client.SAdd(context.Background(), tmpTagsToDeleteKey, tags).Err()
 	if err != nil {
 		return err
 	}
 	defer func() error {
-		return client.Del(context.Background(), tmpTagsToDeleteKey).Err()
+		return r.client.Del(context.Background(), tmpTagsToDeleteKey).Err()
 	}()
 
 	var cursor uint64
@@ -138,7 +141,7 @@ func (r cacheRepositoryRedis) DeleteCacheByTags(tags []string) error {
 	for {
 		var keys []string
 		var err error
-		keys, cursor, err = client.Scan(context.Background(), cursor, "cache:*:tags", 20).Result()
+		keys, cursor, err = r.client.Scan(context.Background(), cursor, "cache:*:tags", 20).Result()
 		if err != nil {
 			return err
 		}
@@ -148,7 +151,7 @@ func (r cacheRepositoryRedis) DeleteCacheByTags(tags []string) error {
 			go func(keys, tags []string, wg *sync.WaitGroup) {
 				defer wg.Done()
 
-				pipe := client.Pipeline()
+				pipe := r.client.Pipeline()
 				var cmds []*redis.StringSliceCmd
 				for _, key := range keys {
 					cmd := pipe.SInter(context.Background(), key, tmpTagsToDeleteKey)
@@ -163,7 +166,7 @@ func (r cacheRepositoryRedis) DeleteCacheByTags(tags []string) error {
 				for index, cmd := range cmds {
 					intersection := cmd.Val()
 					if len(intersection) > 0 {
-						deleteCacheByCacheTagsKey(keys[index])
+						deleteCacheByCacheTagsKey(r.client, keys[index])
 					}
 				}
 			}(keys, tags, &wg)
@@ -234,7 +237,7 @@ func newCache(path string, cacheMap map[string]string, headersMap map[string]str
 	}, nil
 }
 
-func deleteCaches(cacheRedisKeys ...string) error {
+func deleteCaches(client redis.Cmdable, cacheRedisKeys ...string) error {
 	var keys []string
 	for _, cacheKey := range cacheRedisKeys {
 		cacheHeadersKey := fmt.Sprintf("%s:headers", cacheKey)
@@ -247,7 +250,7 @@ func deleteCaches(cacheRedisKeys ...string) error {
 	return client.Del(context.Background(), keys...).Err()
 }
 
-func deleteCacheByCacheTagsKey(cacheTagsKey string) error {
+func deleteCacheByCacheTagsKey(client redis.Cmdable, cacheTagsKey string) error {
 	parts := strings.Split(cacheTagsKey, ":tags")
-	return deleteCaches(parts[0])
+	return deleteCaches(client, parts[0])
 }

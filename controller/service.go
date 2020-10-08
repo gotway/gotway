@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gotway/gotway/core"
@@ -9,30 +8,14 @@ import (
 	"github.com/gotway/gotway/proxy"
 )
 
-// ServiceControllerI interface
-type ServiceControllerI interface {
-	GetServices(offset, limit int) (core.ServicePage, error)
-	GetAllServiceKeys() []string
-	RegisterService(serviceDetail core.ServiceDetail) error
-	GetService(key string) (core.Service, error)
-	GetServiceDetail(key string) (core.ServiceDetail, error)
-	DeleteService(key string) error
-	UpdateServiceStatus(key string, status core.ServiceStatus)
-	ReverseProxy(w http.ResponseWriter, r *http.Request, service core.Service) error
-}
-
 // ServiceController controller
 type ServiceController struct {
-	serviceRepository     model.ServiceRepositoryI
-	cacheConfigRepository model.CacheConfigRepositoryI
+	serviceRepository model.ServiceRepositoryI
 }
 
-// NewServiceController creates a new service controller
-func NewServiceController(serviceRepository model.ServiceRepositoryI,
-	cacheConfigRepository model.CacheConfigRepositoryI) ServiceController {
+func newServiceController(serviceRepository model.ServiceRepositoryI) ServiceController {
 	return ServiceController{
-		serviceRepository:     serviceRepository,
-		cacheConfigRepository: cacheConfigRepository,
+		serviceRepository: serviceRepository,
 	}
 }
 
@@ -65,62 +48,27 @@ func (c ServiceController) GetAllServiceKeys() []string {
 
 // RegisterService adds a new service
 func (c ServiceController) RegisterService(serviceDetail core.ServiceDetail) error {
-	err := c.serviceRepository.StoreService(serviceDetail.Service)
-	if err != nil {
-		return err
-	}
-	if !serviceDetail.Cache.IsEmpty() {
-		return c.cacheConfigRepository.StoreConfig(serviceDetail.Cache, serviceDetail.Service.Path)
-	}
-	return nil
+	return c.serviceRepository.StoreService(serviceDetail)
 }
 
 // GetService gets a service
 func (c ServiceController) GetService(key string) (core.Service, error) {
-	service, err := c.serviceRepository.GetService(key)
-	if err != nil {
-		return core.Service{}, err
-	}
-	return service, nil
+	return c.serviceRepository.GetService(key)
 }
 
-// GetServiceDetail gets a service
+// GetServiceDetail gets a service with extra info
 func (c ServiceController) GetServiceDetail(key string) (core.ServiceDetail, error) {
-	service, err := c.GetService(key)
-	if err != nil {
-		return core.ServiceDetail{}, err
-	}
-
-	config, err := c.cacheConfigRepository.GetConfig(key)
-	if err != nil {
-		if !errors.Is(err, core.ErrCacheNotFound) {
-			return core.ServiceDetail{}, err
-		}
-		config = core.DefaultCacheConfig
-	}
-
-	return core.ServiceDetail{
-		Service: service,
-		Cache:   config,
-	}, nil
+	return c.serviceRepository.GetServiceDetail(key)
 }
 
 // DeleteService deletes a service
 func (c ServiceController) DeleteService(key string) error {
-	err := c.serviceRepository.ExistService(key)
-	if err != nil {
-		return err
-	}
-	err = c.serviceRepository.DeleteService(key)
-	if err != nil {
-		return err
-	}
-	return c.cacheConfigRepository.DeleteConfig(key)
+	return c.serviceRepository.DeleteService(key)
 }
 
 // UpdateServiceStatus updates the status of a service
-func (c ServiceController) UpdateServiceStatus(key string, status core.ServiceStatus) {
-	c.serviceRepository.UpdateServiceStatus(key, status)
+func (c ServiceController) UpdateServiceStatus(key string, status core.ServiceStatus) error {
+	return c.serviceRepository.UpdateServiceStatus(key, status)
 }
 
 // ReverseProxy forwards traffic to a service

@@ -10,11 +10,9 @@ import (
 
 func TestInit(t *testing.T) {
 	serviceRepository := new(mocks.ServiceRepositoryI)
-	cacheConfigRepository := new(mocks.CacheConfigRepositoryI)
 	cacheRepository := new(mocks.CacheRepositoryI)
 
 	model.ServiceRepository = serviceRepository
-	model.CacheConfigRepository = cacheConfigRepository
 	model.CacheRepository = cacheRepository
 
 	Init()

@@ -7,31 +7,19 @@ import (
 	"github.com/gotway/gotway/model"
 )
 
-// CacheControllerI interface
-type CacheControllerI interface {
-	IsCacheableRequest(r *http.Request) bool
-	GetCache(r *http.Request, pathPrefix, serviceKey string) (core.Cache, error)
-	GetCacheDetail(r *http.Request, pathPrefix, serviceKey string) (core.CacheDetail, error)
-	DeleteCacheByPath(paths []core.CachePath) error
-	DeleteCacheByTags(tags []string) error
-	ListenResponses()
-	HandleResponse(serviceKey string, r *http.Response) error
-}
-
 // CacheController controller
 type CacheController struct {
-	cacheConfigRepository model.CacheConfigRepositoryI
-	cacheRepository       model.CacheRepositoryI
-	resChan               chan response
+	cacheRepository   model.CacheRepositoryI
+	serviceRepository model.ServiceRepositoryI
+	resChan           chan response
 }
 
-// NewCacheController creates a new cache controller
-func NewCacheController(cacheConfigRepository model.CacheConfigRepositoryI,
-	cacheRepository model.CacheRepositoryI) CacheController {
+func newCacheController(cacheRepository model.CacheRepositoryI,
+	serviceRepository model.ServiceRepositoryI) CacheController {
 	return CacheController{
-		cacheConfigRepository: cacheConfigRepository,
-		cacheRepository:       cacheRepository,
-		resChan:               make(chan response),
+		cacheRepository:   cacheRepository,
+		serviceRepository: serviceRepository,
+		resChan:           make(chan response),
 	}
 }
 
