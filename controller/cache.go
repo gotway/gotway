@@ -10,8 +10,8 @@ import (
 // CacheControllerI interface
 type CacheControllerI interface {
 	IsCacheableRequest(r *http.Request) bool
-	GetCache(r *http.Request, serviceKey string) (core.Cache, error)
-	GetCacheDetail(r *http.Request, serviceKey string) (core.CacheDetail, error)
+	GetCache(r *http.Request, pathPrefix, serviceKey string) (core.Cache, error)
+	GetCacheDetail(r *http.Request, pathPrefix, serviceKey string) (core.CacheDetail, error)
 	DeleteCacheByPath(paths []core.CachePath) error
 	DeleteCacheByTags(tags []string) error
 	ListenResponses()
@@ -41,8 +41,8 @@ func (c CacheController) IsCacheableRequest(r *http.Request) bool {
 }
 
 // GetCache gets a cached response for a request
-func (c CacheController) GetCache(r *http.Request, serviceKey string) (core.Cache, error) {
-	path, err := core.GetServiceRelativePath(r, serviceKey)
+func (c CacheController) GetCache(r *http.Request, pathPrefix, serviceKey string) (core.Cache, error) {
+	path, err := core.GetServiceRelativePathPrefixed(r, pathPrefix, serviceKey)
 	if err != nil {
 		return core.Cache{}, err
 	}
@@ -54,8 +54,8 @@ func (c CacheController) GetCache(r *http.Request, serviceKey string) (core.Cach
 }
 
 // GetCacheDetail gets a cache with extra info
-func (c CacheController) GetCacheDetail(r *http.Request, serviceKey string) (core.CacheDetail, error) {
-	path, err := core.GetServiceRelativePath(r, serviceKey)
+func (c CacheController) GetCacheDetail(r *http.Request, pathPrefix, serviceKey string) (core.CacheDetail, error) {
+	path, err := core.GetServiceRelativePathPrefixed(r, pathPrefix, serviceKey)
 	if err != nil {
 		return core.CacheDetail{}, err
 	}

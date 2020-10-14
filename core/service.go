@@ -82,16 +82,18 @@ type ServicePage struct {
 	TotalCount int       `json:"totalCount"`
 }
 
-// GetServiceRelativePath retrieves the relative path of a service
-func GetServiceRelativePath(r *http.Request, servicePath string) (string, error) {
+// GetServiceRelativePathPrefixed retrieves the relative path of a service that has a prefix
+func GetServiceRelativePathPrefixed(r *http.Request, pathPrefix string, servicePath string) (string, error) {
 	var b strings.Builder
 	if r.URL.Scheme != "" && r.URL.Host != "" {
 		root := fmt.Sprintf("%s://%s", r.URL.Scheme, r.URL.Host)
 		b.WriteString(root)
 	}
+	if pathPrefix != "" {
+		b.WriteString(fmt.Sprintf("/%s", pathPrefix))
+	}
 	if servicePath != "" {
-		path := fmt.Sprintf("/%s", servicePath)
-		b.WriteString(path)
+		b.WriteString(fmt.Sprintf("/%s", servicePath))
 	}
 
 	urlString := r.URL.String()
@@ -102,6 +104,11 @@ func GetServiceRelativePath(r *http.Request, servicePath string) (string, error)
 	}
 
 	return strings.TrimPrefix(urlString, prefix), nil
+}
+
+// GetServiceRelativePath retrieves the relative path of a service
+func GetServiceRelativePath(r *http.Request, servicePath string) (string, error) {
+	return GetServiceRelativePathPrefixed(r, "", servicePath)
 }
 
 // ErrServiceNotFound error for not found service

@@ -20,7 +20,7 @@ func cacheMiddleware(next http.Handler) http.Handler {
 
 		log.Logger.Debug("Checking cache")
 		serviceKey := getServiceKey(r)
-		cache, err := controller.Cache.GetCache(r, serviceKey)
+		cache, err := controller.Cache.GetCache(r, "", serviceKey)
 		if err != nil {
 			if !errors.Is(err, core.ErrCacheNotFound) {
 				log.Logger.Error(err)

@@ -237,10 +237,12 @@ func TestValidateServiceDetail(t *testing.T) {
 func TestGetServiceRelativePath(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/catalog/products", nil)
 	pathReq, _ := http.NewRequest(http.MethodGet, "/catalog/products", nil)
+	pathPrefixReq, _ := http.NewRequest(http.MethodGet, "/api/cache/catalog/products", nil)
 
 	tests := []struct {
 		name             string
 		req              *http.Request
+		pathPrefix       string
 		servicePath      string
 		wantRelativePath string
 		wantErr          error
@@ -248,6 +250,7 @@ func TestGetServiceRelativePath(t *testing.T) {
 		{
 			name:             "Service not found in URL error",
 			req:              req,
+			pathPrefix:       "",
 			servicePath:      "foo",
 			wantRelativePath: "",
 			wantErr: &ErrServiceNotFoundInURL{
@@ -258,6 +261,7 @@ func TestGetServiceRelativePath(t *testing.T) {
 		{
 			name:             "Relative path with full URL",
 			req:              req,
+			pathPrefix:       "",
 			servicePath:      "catalog",
 			wantRelativePath: "/products",
 			wantErr:          nil,
@@ -265,6 +269,15 @@ func TestGetServiceRelativePath(t *testing.T) {
 		{
 			name:             "Relative path with path URL",
 			req:              pathReq,
+			pathPrefix:       "",
+			servicePath:      "catalog",
+			wantRelativePath: "/products",
+			wantErr:          nil,
+		},
+		{
+			name:             "Relative path with path URL and path prefix",
+			req:              pathPrefixReq,
+			pathPrefix:       "api/cache",
 			servicePath:      "catalog",
 			wantRelativePath: "/products",
 			wantErr:          nil,
@@ -273,7 +286,13 @@ func TestGetServiceRelativePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			relativePath, err := GetServiceRelativePath(tt.req, tt.servicePath)
+			var relativePath string
+			var err error
+			if tt.pathPrefix != "" {
+				relativePath, err = GetServiceRelativePathPrefixed(tt.req, tt.pathPrefix, tt.servicePath)
+			} else {
+				relativePath, err = GetServiceRelativePath(tt.req, tt.servicePath)
+			}
 
 			assert.Equal(t, tt.wantRelativePath, relativePath)
 			assert.Equal(t, tt.wantErr, err)

@@ -124,7 +124,7 @@ func deleteCacheHandler(w http.ResponseWriter, r *http.Request) {
 func getCacheHandler(w http.ResponseWriter, r *http.Request) {
 	servicePath := getServiceKey(r)
 
-	cacheDetail, err := controller.Cache.GetCacheDetail(r, servicePath)
+	cacheDetail, err := controller.Cache.GetCacheDetail(r, "api/cache", servicePath)
 	if err != nil {
 		if errors.Is(err, core.ErrCacheNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

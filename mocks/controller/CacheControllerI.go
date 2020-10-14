@@ -43,20 +43,20 @@ func (_m *CacheControllerI) DeleteCacheByTags(tags []string) error {
 	return r0
 }
 
-// GetCache provides a mock function with given fields: r, serviceKey
-func (_m *CacheControllerI) GetCache(r *http.Request, serviceKey string) (core.Cache, error) {
-	ret := _m.Called(r, serviceKey)
+// GetCache provides a mock function with given fields: r, pathPrefix, serviceKey
+func (_m *CacheControllerI) GetCache(r *http.Request, pathPrefix string, serviceKey string) (core.Cache, error) {
+	ret := _m.Called(r, pathPrefix, serviceKey)
 
 	var r0 core.Cache
-	if rf, ok := ret.Get(0).(func(*http.Request, string) core.Cache); ok {
-		r0 = rf(r, serviceKey)
+	if rf, ok := ret.Get(0).(func(*http.Request, string, string) core.Cache); ok {
+		r0 = rf(r, pathPrefix, serviceKey)
 	} else {
 		r0 = ret.Get(0).(core.Cache)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*http.Request, string) error); ok {
-		r1 = rf(r, serviceKey)
+	if rf, ok := ret.Get(1).(func(*http.Request, string, string) error); ok {
+		r1 = rf(r, pathPrefix, serviceKey)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -64,20 +64,20 @@ func (_m *CacheControllerI) GetCache(r *http.Request, serviceKey string) (core.C
 	return r0, r1
 }
 
-// GetCacheDetail provides a mock function with given fields: r, serviceKey
-func (_m *CacheControllerI) GetCacheDetail(r *http.Request, serviceKey string) (core.CacheDetail, error) {
-	ret := _m.Called(r, serviceKey)
+// GetCacheDetail provides a mock function with given fields: r, pathPrefix, serviceKey
+func (_m *CacheControllerI) GetCacheDetail(r *http.Request, pathPrefix string, serviceKey string) (core.CacheDetail, error) {
+	ret := _m.Called(r, pathPrefix, serviceKey)
 
 	var r0 core.CacheDetail
-	if rf, ok := ret.Get(0).(func(*http.Request, string) core.CacheDetail); ok {
-		r0 = rf(r, serviceKey)
+	if rf, ok := ret.Get(0).(func(*http.Request, string, string) core.CacheDetail); ok {
+		r0 = rf(r, pathPrefix, serviceKey)
 	} else {
 		r0 = ret.Get(0).(core.CacheDetail)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*http.Request, string) error); ok {
-		r1 = rf(r, serviceKey)
+	if rf, ok := ret.Get(1).(func(*http.Request, string, string) error); ok {
+		r1 = rf(r, pathPrefix, serviceKey)
 	} else {
 		r1 = ret.Error(1)
 	}
