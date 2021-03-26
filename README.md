@@ -1,6 +1,8 @@
 # gotway
-[![Build Status](https://travis-ci.org/gotway/gotway.svg)](https://travis-ci.org/gotway/gotway)
-[![Coverage Status](https://coveralls.io/repos/github/gotway/gotway/badge.svg?branch=develop)](https://coveralls.io/github/gotway/gotway?branch=develop)
+[![Lint](https://github.com/gotway/gotway/workflows/Lint/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ALint)
+[![Build](https://github.com/gotway/gotway/workflows/Build/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ABuild)
+[![Test](https://github.com/gotway/gotway/workflows/Test/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ATest)
+[![Release](https://github.com/gotway/gotway/workflows/Release/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ARelease)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gotway/gotway)](https://goreportcard.com/report/github.com/gotway/gotway)
 
 A simple, lightweight and blazingly fast API gateway 🚀
