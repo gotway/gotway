@@ -48,6 +48,8 @@ var (
 	Database = getEnv("DATABASE", "redis")
 	// RedisServer indicates the URL for the redis client
 	RedisServer = getEnv("REDIS_SERVER", "127.0.0.1:6379")
+	// RedisServer indicates the database for the redis client
+	RedisDatabase = getIntEnv("REDIS_DATABASE", 0)
 	// HealthCheckInterval is the interval between health checks
 	HealthCheckInterval = time.Duration(getIntEnv("HEALTH_CHECK_INTERVAL_SECONDS", 10)) * time.Second
 	// HealthCheckTimeout is the timeout for health check

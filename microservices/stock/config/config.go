@@ -28,12 +28,14 @@ func getEnvInt(key string, defaultValue int) int {
 var (
 	// Port indicates the Stock API service port. It uses default K8s service port env variable
 	Port = getEnvInt("STOCK_SERVICE_PORT", 10000)
+	// RedisURL indicates the URL of redis
+	RedisURL = getEnv("REDIS_URL", "localhost:6379")
+	// RedisURL indicates the database of redis
+	RedisDatabase = getEnvInt("REDIS_DATABASE", 1)
 	// RedisPrefix is the prefix to be added to the keys
 	RedisPrefix = getEnv("REDIS_PREFIX", "stock::")
 	// RedisTTLDefault indicates the default time to live of the keys in seconds. 5 minutes by default
 	RedisTTLDefault = getEnvInt("REDIS_TTL_DEFAULT", 300)
 	// RedisTTLMax indicates the maximum time to live of the keys in seconds. 1 day by default
 	RedisTTLMax = getEnvInt("REDIS_TTL_MAX", 86400)
-	// RedisURL indicates the URL of redis
-	RedisURL = getEnv("REDIS_URL", "localhost:6379")
 )
