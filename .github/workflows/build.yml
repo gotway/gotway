@@ -45,7 +45,7 @@ jobs:
       - name: Bin Route
         uses: actions/upload-artifact@v2
         with:
-          name: catalog
+          name: route
           path: ./microservices/route/bin/route
 
       - name: Bin Stock
