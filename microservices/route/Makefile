@@ -17,7 +17,7 @@ fmt-cli:
 fmt: fmt-srv fmt-cli
 proto:
 	protoc -I pb/ --go_opt=paths=source_relative --go_out=plugins=grpc:pb pb/*.proto
-build: fmt-srv proto clean
+build: fmt-srv clean
 	go build -o bin/route -v .
 srv: build
 	./bin/route

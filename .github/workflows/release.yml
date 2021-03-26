@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable experimental
+        run: |
+          echo $'{\n"experimental": true\n}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+
+      - name: Run Qemu
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Release
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: ./scripts/release.sh

@@ -54,6 +54,32 @@ autoscaling:
 
 nodeSelector: {}
 
+
+serviceExamples:
+  enabled: true
+
+  catalog:
+    image:
+      repository: gotwaygateway/catalog
+      pullPolicy: IfNotPresent
+      tag: "v0.0.1"
+
+    service:
+      type: ClusterIP
+      port: 80
+
+  route:
+    image:
+      repository: gotwaygateway/route
+      pullPolicy: IfNotPresent
+      tag: "v0.0.1"
+
+    service:
+      type: ClusterIP
+      port: 80
+
+  stock:
+
 # dependencies
 
 redis:
