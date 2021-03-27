@@ -9,7 +9,7 @@ image:
 service:
   type: NodePort
   interalPort: 443
-  externalPort: 31000
+  externalPort: 30000
 
 tlsEnabled: true
 
@@ -54,7 +54,6 @@ autoscaling:
 
 nodeSelector: {}
 
-
 serviceExamples:
   enabled: true
 
@@ -68,6 +67,20 @@ serviceExamples:
       type: ClusterIP
       port: 80
 
+    livenessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+    
+    readinessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+
+    resources: {}
+
+    nodeSelector: {}
+
   route:
     image:
       repository: gotwaygateway/route
@@ -78,7 +91,40 @@ serviceExamples:
       type: ClusterIP
       port: 80
 
+    resources: {}
+
+    nodeSelector: {}
+
   stock:
+    image:
+      repository: gotwaygateway/stock
+      pullPolicy: IfNotPresent
+      tag: "v0.0.1"
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    redis:
+      address: gotway-redis-master:6379
+      db: 1
+      prefix: "stock::"
+      ttlDefault: 300
+      ttlMax: 86400
+
+    livenessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+    
+    readinessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+    
+    resources: {}
+
+    nodeSelector: {}
 
 # dependencies
 

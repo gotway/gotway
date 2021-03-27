@@ -33,9 +33,8 @@ Create chart name and version as used by the chart label.
 {{/*
 Common labels
 */}}
-{{- define "gotway.labels" -}}
+{{- define "gotway.commonLabels" -}}
 helm.sh/chart: {{ include "gotway.chart" . }}
-{{ include "gotway.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -48,4 +47,81 @@ Selector labels
 {{- define "gotway.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "gotway.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Labels
+*/}}
+{{- define "gotway.labels" -}}
+{{ include "gotway.commonLabels" . }}
+{{ include "gotway.selectorLabels" . }}
+{{- end }}
+
+{{/*
+Full name Catalog
+*/}}
+{{- define "gotway.fullnameCatalog" -}}
+{{- printf "%s-%s" (include "gotway.fullname" .) "catalog" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Selector labels Catalog
+*/}}
+{{- define "gotway.selectorLabelsCatalog" -}}
+app.kubernetes.io/name: {{ include "gotway.fullnameCatalog" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Labels Catalog
+*/}}
+{{- define "gotway.labelsCatalog" -}}
+{{ include "gotway.commonLabels" . }}
+{{ include "gotway.selectorLabelsCatalog" . }}
+{{- end }}
+
+{{/*
+Full name Route
+*/}}
+{{- define "gotway.fullnameRoute" -}}
+{{- printf "%s-%s" (include "gotway.fullname" .) "route" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Selector labels Route
+*/}}
+{{- define "gotway.selectorLabelsRoute" -}}
+app.kubernetes.io/name: {{ include "gotway.fullnameRoute" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Labels Route
+*/}}
+{{- define "gotway.labelsRoute" -}}
+{{ include "gotway.commonLabels" . }}
+{{ include "gotway.selectorLabelsRoute" . }}
+{{- end }}
+
+{{/*
+Full name Stock
+*/}}
+{{- define "gotway.fullnameStock" -}}
+{{- printf "%s-%s" (include "gotway.fullname" .) "stock" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Selector labels Stock
+*/}}
+{{- define "gotway.selectorLabelsStock" -}}
+app.kubernetes.io/name: {{ include "gotway.fullnameStock" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Labels Stock
+*/}}
+{{- define "gotway.labelsStock" -}}
+{{ include "gotway.commonLabels" . }}
+{{ include "gotway.selectorLabelsStock" . }}
 {{- end }}

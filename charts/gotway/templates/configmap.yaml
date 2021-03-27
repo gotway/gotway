@@ -5,6 +5,7 @@ metadata:
   labels:
     {{ include "gotway.labels" . | nindent 4 }}
 data:
+  PORT: {{ .Values.service.interalPort | quote }}
   DATABASE: {{ .Values.databaseType }}
   ENV: {{ .Values.env }}
   REDIS_SERVER: {{ .Values.redisConfig.address }}

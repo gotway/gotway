@@ -1,0 +1,16 @@
+{{ if $.Values.serviceExamples.enabled }}
+{{ with $.Values.serviceExamples.route }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gotway.fullnameRoute" $ }}
+  labels:
+    {{- include "gotway.labelsRoute" $ | nindent 4 }}
+spec:
+  type: {{ .service.type }}
+  ports:
+    - port: {{ .service.port }}
+  selector:
+    {{ include "gotway.selectorLabelsRoute" $ | nindent 4 }}
+{{ end }}
+{{ end }}
