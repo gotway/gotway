@@ -26,8 +26,8 @@ func getEnvInt(key string, defaultValue int) int {
 }
 
 var (
-	// Port indicates the Stock API service port. It uses default K8s service port env variable
-	Port = getEnvInt("STOCK_SERVICE_PORT", 10000)
+	// Port indicates the Stock API service port
+	Port = getEnvInt("PORT", 10000)
 	// RedisURL indicates the URL of redis
 	RedisURL = getEnv("REDIS_URL", "localhost:6379")
 	// RedisURL indicates the database of redis

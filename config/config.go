@@ -41,7 +41,7 @@ func getIntEnv(key string, defaultValue int) int {
 
 var (
 	// Port indicates the gotway API service port. It uses default K8s service port env variable
-	Port = getEnv("GOTWAY_SERVICE_PORT", "8000")
+	Port = getEnv("PORT", "8000")
 	// Env indicates the environment name
 	Env = getEnv("ENV", "development")
 	// Database indicates which database is used for data storage
