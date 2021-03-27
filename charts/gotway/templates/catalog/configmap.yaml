@@ -1,0 +1,12 @@
+{{ if $.Values.serviceExamples.enabled }}
+{{ with $.Values.serviceExamples.catalog }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gotway.fullnameCatalog" $ }}
+  labels:
+    {{ include "gotway.labelsCatalog" $ | nindent 4 }}
+data:
+  PORT: {{ .service.port | quote }}
+{{ end }}
+{{ end }}

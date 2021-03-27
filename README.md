@@ -1,6 +1,8 @@
 # gotway
-[![Build Status](https://travis-ci.org/gotway/gotway.svg)](https://travis-ci.org/gotway/gotway)
-[![Coverage Status](https://coveralls.io/repos/github/gotway/gotway/badge.svg?branch=develop)](https://coveralls.io/github/gotway/gotway?branch=develop)
+[![Lint](https://github.com/gotway/gotway/workflows/Lint/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ALint)
+[![Build](https://github.com/gotway/gotway/workflows/Build/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ABuild)
+[![Test](https://github.com/gotway/gotway/workflows/Test/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ATest)
+[![Release](https://github.com/gotway/gotway/workflows/Release/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ARelease)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gotway/gotway)](https://goreportcard.com/report/github.com/gotway/gotway)
 
 A simple, lightweight and blazingly fast API gateway 🚀
@@ -17,10 +19,8 @@ A simple, lightweight and blazingly fast API gateway 🚀
 ---
 
 - [Installation 🌱](#installation-)
-- [Example 🙌](#example-)
 - [Roadmap 🛣️](https://github.com/gotway/gotway/milestone/1)
 - [Features ⚡](#features-)
-    - [API 🌎](#api-) 
     - [Service discovery 🔭](#service-discovery-)
     - [Health checking 🚑](#health-checking-)
     - [Cache 💾](#cache-)
@@ -47,38 +47,12 @@ $ make run
 $ docker-compose -f docker-compose.redis.yml -f docker-compose.yml up -d
 ```
 
-###### Kubernetes
+###### Kubernetes + Helm
 ```bash
-$ kubectl apply -f manifests
+$ helm install gotway charts/gotway
 ```
-
-## Example 🙌
-
-Let's try a real world scenario by testing a few [microservices](./microservices) with gotway. Choose one of the following alternatives:
-
-###### Local + tmux
-```bash
-$ ./scripts/run-dev.sh
-```
-
-###### Docker
-```bash
-$ docker-compose -f docker-compose.redis.yml -f docker-compose.dev.yml up -d
-```
-
-###### Kubernetes
-```
-$ ./scripts/deploy.sh
-```
-
-You are now ready for start testing [Features ⚡](#features-).
-
 
 ## Features ⚡
-
-#### API 🌎
-
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2e80e5165001548d7d43#?env%5Bgotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)
 
 #### Service discovery 🔭
 
@@ -211,7 +185,6 @@ curl --request POST 'https://<gotway>/api/cache' \
     ]
 }'
 ```
-
 ## Services ⚙
 
 |Service|Client|Image|

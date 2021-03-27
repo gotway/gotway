@@ -21,6 +21,6 @@ run: build
 test: lint
 	go test -v ./... -coverprofile=cover.out
 cover: test
-	go tool cover -html=cover.out
+	go tool cover -html=cover.out -o=cover.html
 mocks:
 	mockery --all --keeptree

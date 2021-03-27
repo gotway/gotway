@@ -1,0 +1,38 @@
+{{ if $.Values.serviceExamples.enabled }}
+{{ with $.Values.serviceExamples.route }}
+{{ $fullName := include "gotway.fullnameRoute" $ }}
+{{ $selectorLabels := include "gotway.selectorLabelsRoute" $ }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{ include "gotway.labelsRoute" $ | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{ $selectorLabels | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ $selectorLabels | nindent 8  }}
+    spec:
+      containers:
+        - name: {{ $fullName }}
+          image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ .image.pullPolicy }}
+          ports:
+            - containerPort: {{ .service.port }}
+          {{ with .resources }}
+          resources:
+          {{ toYaml . | nindent 12 }}
+          {{ end }}
+          {{ with .nodeSelector }}
+          nodeSelector:
+          {{ toYaml . | nindent 12 }}
+          {{ end}}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}
+{{ end }}
+{{ end }}

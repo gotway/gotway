@@ -1,0 +1,134 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: gotwaygateway/gotway
+  pullPolicy: IfNotPresent
+  tag: "0.0.1"
+
+service:
+  type: NodePort
+  interalPort: 443
+  externalPort: 30000
+
+tlsEnabled: true
+
+livenessProbe:
+  initialDelaySeconds: 10
+  timeoutSeconds: 3
+  periodSeconds: 15
+    
+readinessProbe:
+  initialDelaySeconds: 10
+  timeoutSeconds: 3
+  periodSeconds: 15
+
+ingressRoute:
+  enabled: true
+  host: api.gotway.duckdns.org
+  entryPoints:
+    - websecure
+
+env: production
+
+databaseType: redis
+
+redisConfig:
+  address: gotway-redis-master:6379
+  db: 0
+
+healthCheck:
+  intervalSeconds: 10
+  timeoutSeconds: 5
+
+resources: {}
+
+replicaCount: 1
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 50
+  targetMemoryUtilizationPercentage: 50
+
+nodeSelector: {}
+
+serviceExamples:
+  enabled: true
+
+  catalog:
+    image:
+      repository: gotwaygateway/catalog
+      pullPolicy: IfNotPresent
+      tag: "v0.0.1"
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    livenessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+    
+    readinessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+
+    resources: {}
+
+    nodeSelector: {}
+
+  route:
+    image:
+      repository: gotwaygateway/route
+      pullPolicy: IfNotPresent
+      tag: "v0.0.1"
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    resources: {}
+
+    nodeSelector: {}
+
+  stock:
+    image:
+      repository: gotwaygateway/stock
+      pullPolicy: IfNotPresent
+      tag: "v0.0.1"
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    redis:
+      address: gotway-redis-master:6379
+      db: 1
+      prefix: "stock::"
+      ttlDefault: 300
+      ttlMax: 86400
+
+    livenessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+    
+    readinessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+    
+    resources: {}
+
+    nodeSelector: {}
+
+# dependencies
+
+redis:
+  cluster:
+    enabled: false
+  usePassword: false

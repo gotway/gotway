@@ -1,0 +1,21 @@
+{{ if .Values.ingressRoute.enabled }}
+{{ $fullName := include "gotway.fullname" . }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{ include "gotway.labels" $ | nindent 4 }}
+spec:
+  entryPoints:
+    {{ range $entrypoint := .Values.ingressRoute.entryPoints }}
+    - {{ $entrypoint }}
+    {{ end }}
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.ingressRoute.host }}`)
+      services:
+        - kind: Service
+          name: {{ $fullName }}
+          port: {{ .Values.service.externalPort }}
+{{ end }}

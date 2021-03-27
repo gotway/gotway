@@ -26,5 +26,5 @@ func getBoolEnv(key string, defaultValue bool) bool {
 
 var (
 	// Port indicates the server port
-	Port = getEnv("ROUTE_SERVICE_PORT", "11000")
+	Port = getEnv("PORT", "11000")
 )

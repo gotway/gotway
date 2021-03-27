@@ -1,0 +1,69 @@
+{{ $fullName := include "gotway.fullname" . }}
+{{ $selectorLabels := include "gotway.selectorLabels" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{ include "gotway.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{ $selectorLabels | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ $selectorLabels | nindent 8  }}
+    spec:
+      containers:
+        - name: {{ $fullName }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: service
+              containerPort: {{ .Values.service.interalPort }}
+          livenessProbe:
+            httpGet:
+              {{ if .Values.tlsEnabled }}
+              scheme: HTTPS
+              {{ else }}
+              scheme: HTTP
+              {{ end }}
+              path: /api/health
+              port: service
+            {{ with .Values.livenessProbe}}
+            {{ toYaml . | nindent 12 }}
+            {{ end }}
+          readinessProbe:
+            httpGet:
+              {{ if .Values.tlsEnabled }}
+              scheme: HTTPS
+              {{ else }}
+              scheme: HTTP
+              {{ end }}
+              path: /api/health
+              port: service
+            {{ with .Values.readinessProbe }}
+              {{ toYaml . | nindent 12  }}
+            {{ end }}
+          {{ with .resources }}
+          resources:
+          {{ toYaml . | nindent 12 }}
+          {{ end }}
+          {{ with .nodeSelector }}
+          nodeSelector:
+          {{ toYaml . | nindent 12 }}
+          {{ end}}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}
+      {{ if .Values.tlsEnabled }}
+          volumeMounts:
+          - name: tls
+            mountPath: "/etc/ssl"
+            readOnly: true
+      volumes:
+      - name: tls
+        secret:
+          secretName: {{ $fullName }}
+      {{ end }}

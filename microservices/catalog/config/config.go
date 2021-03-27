@@ -11,5 +11,5 @@ func getEnv(key string, defaultValue string) string {
 
 var (
 	// Port indicates the Catalog API service port. It uses default K8s service port env variable
-	Port = getEnv("CATALOG_SERVICE_PORT", "9000")
+	Port = getEnv("PORT", "9000")
 )

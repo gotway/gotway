@@ -16,6 +16,7 @@ var client *redis.Client
 func Init() {
 	client = redis.NewClient(&redis.Options{
 		Addr: conf.RedisURL,
+		DB:   conf.RedisDatabase,
 	})
 	err := client.Ping(ctx.Background()).Err()
 	if err != nil {
