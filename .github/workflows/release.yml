@@ -10,13 +10,11 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     steps:
-      - name: Enable experimental
-        run: |
-          echo $'{\n"experimental": true\n}' | sudo tee /etc/docker/daemon.json
-          sudo service docker restart
-
-      - name: Run Qemu
-        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v1
+      
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
       - name: Check out code
         uses: actions/checkout@v2
