@@ -1,0 +1,29 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  release:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        
+      - uses: azure/setup-helm@v1
+        with:
+          version: "v3.5.3"
+        id: install
+
+      - uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          context: mmontes-dev
+        id: setcontext
+
+      - name: Deploy
+        run: ./scripts/deploy.sh
