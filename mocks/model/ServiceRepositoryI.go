@@ -26,20 +26,6 @@ func (_m *ServiceRepositoryI) DeleteService(key string) error {
 	return r0
 }
 
-// ExistService provides a mock function with given fields: key
-func (_m *ServiceRepositoryI) ExistService(key string) error {
-	ret := _m.Called(key)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(key)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // GetAllServiceKeys provides a mock function with given fields:
 func (_m *ServiceRepositoryI) GetAllServiceKeys() []string {
 	ret := _m.Called()
@@ -65,6 +51,48 @@ func (_m *ServiceRepositoryI) GetService(key string) (core.Service, error) {
 		r0 = rf(key)
 	} else {
 		r0 = ret.Get(0).(core.Service)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetServiceCache provides a mock function with given fields: key
+func (_m *ServiceRepositoryI) GetServiceCache(key string) (core.CacheConfig, error) {
+	ret := _m.Called(key)
+
+	var r0 core.CacheConfig
+	if rf, ok := ret.Get(0).(func(string) core.CacheConfig); ok {
+		r0 = rf(key)
+	} else {
+		r0 = ret.Get(0).(core.CacheConfig)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetServiceDetail provides a mock function with given fields: key
+func (_m *ServiceRepositoryI) GetServiceDetail(key string) (core.ServiceDetail, error) {
+	ret := _m.Called(key)
+
+	var r0 core.ServiceDetail
+	if rf, ok := ret.Get(0).(func(string) core.ServiceDetail); ok {
+		r0 = rf(key)
+	} else {
+		r0 = ret.Get(0).(core.ServiceDetail)
 	}
 
 	var r1 error
@@ -106,12 +134,26 @@ func (_m *ServiceRepositoryI) GetServices(keys ...string) ([]core.Service, error
 	return r0, r1
 }
 
+// IsCacheableStatusCode provides a mock function with given fields: key, statusCode
+func (_m *ServiceRepositoryI) IsCacheableStatusCode(key string, statusCode int) bool {
+	ret := _m.Called(key, statusCode)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string, int) bool); ok {
+		r0 = rf(key, statusCode)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // StoreService provides a mock function with given fields: service
-func (_m *ServiceRepositoryI) StoreService(service core.Service) error {
+func (_m *ServiceRepositoryI) StoreService(service core.ServiceDetail) error {
 	ret := _m.Called(service)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(core.Service) error); ok {
+	if rf, ok := ret.Get(0).(func(core.ServiceDetail) error); ok {
 		r0 = rf(service)
 	} else {
 		r0 = ret.Error(0)
@@ -121,6 +163,15 @@ func (_m *ServiceRepositoryI) StoreService(service core.Service) error {
 }
 
 // UpdateServiceStatus provides a mock function with given fields: key, status
-func (_m *ServiceRepositoryI) UpdateServiceStatus(key string, status core.ServiceStatus) {
-	_m.Called(key, status)
+func (_m *ServiceRepositoryI) UpdateServiceStatus(key string, status core.ServiceStatus) error {
+	ret := _m.Called(key, status)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, core.ServiceStatus) error); ok {
+		r0 = rf(key, status)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }

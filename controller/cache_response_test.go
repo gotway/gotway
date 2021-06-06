@@ -22,9 +22,9 @@ import (
 func TestListenResponses(t *testing.T) {
 	log.Init()
 
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	body := ioutil.NopCloser(bytes.NewBufferString("{}"))
 	url, _ := url.Parse("http://api.gotway.com/catalog/products?offset=0&limit=10")
@@ -46,11 +46,11 @@ func TestListenResponses(t *testing.T) {
 		body:         &body,
 	}
 
-	cacheConfigRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
-	cacheConfigRepo.On("GetConfig", res.serviceKey).Return(core.CacheConfig{}, nil)
-	errCacheConfig := errors.New("Error getting cache config")
-	cacheConfigRepo.On("GetConfig", errRes.serviceKey).Return(core.CacheConfig{}, errCacheConfig)
 	cacheRepo.On("StoreCache", mock.Anything, mock.Anything).Return(nil)
+	serviceRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
+	serviceRepo.On("GetServiceCache", res.serviceKey).Return(core.CacheConfig{}, nil)
+	errCacheConfig := errors.New("Error getting cache config")
+	serviceRepo.On("GetServiceCache", errRes.serviceKey).Return(core.CacheConfig{}, errCacheConfig)
 
 	responses := []response{res, errRes}
 	controller.ListenResponses()
@@ -64,17 +64,17 @@ func TestListenResponses(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	cacheConfigRepo.AssertNumberOfCalls(t, "IsCacheableStatusCode", 2)
-	cacheConfigRepo.AssertNumberOfCalls(t, "GetConfig", 2)
 	cacheRepo.AssertNumberOfCalls(t, "StoreCache", 1)
+	serviceRepo.AssertNumberOfCalls(t, "IsCacheableStatusCode", 2)
+	serviceRepo.AssertNumberOfCalls(t, "GetServiceCache", 2)
 }
 
 func TestListenCacheControlResponses(t *testing.T) {
 	log.Init()
 
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	body := ioutil.NopCloser(bytes.NewBufferString("{}"))
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
@@ -118,9 +118,9 @@ func TestListenCacheControlResponses(t *testing.T) {
 		body: &body,
 	}
 
-	cacheConfigRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
-	cacheConfigRepo.On("GetConfig", mock.Anything).Return(core.CacheConfig{}, nil)
 	cacheRepo.On("StoreCache", mock.Anything, mock.Anything).Return(nil)
+	serviceRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
+	serviceRepo.On("GetServiceCache", mock.Anything).Return(core.CacheConfig{}, nil)
 
 	responses := []response{TTLRes, noTTLRes, zeroTTLRes}
 	controller.ListenResponses()
@@ -134,17 +134,17 @@ func TestListenCacheControlResponses(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	cacheConfigRepo.AssertNumberOfCalls(t, "IsCacheableStatusCode", 2)
-	cacheConfigRepo.AssertNumberOfCalls(t, "GetConfig", 2)
 	cacheRepo.AssertNumberOfCalls(t, "StoreCache", 2)
+	serviceRepo.AssertNumberOfCalls(t, "IsCacheableStatusCode", 2)
+	serviceRepo.AssertNumberOfCalls(t, "GetServiceCache", 2)
 }
 
 func TestListenCacheTagsResponses(t *testing.T) {
 	log.Init()
 
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	body := ioutil.NopCloser(bytes.NewBufferString("{}"))
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
@@ -174,9 +174,9 @@ func TestListenCacheTagsResponses(t *testing.T) {
 		body: &body,
 	}
 
-	cacheConfigRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
-	cacheConfigRepo.On("GetConfig", mock.Anything).Return(core.CacheConfig{}, nil)
 	cacheRepo.On("StoreCache", mock.Anything, mock.Anything).Return(nil)
+	serviceRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
+	serviceRepo.On("GetServiceCache", mock.Anything).Return(core.CacheConfig{}, nil)
 
 	responses := []response{tagsRes, noTagsRes}
 	controller.ListenResponses()
@@ -190,9 +190,9 @@ func TestListenCacheTagsResponses(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	cacheConfigRepo.AssertNumberOfCalls(t, "IsCacheableStatusCode", 2)
-	cacheConfigRepo.AssertNumberOfCalls(t, "GetConfig", 2)
 	cacheRepo.AssertNumberOfCalls(t, "StoreCache", 2)
+	serviceRepo.AssertNumberOfCalls(t, "IsCacheableStatusCode", 2)
+	serviceRepo.AssertNumberOfCalls(t, "GetServiceCache", 2)
 }
 
 type errReader int
@@ -204,9 +204,9 @@ func (errReader) Read(p []byte) (n int, err error) {
 func TestErrReadingBody(t *testing.T) {
 	log.Init()
 
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
 	testRequest := httptest.NewRequest(http.MethodPost, "/foo", errReader(0))
@@ -221,9 +221,9 @@ func TestErrReadingBody(t *testing.T) {
 		Body: body,
 	}
 
-	cacheConfigRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
-	cacheConfigRepo.On("GetConfig", mock.Anything).Return(core.CacheConfig{}, nil)
 	cacheRepo.On("StoreCache", mock.Anything, mock.Anything).Return(nil)
+	serviceRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
+	serviceRepo.On("GetServiceCache", mock.Anything).Return(core.CacheConfig{}, nil)
 
 	controller.ListenResponses()
 	err := controller.HandleResponse("foo", res)
@@ -232,9 +232,9 @@ func TestErrReadingBody(t *testing.T) {
 }
 
 func TestCachePolicy(t *testing.T) {
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
 	notCacheableHeader := http.Header{}
@@ -247,8 +247,8 @@ func TestCachePolicy(t *testing.T) {
 	cacheableService := "catalog"
 	notCacheableService := "stock"
 
-	cacheConfigRepo.On("IsCacheableStatusCode", cacheableService, mock.Anything).Return(true)
-	cacheConfigRepo.On("IsCacheableStatusCode", notCacheableService, mock.Anything).Return(false)
+	serviceRepo.On("IsCacheableStatusCode", cacheableService, mock.Anything).Return(true)
+	serviceRepo.On("IsCacheableStatusCode", notCacheableService, mock.Anything).Return(false)
 
 	tests := []struct {
 		name            string

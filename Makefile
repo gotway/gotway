@@ -1,4 +1,4 @@
-.PHONY: clean deps deps-sync fmt vet lint build install run test cover mocks
+.PHONY: clean deps deps-sync fmt vet lint build install run clean-test test cover mocks
 
 all: build
 clean:
@@ -12,12 +12,14 @@ fmt:
 vet:
 	go vet ./...
 lint: fmt vet
-build: lint clean
+build: clean
 	go build -o bin/gotway -v .
 install:
 	go install -v .
 run: build
 	./bin/gotway
+clean-test:
+	go clean -testcache ./...
 test: lint
 	go test -v ./... -coverprofile=cover.out
 cover: test

@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/controller"
 	"github.com/gotway/gotway/core"
+	"github.com/gotway/gotway/log"
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,11 +52,12 @@ func registerServiceHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = controller.Service.RegisterService(serviceDetail)
 	if err != nil {
+		log.Logger.Error(err)
 		if errors.Is(err, core.ErrServiceAlreadyRegistered) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -165,12 +167,13 @@ func getServiceKey(r *http.Request) string {
 }
 
 func handleServiceError(err error, w http.ResponseWriter, r *http.Request) {
+	log.Logger.Error(err)
 	key := getServiceKey(r)
 	if errors.Is(err, core.ErrServiceNotFound) {
 		http.Error(w, fmt.Sprintf("'%s' service not found", key), http.StatusNotFound)
 		return
 	}
-	http.Error(w, "Internal server error", http.StatusInternalServerError)
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 func processPaginationParams(offsetStr string, limitStr string) (int, int, error) {

@@ -19,8 +19,7 @@ import (
 
 func TestGetServices(t *testing.T) {
 	serviceRepository := new(modelMocks.ServiceRepositoryI)
-	cacheConfigRepository := new(modelMocks.CacheConfigRepositoryI)
-	controller := NewServiceController(serviceRepository, cacheConfigRepository)
+	controller := newServiceController(serviceRepository)
 
 	catalogPath := "catalog"
 	stockPath := "stock"
@@ -115,8 +114,7 @@ func TestGetServices(t *testing.T) {
 
 func TestGetServicesRepoError(t *testing.T) {
 	serviceRepository := new(modelMocks.ServiceRepositoryI)
-	cacheConfigRepository := new(modelMocks.CacheConfigRepositoryI)
-	controller := NewServiceController(serviceRepository, cacheConfigRepository)
+	controller := newServiceController(serviceRepository)
 
 	serviceRepository.On("GetAllServiceKeys").Return([]string{"foo"})
 	repoErr := errors.New("Error getting services")
@@ -133,270 +131,95 @@ func TestGetServicesRepoError(t *testing.T) {
 
 func TestRegisterService(t *testing.T) {
 	serviceRepository := new(modelMocks.ServiceRepositoryI)
-	cacheConfigRepository := new(modelMocks.CacheConfigRepositoryI)
-	controller := NewServiceController(serviceRepository, cacheConfigRepository)
+	controller := newServiceController(serviceRepository)
 
 	service := core.Service{
 		Type: core.ServiceTypeREST,
 		Path: "service",
 	}
-	invalidService := core.Service{
-		Type: "foo",
-		Path: "foo",
-	}
-	errService := errors.New("Error storing service")
-	serviceRepository.On("StoreService", service).Return(nil)
-	serviceRepository.On("StoreService", invalidService).Return(errService)
-
 	cacheConfig := core.CacheConfig{
 		TTL:      1,
 		Statuses: []int{200},
 		Tags:     []string{"catalog"},
 	}
-	invalidCacheConfig := core.CacheConfig{
-		TTL:      -1,
-		Statuses: []int{418},
-	}
-	errCacheConfig := errors.New("Error storing cache config")
-	cacheConfigRepository.On("StoreConfig", cacheConfig, service.Path).Return(nil)
-	cacheConfigRepository.On("StoreConfig", invalidCacheConfig, service.Path).Return(errCacheConfig)
-	cacheConfigRepository.On("StoreConfig", invalidCacheConfig, invalidService.Path).Return(errCacheConfig)
-
-	tests := []struct {
-		name          string
-		serviceDetail core.ServiceDetail
-		wantErr       error
-	}{
-		{
-			name: "Stores a invalid service",
-			serviceDetail: core.ServiceDetail{
-				Service: invalidService,
-				Cache:   cacheConfig,
-			},
-			wantErr: errService,
-		},
-		{
-			name: "Stores a service with invalid config",
-			serviceDetail: core.ServiceDetail{
-				Service: service,
-				Cache:   invalidCacheConfig,
-			},
-			wantErr: errCacheConfig,
-		},
-		{
-			name: "Stores a service without cache",
-			serviceDetail: core.ServiceDetail{
-				Service: service,
-				Cache:   core.DefaultCacheConfig,
-			},
-			wantErr: nil,
-		},
-		{
-			name: "Stores a service",
-			serviceDetail: core.ServiceDetail{
-				Service: service,
-				Cache:   cacheConfig,
-			},
-			wantErr: nil,
-		},
+	serviceDetail := core.ServiceDetail{
+		Service: service,
+		Cache:   cacheConfig,
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := controller.RegisterService(tt.serviceDetail)
+	serviceRepository.On("StoreService", serviceDetail).Return(nil)
 
-			assert.Equal(t, tt.wantErr, err)
-		})
-	}
+	err := controller.RegisterService(serviceDetail)
+
+	assert.Nil(t, err)
 }
 
 func TestGetService(t *testing.T) {
 	serviceRepository := new(modelMocks.ServiceRepositoryI)
-	cacheConfigRepository := new(modelMocks.CacheConfigRepositoryI)
-	controller := NewServiceController(serviceRepository, cacheConfigRepository)
+	controller := newServiceController(serviceRepository)
 
-	catalog := core.Service{
+	service := core.Service{
 		Type: core.ServiceTypeREST,
 		Path: "catalog",
 	}
-	serviceRepository.On("GetService", catalog.Path).Return(catalog, nil)
+	serviceRepository.On("GetService", service.Path).Return(service, nil)
 
-	errServiceKey := "foo"
-	errService := errors.New("Error getting service")
-	serviceRepository.On("GetService", errServiceKey).Return(core.Service{}, errService)
+	result, err := controller.GetService(service.Path)
 
-	tests := []struct {
-		name        string
-		key         string
-		wantService core.Service
-		wantErr     error
-	}{
-		{
-			name:        "Get an invalid service",
-			key:         errServiceKey,
-			wantService: core.Service{},
-			wantErr:     errService,
-		},
-		{
-			name:        "Get a service",
-			key:         catalog.Path,
-			wantService: catalog,
-			wantErr:     nil,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			service, err := controller.GetService(tt.key)
-
-			assert.Equal(t, tt.wantService, service)
-			assert.Equal(t, tt.wantErr, err)
-		})
-	}
+	assert.Equal(t, result, service)
+	assert.Nil(t, err)
 }
 
 func TestGetServiceDetail(t *testing.T) {
 	serviceRepository := new(modelMocks.ServiceRepositoryI)
-	cacheConfigRepository := new(modelMocks.CacheConfigRepositoryI)
-	controller := NewServiceController(serviceRepository, cacheConfigRepository)
+	controller := newServiceController(serviceRepository)
 
 	catalog := core.Service{
 		Type: core.ServiceTypeREST,
 		Path: "catalog",
-	}
-	stock := core.Service{
-		Type: core.ServiceTypeREST,
-		Path: "stock",
 	}
 	cacheConfig := core.CacheConfig{
 		TTL:      1,
 		Statuses: []int{200},
 		Tags:     []string{"catalog"},
 	}
-
-	errServiceKey := "foo"
-	errService := errors.New("Error getting service")
-	errCacheServiceKey := "bar"
-	errCache := errors.New("Error getting cache")
-
-	serviceRepository.On("GetService", catalog.Path).Return(catalog, nil)
-	serviceRepository.On("GetService", stock.Path).Return(stock, nil)
-	serviceRepository.On("GetService", errServiceKey).Return(core.Service{}, errService)
-	serviceRepository.On("GetService", errCacheServiceKey).Return(core.Service{}, nil)
-
-	cacheConfigRepository.On("GetConfig", catalog.Path).Return(cacheConfig, nil)
-	cacheConfigRepository.On("GetConfig", stock.Path).Return(core.CacheConfig{}, core.ErrCacheNotFound)
-	cacheConfigRepository.On("GetConfig", errCacheServiceKey).Return(core.CacheConfig{}, errCache)
-
-	tests := []struct {
-		name              string
-		key               string
-		wantServiceDetail core.ServiceDetail
-		wantErr           error
-	}{
-		{
-			name:              "Error getting service",
-			key:               errServiceKey,
-			wantServiceDetail: core.ServiceDetail{},
-			wantErr:           errService,
-		},
-		{
-			name:              "Error getting cache",
-			key:               errCacheServiceKey,
-			wantServiceDetail: core.ServiceDetail{},
-			wantErr:           errCache,
-		},
-		{
-			name: "Get service detail without cache",
-			key:  stock.Path,
-			wantServiceDetail: core.ServiceDetail{
-				Service: stock,
-				Cache:   core.DefaultCacheConfig,
-			},
-			wantErr: nil,
-		},
-		{
-			name: "Get service detail",
-			key:  catalog.Path,
-			wantServiceDetail: core.ServiceDetail{
-				Service: catalog,
-				Cache:   cacheConfig,
-			},
-			wantErr: nil,
-		},
+	serviceDetail := core.ServiceDetail{
+		Service: catalog,
+		Cache:   cacheConfig,
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			service, err := controller.GetServiceDetail(tt.key)
+	serviceRepository.On("GetServiceDetail", catalog.Path).Return(serviceDetail, nil)
 
-			assert.Equal(t, tt.wantServiceDetail, service)
-			assert.Equal(t, tt.wantErr, err)
-		})
-	}
+	result, err := controller.GetServiceDetail(catalog.Path)
+
+	assert.Equal(t, serviceDetail, result)
+	assert.Nil(t, err)
 }
 
 func TestDeleteService(t *testing.T) {
 	serviceRepository := new(modelMocks.ServiceRepositoryI)
-	cacheConfigRepository := new(modelMocks.CacheConfigRepositoryI)
-	controller := NewServiceController(serviceRepository, cacheConfigRepository)
+	controller := newServiceController(serviceRepository)
 
-	successService := "service"
-	errDeleteService := "err-deleting-service"
-	notExistsService := "not-exists-service"
+	service := "service"
 
-	errServiceNotExist := errors.New("Service does not exist")
-	errDeletingService := errors.New("Error deleting service")
+	serviceRepository.On("DeleteService", service).Return(nil)
 
-	serviceRepository.On("ExistService", successService).Return(nil)
-	serviceRepository.On("ExistService", errDeleteService).Return(nil)
-	serviceRepository.On("ExistService", notExistsService).Return(errServiceNotExist)
+	err := controller.DeleteService(service)
 
-	serviceRepository.On("DeleteService", successService).Return(nil)
-	serviceRepository.On("DeleteService", errDeleteService).Return(errDeletingService)
-
-	cacheConfigRepository.On("DeleteConfig", mock.Anything).Return(nil)
-
-	tests := []struct {
-		name    string
-		key     string
-		wantErr error
-	}{
-		{
-			name:    "Service does not exist",
-			key:     notExistsService,
-			wantErr: errServiceNotExist,
-		},
-		{
-			name:    "Error deleting service",
-			key:     errDeleteService,
-			wantErr: errDeletingService,
-		},
-		{
-			name:    "Delete service successfully",
-			key:     successService,
-			wantErr: nil,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := controller.DeleteService(tt.key)
-
-			assert.Equal(t, tt.wantErr, err)
-		})
-	}
+	assert.Nil(t, err)
 }
 
 func TestUpdateServiceStatus(t *testing.T) {
 	serviceRepository := new(modelMocks.ServiceRepositoryI)
-	cacheConfigRepository := new(modelMocks.CacheConfigRepositoryI)
-	controller := NewServiceController(serviceRepository, cacheConfigRepository)
+	controller := newServiceController(serviceRepository)
 
-	serviceRepository.On("UpdateServiceStatus", mock.Anything, mock.Anything)
+	serviceRepository.On("UpdateServiceStatus", mock.Anything, mock.Anything).Return(nil)
 
-	controller.UpdateServiceStatus("catalog", core.ServiceStatusHealthy)
-	controller.UpdateServiceStatus("stock", core.ServiceStatusIdle)
+	err := controller.UpdateServiceStatus("catalog", core.ServiceStatusHealthy)
+	assert.Nil(t, err)
+
+	err = controller.UpdateServiceStatus("stock", core.ServiceStatusIdle)
+	assert.Nil(t, err)
 
 	serviceRepository.AssertNumberOfCalls(t, "UpdateServiceStatus", 2)
 }
@@ -424,8 +247,7 @@ func TestReverseProxy(t *testing.T) {
 		httpmock.NewStringResponder(200, `[{"id": 1, "stock": 10}]`))
 
 	serviceRepository := new(modelMocks.ServiceRepositoryI)
-	cacheConfigRepository := new(modelMocks.CacheConfigRepositoryI)
-	controller := NewServiceController(serviceRepository, cacheConfigRepository)
+	controller := newServiceController(serviceRepository)
 
 	cache := new(controllerMocks.CacheControllerI)
 	Cache = cache

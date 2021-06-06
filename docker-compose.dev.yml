@@ -8,7 +8,6 @@ services:
     environment: 
       - GOTWAY_SERVICE_PORT=8000
       - ENV=development
-      - DATABASE=redis
       - REDIS_SERVER=redis:6379 
       - HEALTH_CHECK_INTERVAL_SECONDS=10
       - HEALTH_CHECK_TIMEOUT_SECONDS=5

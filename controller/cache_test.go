@@ -11,9 +11,9 @@ import (
 )
 
 func TestIsCacheable(t *testing.T) {
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	cacheableReq, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	notCacheableReq, _ := http.NewRequest(http.MethodPost, "http://api.gotway.com/service/foo", nil)
@@ -45,9 +45,9 @@ func TestIsCacheable(t *testing.T) {
 }
 
 func TestGetCache(t *testing.T) {
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	reqCacheError, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	cacheError := errors.New("Cache not found")
@@ -117,9 +117,9 @@ func TestGetCache(t *testing.T) {
 }
 
 func TestGetCacheDetail(t *testing.T) {
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	reqCacheError, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	cacheError := errors.New("Cache not found")
@@ -193,9 +193,9 @@ func TestGetCacheDetail(t *testing.T) {
 }
 
 func TestDeleteCacheByPath(t *testing.T) {
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	paths := []core.CachePath{
 		{
@@ -212,9 +212,9 @@ func TestDeleteCacheByPath(t *testing.T) {
 }
 
 func TestDeleteCacheByTags(t *testing.T) {
-	cacheConfigRepo := new(mocks.CacheConfigRepositoryI)
 	cacheRepo := new(mocks.CacheRepositoryI)
-	controller := NewCacheController(cacheConfigRepo, cacheRepo)
+	serviceRepo := new(mocks.ServiceRepositoryI)
+	controller := newCacheController(cacheRepo, serviceRepo)
 
 	tags := []string{"foo"}
 	cacheRepo.On("DeleteCacheByTags", tags).Return(nil)

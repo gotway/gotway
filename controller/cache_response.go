@@ -65,11 +65,11 @@ func (c CacheController) isCacheableResponse(r *http.Response, serviceKey string
 	if !c.IsCacheableRequest(r.Request) || headersDisallowCaching(r) {
 		return false
 	}
-	return c.cacheConfigRepository.IsCacheableStatusCode(serviceKey, r.StatusCode)
+	return c.serviceRepository.IsCacheableStatusCode(serviceKey, r.StatusCode)
 }
 
 func (c CacheController) cacheResponse(res response) error {
-	config, err := c.cacheConfigRepository.GetConfig(res.serviceKey)
+	config, err := c.serviceRepository.GetServiceCache(res.serviceKey)
 	if err != nil {
 		return err
 	}
