@@ -19,15 +19,15 @@ jobs:
         run: make build
 
       - name: Build Catalog
-        working-directory: ./microservices/catalog
+        working-directory: ./cmd/catalog
         run: make build
 
       - name: Build Route
-        working-directory: ./microservices/route
+        working-directory: ./cmd/route
         run: make build
 
       - name: Build Stock
-        working-directory: ./microservices/stock
+        working-directory: ./cmd/stock
         run: make build
 
       - name: Bin
@@ -40,16 +40,16 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: catalog
-          path: ./microservices/catalog/bin/catalog
+          path: ./cmd/catalog/bin/catalog
 
       - name: Bin Route
         uses: actions/upload-artifact@v2
         with:
           name: route
-          path: ./microservices/route/bin/route
+          path: ./cmd/route/bin/route
 
       - name: Bin Stock
         uses: actions/upload-artifact@v2
         with:
           name: stock
-          path: ./microservices/stock/bin/stock
+          path: ./cmd/stock/bin/stock

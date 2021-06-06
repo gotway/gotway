@@ -63,7 +63,7 @@ Services can be discovered in runtime by registering them in the gotway API.
 
 ###### REST
 
-We will register [catalog](./microservices/catalog) as an example:
+We will register [catalog](./cmd/catalog) as an example:
 
 ```bash
 curl --request POST 'https://<gotway>/api/service' \
@@ -86,7 +86,7 @@ After executing that command, our service will be available at
 
 ###### gRPC
 
-We will register [route](./microservices/route) as an example:
+We will register [route](./cmd/route) as an example:
 
 ```bash
 curl --request POST 'https://<gotway>/api/service' \
@@ -102,7 +102,7 @@ Where `route.Route` represents the package and the service name of your gRPC ser
 
 [grpc.health.v1.Health](https://github.com/grpc/grpc/blob/master/doc/health-checking.md)
 
-This will be defined in your [.proto](./microservices/route/pb/route.proto) file and will be used as path in the dynamic routing.
+This will be defined in your [.proto](./cmd/route/pb/route.proto) file and will be used as path in the dynamic routing.
 
 In this case, the RPC methods routed through gotway will be:
 
@@ -111,9 +111,9 @@ In this case, the RPC methods routed through gotway will be:
 - `https://<gotway>/route.Route/RecordRoute`
 - `https://<gotway>/route.Route/RouteChat`
 
-For testing them, we have a [gRPC go client](./microservices/route/client/client.go):
+For testing them, we have a [gRPC go client](./cmd/route/client/client.go):
 ```bash
-$ cd microservices/route
+$ cd cmd/route
 $ make cli
 ```
 
@@ -125,13 +125,13 @@ gotway will make a health probe to check that our services are responding. In ot
 
 By default, the health probe will be done by requesting `http://<microservice>/health`. However, it is posible to use a custom path by specifying `healthPath` when registering.
 
-An example of REST health endpoint is available [here](./microservices/catalog/api/api.go).
+An example of REST health endpoint is available [here](./cmd/catalog/api/api.go).
 
 ###### gRPC
 
 By default, the standard [gRPC health checking protocol](https://github.com/grpc/grpc/blob/master/doc/health-checking.md) is used. However, it is posible to use another one by specifying `healthPath` when registering.
 
-An example of gRPC health checking protocol implementation can be found [here](./microservices/route/server/server.go).
+An example of gRPC health checking protocol implementation can be found [here](./cmd/route/server/server.go).
 
 #### Cache 💾
 
@@ -193,6 +193,6 @@ curl --request POST 'https://<gotway>/api/cache' \
 |Service|Client|Image|
 |-------|------|-----|
 |gotway|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2e80e5165001548d7d43#?env%5BGotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gotwaygateway/gotway](https://hub.docker.com/r/gotwaygateway/gotway/tags)|
-|[Catalog](./microservices/catalog)|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/ac7596f337b868ab0e6c#?env%5BGotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gotwaygateway/catalog](https://hub.docker.com/r/gotwaygateway/catalog/tags)|
-|[Stock](./microservices/stock)|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/bdb7fe928c1e93fb15e5#?env%5BGotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gotwaygateway/stock](https://hub.docker.com/r/gotwaygateway/stock/tags)|
-|[Route](./microservices/route)|[Go client](./microservices/route/client)|[gotwaygateway/route](https://hub.docker.com/r/gotwaygateway/route/tags)|
+|[Catalog](./cmd/catalog)|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/ac7596f337b868ab0e6c#?env%5BGotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gotwaygateway/catalog](https://hub.docker.com/r/gotwaygateway/catalog/tags)|
+|[Stock](./cmd/stock)|[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/bdb7fe928c1e93fb15e5#?env%5BGotway%20Local%5D=W3sia2V5IjoidXJsIiwidmFsdWUiOiJodHRwczovL2xvY2FsaG9zdDo4MDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxDYXRhbG9nIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjkwMDAiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InVybFJvdXRlIiwidmFsdWUiOiJodHRwOi8vbG9jYWxob3N0OjExMDAwIiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJ1cmxTdG9jayIsInZhbHVlIjoiaHR0cDovL2xvY2FsaG9zdDoxMDAwMCIsImVuYWJsZWQiOnRydWV9LHsia2V5IjoicHJvZHVjdElkIiwidmFsdWUiOiIxMjM0IiwiZW5hYmxlZCI6dHJ1ZX0seyJrZXkiOiJwcm9kdWN0SWQyIiwidmFsdWUiOiI0NTYiLCJlbmFibGVkIjp0cnVlfSx7ImtleSI6InByb2R1Y3RJZDMiLCJ2YWx1ZSI6Ijc4OSIsImVuYWJsZWQiOnRydWV9XQ==)|[gotwaygateway/stock](https://hub.docker.com/r/gotwaygateway/stock/tags)|
+|[Route](./cmd/route)|[Go client](./cmd/route/client)|[gotwaygateway/route](https://hub.docker.com/r/gotwaygateway/route/tags)|

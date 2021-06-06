@@ -20,7 +20,7 @@ services:
       - "./cert:/etc/ssl"
       
   catalog:
-    build: microservices/catalog
+    build: cmd/catalog
     depends_on:
       - gotway
     environment:
@@ -29,7 +29,7 @@ services:
       - "9000:9000"
 
   stock:
-    build: microservices/stock
+    build: cmd/stock
     depends_on:
       - gotway
       - redis
@@ -40,7 +40,7 @@ services:
       - "10000:10000"
 
   route:
-    build: microservices/route
+    build: cmd/route
     depends_on:
       - gotway
     environment:

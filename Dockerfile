@@ -1,15 +1,17 @@
-FROM golang:1.14.4-alpine3.12 AS builder
+FROM golang:1.15-alpine3.12 AS builder
 
-ENV WORKDIR /go/src/gotway
+ARG SERVICE
+
+ENV WORKDIR /app
 RUN mkdir -p ${WORKDIR}
 WORKDIR ${WORKDIR}
 
 COPY . .
 
-RUN go build -o bin/gotway -v .
+RUN CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o bin/app cmd/$SERVICE/main.go
 
 FROM alpine:3.12.0
 
-COPY --from=builder /go/src/gotway/bin/gotway /app/gotway
+COPY --from=builder /app /app
 
-CMD [ "/app/gotway" ]
+CMD [ "/app" ]
