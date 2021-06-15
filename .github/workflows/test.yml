@@ -4,8 +4,6 @@ on:
   workflow_run:
     workflows:
       - "Lint"
-    branches:
-      - '*'
     types:
       - completed
 

@@ -4,8 +4,6 @@ on:
   workflow_run:
     workflows:
       - "Test"
-    branches:
-      - '*'
     types:
       - completed
 
