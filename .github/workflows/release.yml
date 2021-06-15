@@ -1,14 +1,9 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows:
-      - "Build"
-    branches:
-      - "develop"
-      - "master"
-    types:
-      - completed
+  push:
+    tags:
+      - "v*"
 
 jobs:
   release:
