@@ -5,7 +5,7 @@ on:
     workflows:
       - "Build"
     tags:
-      - 'v*'
+      - "v*"
     types:
       - completed
 
@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v1
-      
+
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v1
 

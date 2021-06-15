@@ -4,6 +4,10 @@ on:
   workflow_run:
     workflows:
       - "Lint"
+    branches:
+      - "*"
+    tags:
+      - "v*"
     types:
       - completed
 

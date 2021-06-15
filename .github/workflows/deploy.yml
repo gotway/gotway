@@ -5,7 +5,7 @@ on:
     workflows:
       - "Build"
     branches:
-      - 'master'
+      - "master"
     types:
       - completed
 
@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-        
+
       - uses: azure/setup-helm@v1
         with:
           version: "v3.5.3"

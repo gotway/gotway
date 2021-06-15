@@ -3,14 +3,14 @@ name: Lint
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
     tags:
-      - 'v*'
+      - "v*"
   push:
     branches:
-      - '*'
+      - "*"
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   lint:
