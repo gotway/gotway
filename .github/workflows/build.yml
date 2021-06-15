@@ -6,8 +6,6 @@ on:
       - "Test"
     branches:
       - "*"
-    tags:
-      - "v*"
     types:
       - completed
 

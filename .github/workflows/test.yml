@@ -6,8 +6,6 @@ on:
       - "Lint"
     branches:
       - "*"
-    tags:
-      - "v*"
     types:
       - completed
 

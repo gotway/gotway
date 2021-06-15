@@ -4,8 +4,9 @@ on:
   workflow_run:
     workflows:
       - "Build"
-    tags:
-      - "v*"
+    branches:
+      - "develop"
+      - "master"
     types:
       - completed
 

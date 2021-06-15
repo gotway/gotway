@@ -4,13 +4,9 @@ on:
   pull_request:
     branches:
       - "*"
-    tags:
-      - "v*"
   push:
     branches:
       - "*"
-    tags:
-      - "v*"
 
 jobs:
   lint:
