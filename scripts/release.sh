@@ -22,5 +22,8 @@ release "gotway" "$tag" .
 
 for ms in $(ls -d cmd/*); do
   name=$(basename "$ms")
+  if [ "$name" = "gotway" ]; then
+    continue
+  fi
   release "$name" "$tag" .
 done
