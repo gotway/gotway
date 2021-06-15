@@ -4,7 +4,7 @@ set -e
 
 docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
-tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+tag=$(git describe --abbrev=0 --tags)
 
 function release() {
   name="$1"
