@@ -1,9 +1,13 @@
 name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - "Build"
     branches:
-      - "master"
+      - 'master'
+    types:
+      - completed
 
 jobs:
   release:

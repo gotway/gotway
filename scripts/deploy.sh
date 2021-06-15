@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-RELEASE="gotway"
-REPO="gotway"
+release="gotway"
+repo="gotway"
+tag=$(git describe --abbrev=0 --tags)
 
-helm repo add "$REPO" https://charts.gotway.duckdns.org
+helm repo add "$repo" https://charts.gotway.duckdns.org
 helm repo update
 
-echo "🚀 Deploying '${RELEASE}'..."
-helm upgrade --install "$RELEASE" "$REPO/$RELEASE"
+echo "🚀 Deploying '${release}'..."
+helm upgrade --install "$release" "$repo/$release" --set image.tag=$tag
