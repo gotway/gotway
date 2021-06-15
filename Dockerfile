@@ -8,7 +8,7 @@ WORKDIR ${WORKDIR}
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o bin/app cmd/$SERVICE/main.go
+RUN CGO_ENABLED=0 go build -ldflags '-extldflags "-static"' -o bin/app cmd/$SERVICE/*.go
 
 FROM alpine:3.12.0
 
