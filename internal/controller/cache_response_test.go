@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gotway/gotway/internal/core"
 	"github.com/gotway/gotway/internal/mocks"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/pkg/log"
 
 	"github.com/stretchr/testify/assert"
@@ -46,9 +46,9 @@ func TestListenResponses(t *testing.T) {
 
 	cacheRepo.On("StoreCache", mock.Anything, mock.Anything).Return(nil)
 	serviceRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
-	serviceRepo.On("GetServiceCache", res.serviceKey).Return(core.CacheConfig{}, nil)
+	serviceRepo.On("GetServiceCache", res.serviceKey).Return(model.CacheConfig{}, nil)
 	errCacheConfig := errors.New("Error getting cache config")
-	serviceRepo.On("GetServiceCache", errRes.serviceKey).Return(core.CacheConfig{}, errCacheConfig)
+	serviceRepo.On("GetServiceCache", errRes.serviceKey).Return(model.CacheConfig{}, errCacheConfig)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -115,7 +115,7 @@ func TestListenCacheControlResponses(t *testing.T) {
 
 	cacheRepo.On("StoreCache", mock.Anything, mock.Anything).Return(nil)
 	serviceRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
-	serviceRepo.On("GetServiceCache", mock.Anything).Return(core.CacheConfig{}, nil)
+	serviceRepo.On("GetServiceCache", mock.Anything).Return(model.CacheConfig{}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -168,7 +168,7 @@ func TestListenCacheTagsResponses(t *testing.T) {
 
 	cacheRepo.On("StoreCache", mock.Anything, mock.Anything).Return(nil)
 	serviceRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
-	serviceRepo.On("GetServiceCache", mock.Anything).Return(core.CacheConfig{}, nil)
+	serviceRepo.On("GetServiceCache", mock.Anything).Return(model.CacheConfig{}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -212,7 +212,7 @@ func TestErrReadingBody(t *testing.T) {
 
 	cacheRepo.On("StoreCache", mock.Anything, mock.Anything).Return(nil)
 	serviceRepo.On("IsCacheableStatusCode", mock.Anything, mock.Anything).Return(true)
-	serviceRepo.On("GetServiceCache", mock.Anything).Return(core.CacheConfig{}, nil)
+	serviceRepo.On("GetServiceCache", mock.Anything).Return(model.CacheConfig{}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

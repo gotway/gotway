@@ -5,7 +5,7 @@ package mocks
 import (
 	http "net/http"
 
-	core "github.com/gotway/gotway/internal/core"
+	model "github.com/gotway/gotway/internal/model"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -16,11 +16,11 @@ type CacheController struct {
 }
 
 // DeleteCacheByPath provides a mock function with given fields: paths
-func (_m *CacheController) DeleteCacheByPath(paths []core.CachePath) error {
+func (_m *CacheController) DeleteCacheByPath(paths []model.CachePath) error {
 	ret := _m.Called(paths)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func([]core.CachePath) error); ok {
+	if rf, ok := ret.Get(0).(func([]model.CachePath) error); ok {
 		r0 = rf(paths)
 	} else {
 		r0 = ret.Error(0)
@@ -44,14 +44,14 @@ func (_m *CacheController) DeleteCacheByTags(tags []string) error {
 }
 
 // GetCache provides a mock function with given fields: r, pathPrefix, serviceKey
-func (_m *CacheController) GetCache(r *http.Request, pathPrefix string, serviceKey string) (core.Cache, error) {
+func (_m *CacheController) GetCache(r *http.Request, pathPrefix string, serviceKey string) (model.Cache, error) {
 	ret := _m.Called(r, pathPrefix, serviceKey)
 
-	var r0 core.Cache
-	if rf, ok := ret.Get(0).(func(*http.Request, string, string) core.Cache); ok {
+	var r0 model.Cache
+	if rf, ok := ret.Get(0).(func(*http.Request, string, string) model.Cache); ok {
 		r0 = rf(r, pathPrefix, serviceKey)
 	} else {
-		r0 = ret.Get(0).(core.Cache)
+		r0 = ret.Get(0).(model.Cache)
 	}
 
 	var r1 error
@@ -65,14 +65,14 @@ func (_m *CacheController) GetCache(r *http.Request, pathPrefix string, serviceK
 }
 
 // GetCacheDetail provides a mock function with given fields: r, pathPrefix, serviceKey
-func (_m *CacheController) GetCacheDetail(r *http.Request, pathPrefix string, serviceKey string) (core.CacheDetail, error) {
+func (_m *CacheController) GetCacheDetail(r *http.Request, pathPrefix string, serviceKey string) (model.CacheDetail, error) {
 	ret := _m.Called(r, pathPrefix, serviceKey)
 
-	var r0 core.CacheDetail
-	if rf, ok := ret.Get(0).(func(*http.Request, string, string) core.CacheDetail); ok {
+	var r0 model.CacheDetail
+	if rf, ok := ret.Get(0).(func(*http.Request, string, string) model.CacheDetail); ok {
 		r0 = rf(r, pathPrefix, serviceKey)
 	} else {
-		r0 = ret.Get(0).(core.CacheDetail)
+		r0 = ret.Get(0).(model.CacheDetail)
 	}
 
 	var r1 error

@@ -13,15 +13,15 @@ import (
 	"time"
 
 	goRedis "github.com/go-redis/redis/v8"
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/pkg/redis"
 )
 
 type CacheRepo interface {
-	StoreCache(cache core.CacheDetail, serviceKey string) error
-	GetCache(path string, serviceKey string) (core.Cache, error)
-	GetCacheDetail(path string, serviceKey string) (core.CacheDetail, error)
-	DeleteCacheByPath(paths []core.CachePath) error
+	StoreCache(cache model.CacheDetail, serviceKey string) error
+	GetCache(path string, serviceKey string) (model.Cache, error)
+	GetCacheDetail(path string, serviceKey string) (model.CacheDetail, error)
+	DeleteCacheByPath(paths []model.CachePath) error
 	DeleteCacheByTags(tags []string) error
 }
 
@@ -30,7 +30,7 @@ type CacheRepoRedis struct {
 }
 
 // StoreCache stores a cache
-func (r CacheRepoRedis) StoreCache(cache core.CacheDetail, serviceKey string) error {
+func (r CacheRepoRedis) StoreCache(cache model.CacheDetail, serviceKey string) error {
 	cacheMap, err := newCacheMap(cache.StatusCode, cache.Body)
 	if err != nil {
 		return nil
@@ -58,7 +58,7 @@ func (r CacheRepoRedis) StoreCache(cache core.CacheDetail, serviceKey string) er
 }
 
 // GetCache gets a cache
-func (r CacheRepoRedis) GetCache(path string, serviceKey string) (core.Cache, error) {
+func (r CacheRepoRedis) GetCache(path string, serviceKey string) (model.Cache, error) {
 	cacheKey := getCacheRedisKey(path, serviceKey)
 	headersKey := getCacheHeadersRedisKey(path, serviceKey)
 
@@ -69,12 +69,12 @@ func (r CacheRepoRedis) GetCache(path string, serviceKey string) (core.Cache, er
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		return core.Cache{}, err
+		return model.Cache{}, err
 	}
 
 	cacheMap, headersMap := getCache.Val(), getHeaders.Val()
 	if len(cacheMap) == 0 || len(headersMap) == 0 {
-		return core.Cache{}, core.ErrCacheNotFound
+		return model.Cache{}, model.ErrCacheNotFound
 	}
 
 	return newCache(path, cacheMap, headersMap)
@@ -84,27 +84,27 @@ func (r CacheRepoRedis) GetCache(path string, serviceKey string) (core.Cache, er
 func (r CacheRepoRedis) GetCacheDetail(
 	path string,
 	serviceKey string,
-) (core.CacheDetail, error) {
+) (model.CacheDetail, error) {
 	cache, err := r.GetCache(path, serviceKey)
 	if err != nil {
-		return core.CacheDetail{}, err
+		return model.CacheDetail{}, err
 	}
 
 	cacheKey := getCacheRedisKey(path, serviceKey)
 	ttl, err := r.redis.TTL(context.Background(), cacheKey).Result()
 	if err != nil {
-		return core.CacheDetail{}, err
+		return model.CacheDetail{}, err
 	}
 
 	cacheTagsKey := getCacheTagsRedisKey(path, serviceKey)
 	tags, err := r.redis.SMembers(context.Background(), cacheTagsKey).Result()
 	if err != nil {
-		return core.CacheDetail{}, err
+		return model.CacheDetail{}, err
 	}
 
-	cacheDetail := core.CacheDetail{
+	cacheDetail := model.CacheDetail{
 		Cache: cache,
-		TTL:   core.CacheTTL(ttl),
+		TTL:   model.CacheTTL(ttl),
 		Tags:  tags,
 	}
 
@@ -112,7 +112,7 @@ func (r CacheRepoRedis) GetCacheDetail(
 }
 
 // DeleteCacheByPath deletes caches by specifying its path
-func (r CacheRepoRedis) DeleteCacheByPath(paths []core.CachePath) error {
+func (r CacheRepoRedis) DeleteCacheByPath(paths []model.CachePath) error {
 	cacheKeys := make([]string, len(paths))
 	for index, item := range paths {
 		cacheKeys[index] = getCacheRedisKey(item.Path, item.ServicePath)
@@ -123,7 +123,7 @@ func (r CacheRepoRedis) DeleteCacheByPath(paths []core.CachePath) error {
 		return err
 	}
 	if !ok && notFoundIndex >= 0 {
-		return &core.ErrCachePathNotFound{
+		return &model.ErrCachePathNotFound{
 			CachePath: paths[notFoundIndex],
 		}
 	}
@@ -243,10 +243,10 @@ func newCache(
 	path string,
 	cacheMap map[string]string,
 	headersMap map[string]string,
-) (core.Cache, error) {
+) (model.Cache, error) {
 	statusCode, err := strconv.Atoi(cacheMap["statusCode"])
 	if err != nil {
-		return core.Cache{}, err
+		return model.Cache{}, err
 	}
 
 	headers := make(map[string][]string)
@@ -254,11 +254,11 @@ func newCache(
 		headers[key] = strings.Split(header, cacheHeadersSeparator)
 	}
 
-	body := core.CacheBody{
+	body := model.CacheBody{
 		Reader: ioutil.NopCloser(bytes.NewBufferString(cacheMap["body"])),
 	}
 
-	return core.Cache{
+	return model.Cache{
 		Path:       path,
 		StatusCode: statusCode,
 		Headers:    headers,

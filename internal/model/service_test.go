@@ -1,4 +1,4 @@
-package core
+package model
 
 import (
 	"fmt"
@@ -289,7 +289,11 @@ func TestGetServiceRelativePath(t *testing.T) {
 			var relativePath string
 			var err error
 			if tt.pathPrefix != "" {
-				relativePath, err = GetServiceRelativePathPrefixed(tt.req, tt.pathPrefix, tt.servicePath)
+				relativePath, err = GetServiceRelativePathPrefixed(
+					tt.req,
+					tt.pathPrefix,
+					tt.servicePath,
+				)
 			} else {
 				relativePath, err = GetServiceRelativePath(tt.req, tt.servicePath)
 			}
@@ -309,7 +313,11 @@ func TestErrServiceNotFoundInURLFormat(t *testing.T) {
 		ServicePath: servicePath,
 	}
 
-	assert.EqualError(t, err, fmt.Sprintf("Service path '%s' not found in URL: %s", servicePath, urlString))
+	assert.EqualError(
+		t,
+		err,
+		fmt.Sprintf("Service path '%s' not found in URL: %s", servicePath, urlString),
+	)
 }
 
 func TestStatusMarshal(t *testing.T) {

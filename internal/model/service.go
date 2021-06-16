@@ -1,4 +1,4 @@
-package core
+package model
 
 import (
 	"errors"
@@ -83,7 +83,11 @@ type ServicePage struct {
 }
 
 // GetServiceRelativePathPrefixed retrieves the relative path of a service that has a prefix
-func GetServiceRelativePathPrefixed(r *http.Request, pathPrefix string, servicePath string) (string, error) {
+func GetServiceRelativePathPrefixed(
+	r *http.Request,
+	pathPrefix string,
+	servicePath string,
+) (string, error) {
 	var b strings.Builder
 	if r.URL.Scheme != "" && r.URL.Host != "" {
 		root := fmt.Sprintf("%s://%s", r.URL.Scheme, r.URL.Host)

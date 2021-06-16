@@ -10,8 +10,8 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/gotway/gotway/internal/core"
 	"github.com/gotway/gotway/internal/mocks"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,57 +24,57 @@ func TestGetServices(t *testing.T) {
 	stockPath := "stock"
 	routePath := "route.Route"
 	servicePaths := []string{catalogPath, stockPath, routePath}
-	catalog := core.Service{
-		Type: core.ServiceTypeREST,
+	catalog := model.Service{
+		Type: model.ServiceTypeREST,
 		Path: catalogPath,
 	}
-	stock := core.Service{
-		Type: core.ServiceTypeREST,
+	stock := model.Service{
+		Type: model.ServiceTypeREST,
 		Path: stockPath,
 	}
-	route := core.Service{
-		Type: core.ServiceTypeGRPC,
+	route := model.Service{
+		Type: model.ServiceTypeGRPC,
 		Path: routePath,
 	}
 
 	serviceRepo.On("GetAllServiceKeys").Return(servicePaths)
 	serviceRepo.On("GetServices", catalogPath).Return(
-		[]core.Service{catalog}, nil,
+		[]model.Service{catalog}, nil,
 	)
 	serviceRepo.On("GetServices", stockPath, routePath).Return(
-		[]core.Service{stock, route}, nil,
+		[]model.Service{stock, route}, nil,
 	)
 	serviceRepo.On("GetServices", catalogPath, stockPath, routePath).Return(
-		[]core.Service{catalog, stock, route}, nil,
+		[]model.Service{catalog, stock, route}, nil,
 	)
 
 	tests := []struct {
 		name            string
 		offset          int
 		limit           int
-		wantServicePage core.ServicePage
+		wantServicePage model.ServicePage
 		wantErr         error
 	}{
 		{
 			name:            "Get services with invalid offset",
 			offset:          10,
 			limit:           1,
-			wantServicePage: core.ServicePage{},
-			wantErr:         core.ErrServiceNotFound,
+			wantServicePage: model.ServicePage{},
+			wantErr:         model.ErrServiceNotFound,
 		},
 		{
 			name:            "Get empty range of services",
 			offset:          0,
 			limit:           0,
-			wantServicePage: core.ServicePage{},
-			wantErr:         core.ErrServiceNotFound,
+			wantServicePage: model.ServicePage{},
+			wantErr:         model.ErrServiceNotFound,
 		},
 		{
 			name:   "Get first service",
 			offset: 0,
 			limit:  1,
-			wantServicePage: core.ServicePage{
-				Services:   []core.Service{catalog},
+			wantServicePage: model.ServicePage{
+				Services:   []model.Service{catalog},
 				TotalCount: len(servicePaths),
 			},
 			wantErr: nil,
@@ -83,8 +83,8 @@ func TestGetServices(t *testing.T) {
 			name:   "Get las 2 services",
 			offset: 1,
 			limit:  2,
-			wantServicePage: core.ServicePage{
-				Services:   []core.Service{stock, route},
+			wantServicePage: model.ServicePage{
+				Services:   []model.Service{stock, route},
 				TotalCount: len(servicePaths),
 			},
 			wantErr: nil,
@@ -93,8 +93,8 @@ func TestGetServices(t *testing.T) {
 			name:   "Get all services",
 			offset: 0,
 			limit:  10,
-			wantServicePage: core.ServicePage{
-				Services:   []core.Service{catalog, stock, route},
+			wantServicePage: model.ServicePage{
+				Services:   []model.Service{catalog, stock, route},
 				TotalCount: len(servicePaths),
 			},
 			wantErr: nil,
@@ -118,12 +118,12 @@ func TestGetServicesRepoError(t *testing.T) {
 	serviceRepo.On("GetAllServiceKeys").Return([]string{"foo"})
 	repoErr := errors.New("Error getting services")
 	serviceRepo.On("GetServices", mock.Anything).Return(
-		[]core.Service{}, repoErr,
+		[]model.Service{}, repoErr,
 	)
 
 	servicePage, err := controller.GetServices(0, 1)
 
-	assert.Equal(t, core.ServicePage{}, servicePage)
+	assert.Equal(t, model.ServicePage{}, servicePage)
 	assert.Equal(t, repoErr, err)
 	serviceRepo.AssertExpectations(t)
 }
@@ -132,16 +132,16 @@ func TestRegisterService(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
 	controller := NewServiceController(serviceRepo, log.Log)
 
-	service := core.Service{
-		Type: core.ServiceTypeREST,
+	service := model.Service{
+		Type: model.ServiceTypeREST,
 		Path: "service",
 	}
-	cacheConfig := core.CacheConfig{
+	cacheConfig := model.CacheConfig{
 		TTL:      1,
 		Statuses: []int{200},
 		Tags:     []string{"catalog"},
 	}
-	serviceDetail := core.ServiceDetail{
+	serviceDetail := model.ServiceDetail{
 		Service: service,
 		Cache:   cacheConfig,
 	}
@@ -157,8 +157,8 @@ func TestGetService(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
 	controller := NewServiceController(serviceRepo, log.Log)
 
-	service := core.Service{
-		Type: core.ServiceTypeREST,
+	service := model.Service{
+		Type: model.ServiceTypeREST,
 		Path: "catalog",
 	}
 	serviceRepo.On("GetService", service.Path).Return(service, nil)
@@ -173,16 +173,16 @@ func TestGetServiceDetail(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
 	controller := NewServiceController(serviceRepo, log.Log)
 
-	catalog := core.Service{
-		Type: core.ServiceTypeREST,
+	catalog := model.Service{
+		Type: model.ServiceTypeREST,
 		Path: "catalog",
 	}
-	cacheConfig := core.CacheConfig{
+	cacheConfig := model.CacheConfig{
 		TTL:      1,
 		Statuses: []int{200},
 		Tags:     []string{"catalog"},
 	}
-	serviceDetail := core.ServiceDetail{
+	serviceDetail := model.ServiceDetail{
 		Service: catalog,
 		Cache:   cacheConfig,
 	}
@@ -214,10 +214,10 @@ func TestUpdateServiceStatus(t *testing.T) {
 
 	serviceRepo.On("UpdateServiceStatus", mock.Anything, mock.Anything).Return(nil)
 
-	err := controller.UpdateServiceStatus("catalog", core.ServiceStatusHealthy)
+	err := controller.UpdateServiceStatus("catalog", model.ServiceStatusHealthy)
 	assert.Nil(t, err)
 
-	err = controller.UpdateServiceStatus("stock", core.ServiceStatusIdle)
+	err = controller.UpdateServiceStatus("stock", model.ServiceStatusIdle)
 	assert.Nil(t, err)
 
 	serviceRepo.AssertNumberOfCalls(t, "UpdateServiceStatus", 2)
@@ -227,16 +227,16 @@ func TestReverseProxy(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	catalog := core.Service{
-		Type: core.ServiceTypeREST,
+	catalog := model.Service{
+		Type: model.ServiceTypeREST,
 		URL:  "http://api.catalog.com",
 		Path: "catalog",
 	}
 	httpmock.RegisterResponder(http.MethodGet, fmt.Sprintf("%v/products", catalog.URL),
 		httpmock.NewStringResponder(200, `[{"id": 1, "name": "T-Shirt"}]`))
 
-	stock := core.Service{
-		Type: core.ServiceTypeREST,
+	stock := model.Service{
+		Type: model.ServiceTypeREST,
 		URL:  "http://api.stock.com",
 		Path: "stock",
 	}
@@ -258,15 +258,15 @@ func TestReverseProxy(t *testing.T) {
 	tests := []struct {
 		name           string
 		req            *http.Request
-		service        core.Service
+		service        model.Service
 		wantErr        error
 		wantStatusCode int
 	}{
 		{
 			name:           "Error creating reverse proxy",
 			req:            nil,
-			service:        core.Service{Type: "foo"},
-			wantErr:        core.ErrInvalidServiceType,
+			service:        model.Service{Type: "foo"},
+			wantErr:        model.ErrInvalidServiceType,
 			wantStatusCode: http.StatusOK,
 		},
 		{

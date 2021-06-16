@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 )
 
 func (s *Server) cacheMiddleware(next http.Handler) http.Handler {
@@ -20,7 +20,7 @@ func (s *Server) cacheMiddleware(next http.Handler) http.Handler {
 		serviceKey := getServiceKey(r)
 		cache, err := s.cacheController.GetCache(r, "", serviceKey)
 		if err != nil {
-			if !errors.Is(err, core.ErrCacheNotFound) {
+			if !errors.Is(err, model.ErrCacheNotFound) {
 				s.logger.Error(err)
 			}
 			next.ServeHTTP(w, r)

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gotway/gotway/internal/controller"
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 
 	"github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/health/client"
@@ -40,13 +40,13 @@ func (h *Health) updateServiceStatus() {
 	setToHealthy, setToIdle := h.getServicesToChangeStatus()
 
 	for _, service := range setToHealthy {
-		err := h.serviceController.UpdateServiceStatus(service, core.ServiceStatusHealthy)
+		err := h.serviceController.UpdateServiceStatus(service, model.ServiceStatusHealthy)
 		if err != nil {
 			h.logger.Error(err)
 		}
 	}
 	for _, service := range setToIdle {
-		err := h.serviceController.UpdateServiceStatus(service, core.ServiceStatusIdle)
+		err := h.serviceController.UpdateServiceStatus(service, model.ServiceStatusIdle)
 		if err != nil {
 			h.logger.Error(err)
 		}
@@ -78,12 +78,12 @@ func (h *Health) getServicesToChangeStatus() (setToHealthy []string, setToIdle [
 
 			err = client.HealthCheck()
 			if err != nil {
-				if service.Status == core.ServiceStatusHealthy {
+				if service.Status == model.ServiceStatusHealthy {
 					h.logger.Infof("service %s is now idle. Cause: %v", service.Path, err)
 					idleServices = append(idleServices, service.Path)
 				}
 			} else {
-				if service.Status == core.ServiceStatusIdle {
+				if service.Status == model.ServiceStatusIdle {
 					h.logger.Infof("Service %s is now healthy", service.Path)
 					healthyServices = append(healthyServices, service.Path)
 				}

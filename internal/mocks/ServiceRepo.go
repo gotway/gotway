@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	core "github.com/gotway/gotway/internal/core"
+	model "github.com/gotway/gotway/internal/model"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -43,14 +43,14 @@ func (_m *ServiceRepo) GetAllServiceKeys() []string {
 }
 
 // GetService provides a mock function with given fields: key
-func (_m *ServiceRepo) GetService(key string) (core.Service, error) {
+func (_m *ServiceRepo) GetService(key string) (model.Service, error) {
 	ret := _m.Called(key)
 
-	var r0 core.Service
-	if rf, ok := ret.Get(0).(func(string) core.Service); ok {
+	var r0 model.Service
+	if rf, ok := ret.Get(0).(func(string) model.Service); ok {
 		r0 = rf(key)
 	} else {
-		r0 = ret.Get(0).(core.Service)
+		r0 = ret.Get(0).(model.Service)
 	}
 
 	var r1 error
@@ -64,14 +64,14 @@ func (_m *ServiceRepo) GetService(key string) (core.Service, error) {
 }
 
 // GetServiceCache provides a mock function with given fields: key
-func (_m *ServiceRepo) GetServiceCache(key string) (core.CacheConfig, error) {
+func (_m *ServiceRepo) GetServiceCache(key string) (model.CacheConfig, error) {
 	ret := _m.Called(key)
 
-	var r0 core.CacheConfig
-	if rf, ok := ret.Get(0).(func(string) core.CacheConfig); ok {
+	var r0 model.CacheConfig
+	if rf, ok := ret.Get(0).(func(string) model.CacheConfig); ok {
 		r0 = rf(key)
 	} else {
-		r0 = ret.Get(0).(core.CacheConfig)
+		r0 = ret.Get(0).(model.CacheConfig)
 	}
 
 	var r1 error
@@ -85,14 +85,14 @@ func (_m *ServiceRepo) GetServiceCache(key string) (core.CacheConfig, error) {
 }
 
 // GetServiceDetail provides a mock function with given fields: key
-func (_m *ServiceRepo) GetServiceDetail(key string) (core.ServiceDetail, error) {
+func (_m *ServiceRepo) GetServiceDetail(key string) (model.ServiceDetail, error) {
 	ret := _m.Called(key)
 
-	var r0 core.ServiceDetail
-	if rf, ok := ret.Get(0).(func(string) core.ServiceDetail); ok {
+	var r0 model.ServiceDetail
+	if rf, ok := ret.Get(0).(func(string) model.ServiceDetail); ok {
 		r0 = rf(key)
 	} else {
-		r0 = ret.Get(0).(core.ServiceDetail)
+		r0 = ret.Get(0).(model.ServiceDetail)
 	}
 
 	var r1 error
@@ -106,7 +106,7 @@ func (_m *ServiceRepo) GetServiceDetail(key string) (core.ServiceDetail, error) 
 }
 
 // GetServices provides a mock function with given fields: keys
-func (_m *ServiceRepo) GetServices(keys ...string) ([]core.Service, error) {
+func (_m *ServiceRepo) GetServices(keys ...string) ([]model.Service, error) {
 	_va := make([]interface{}, len(keys))
 	for _i := range keys {
 		_va[_i] = keys[_i]
@@ -115,12 +115,12 @@ func (_m *ServiceRepo) GetServices(keys ...string) ([]core.Service, error) {
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 []core.Service
-	if rf, ok := ret.Get(0).(func(...string) []core.Service); ok {
+	var r0 []model.Service
+	if rf, ok := ret.Get(0).(func(...string) []model.Service); ok {
 		r0 = rf(keys...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]core.Service)
+			r0 = ret.Get(0).([]model.Service)
 		}
 	}
 
@@ -149,11 +149,11 @@ func (_m *ServiceRepo) IsCacheableStatusCode(key string, statusCode int) bool {
 }
 
 // StoreService provides a mock function with given fields: service
-func (_m *ServiceRepo) StoreService(service core.ServiceDetail) error {
+func (_m *ServiceRepo) StoreService(service model.ServiceDetail) error {
 	ret := _m.Called(service)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(core.ServiceDetail) error); ok {
+	if rf, ok := ret.Get(0).(func(model.ServiceDetail) error); ok {
 		r0 = rf(service)
 	} else {
 		r0 = ret.Error(0)
@@ -163,11 +163,11 @@ func (_m *ServiceRepo) StoreService(service core.ServiceDetail) error {
 }
 
 // UpdateServiceStatus provides a mock function with given fields: key, status
-func (_m *ServiceRepo) UpdateServiceStatus(key string, status core.ServiceStatus) error {
+func (_m *ServiceRepo) UpdateServiceStatus(key string, status model.ServiceStatus) error {
 	ret := _m.Called(key, status)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, core.ServiceStatus) error); ok {
+	if rf, ok := ret.Get(0).(func(string, model.ServiceStatus) error); ok {
 		r0 = rf(key, status)
 	} else {
 		r0 = ret.Error(0)

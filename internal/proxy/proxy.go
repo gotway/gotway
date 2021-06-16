@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/pkg/log"
 )
 
@@ -18,7 +18,7 @@ type Proxy interface {
 type ResponseHandler = func(serviceKey string, res *http.Response) error
 
 type proxy struct {
-	service        core.Service
+	service        model.Service
 	handleResponse ResponseHandler
 	logger         log.Logger
 }
@@ -43,18 +43,18 @@ func getDirector(target *url.URL) func(r *http.Request) {
 }
 
 // New instanciates a new Proxy
-func New(service core.Service, handleResponse ResponseHandler, logger log.Logger) (Proxy, error) {
+func New(service model.Service, handleResponse ResponseHandler, logger log.Logger) (Proxy, error) {
 	proxy := proxy{
 		service,
 		handleResponse,
 		logger,
 	}
 	switch service.Type {
-	case core.ServiceTypeREST:
+	case model.ServiceTypeREST:
 		return proxyREST{proxy}, nil
-	case core.ServiceTypeGRPC:
+	case model.ServiceTypeGRPC:
 		return proxyGRPC{proxy}, nil
 	default:
-		return nil, core.ErrInvalidServiceType
+		return nil, model.ErrInvalidServiceType
 	}
 }

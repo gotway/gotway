@@ -4,16 +4,16 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/pkg/log"
 )
 
 type CacheController interface {
 	IsCacheableRequest(r *http.Request) bool
-	GetCache(r *http.Request, pathPrefix, serviceKey string) (core.Cache, error)
-	GetCacheDetail(r *http.Request, pathPrefix, serviceKey string) (core.CacheDetail, error)
-	DeleteCacheByPath(paths []core.CachePath) error
+	GetCache(r *http.Request, pathPrefix, serviceKey string) (model.Cache, error)
+	GetCacheDetail(r *http.Request, pathPrefix, serviceKey string) (model.CacheDetail, error)
+	DeleteCacheByPath(paths []model.CachePath) error
 	DeleteCacheByTags(tags []string) error
 	ListenResponses(ctx context.Context)
 	HandleResponse(serviceKey string, r *http.Response) error
@@ -36,14 +36,14 @@ func (c BasicCacheController) IsCacheableRequest(r *http.Request) bool {
 func (c BasicCacheController) GetCache(
 	r *http.Request,
 	pathPrefix, serviceKey string,
-) (core.Cache, error) {
-	path, err := core.GetServiceRelativePathPrefixed(r, pathPrefix, serviceKey)
+) (model.Cache, error) {
+	path, err := model.GetServiceRelativePathPrefixed(r, pathPrefix, serviceKey)
 	if err != nil {
-		return core.Cache{}, err
+		return model.Cache{}, err
 	}
 	cache, err := c.cacheRepo.GetCache(path, serviceKey)
 	if err != nil {
-		return core.Cache{}, err
+		return model.Cache{}, err
 	}
 	return cache, nil
 }
@@ -52,20 +52,20 @@ func (c BasicCacheController) GetCache(
 func (c BasicCacheController) GetCacheDetail(
 	r *http.Request,
 	pathPrefix, serviceKey string,
-) (core.CacheDetail, error) {
-	path, err := core.GetServiceRelativePathPrefixed(r, pathPrefix, serviceKey)
+) (model.CacheDetail, error) {
+	path, err := model.GetServiceRelativePathPrefixed(r, pathPrefix, serviceKey)
 	if err != nil {
-		return core.CacheDetail{}, err
+		return model.CacheDetail{}, err
 	}
 	cacheDetail, err := c.cacheRepo.GetCacheDetail(path, serviceKey)
 	if err != nil {
-		return core.CacheDetail{}, err
+		return model.CacheDetail{}, err
 	}
 	return cacheDetail, nil
 }
 
 // DeleteCacheByPath deletes cache defined by its path
-func (c BasicCacheController) DeleteCacheByPath(paths []core.CachePath) error {
+func (c BasicCacheController) DeleteCacheByPath(paths []model.CachePath) error {
 	return c.cacheRepo.DeleteCacheByPath(paths)
 }
 

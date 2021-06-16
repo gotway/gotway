@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 )
 
 // Client interface
@@ -14,14 +14,14 @@ type Client interface {
 }
 
 // New instanciates a new client
-func New(service core.Service) (Client, error) {
+func New(service model.Service) (Client, error) {
 	switch service.Type {
-	case core.ServiceTypeREST:
+	case model.ServiceTypeREST:
 		return clientREST{service}, nil
-	case core.ServiceTypeGRPC:
+	case model.ServiceTypeGRPC:
 		return clientGRPC{service}, nil
 	default:
-		return nil, core.ErrInvalidServiceType
+		return nil, model.ErrInvalidServiceType
 	}
 }
 

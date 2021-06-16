@@ -5,7 +5,7 @@ package mocks
 import (
 	http "net/http"
 
-	core "github.com/gotway/gotway/internal/core"
+	model "github.com/gotway/gotway/internal/model"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -46,14 +46,14 @@ func (_m *ServiceController) GetAllServiceKeys() []string {
 }
 
 // GetService provides a mock function with given fields: key
-func (_m *ServiceController) GetService(key string) (core.Service, error) {
+func (_m *ServiceController) GetService(key string) (model.Service, error) {
 	ret := _m.Called(key)
 
-	var r0 core.Service
-	if rf, ok := ret.Get(0).(func(string) core.Service); ok {
+	var r0 model.Service
+	if rf, ok := ret.Get(0).(func(string) model.Service); ok {
 		r0 = rf(key)
 	} else {
-		r0 = ret.Get(0).(core.Service)
+		r0 = ret.Get(0).(model.Service)
 	}
 
 	var r1 error
@@ -67,14 +67,14 @@ func (_m *ServiceController) GetService(key string) (core.Service, error) {
 }
 
 // GetServiceDetail provides a mock function with given fields: key
-func (_m *ServiceController) GetServiceDetail(key string) (core.ServiceDetail, error) {
+func (_m *ServiceController) GetServiceDetail(key string) (model.ServiceDetail, error) {
 	ret := _m.Called(key)
 
-	var r0 core.ServiceDetail
-	if rf, ok := ret.Get(0).(func(string) core.ServiceDetail); ok {
+	var r0 model.ServiceDetail
+	if rf, ok := ret.Get(0).(func(string) model.ServiceDetail); ok {
 		r0 = rf(key)
 	} else {
-		r0 = ret.Get(0).(core.ServiceDetail)
+		r0 = ret.Get(0).(model.ServiceDetail)
 	}
 
 	var r1 error
@@ -88,14 +88,14 @@ func (_m *ServiceController) GetServiceDetail(key string) (core.ServiceDetail, e
 }
 
 // GetServices provides a mock function with given fields: offset, limit
-func (_m *ServiceController) GetServices(offset int, limit int) (core.ServicePage, error) {
+func (_m *ServiceController) GetServices(offset int, limit int) (model.ServicePage, error) {
 	ret := _m.Called(offset, limit)
 
-	var r0 core.ServicePage
-	if rf, ok := ret.Get(0).(func(int, int) core.ServicePage); ok {
+	var r0 model.ServicePage
+	if rf, ok := ret.Get(0).(func(int, int) model.ServicePage); ok {
 		r0 = rf(offset, limit)
 	} else {
-		r0 = ret.Get(0).(core.ServicePage)
+		r0 = ret.Get(0).(model.ServicePage)
 	}
 
 	var r1 error
@@ -109,11 +109,11 @@ func (_m *ServiceController) GetServices(offset int, limit int) (core.ServicePag
 }
 
 // RegisterService provides a mock function with given fields: serviceDetail
-func (_m *ServiceController) RegisterService(serviceDetail core.ServiceDetail) error {
+func (_m *ServiceController) RegisterService(serviceDetail model.ServiceDetail) error {
 	ret := _m.Called(serviceDetail)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(core.ServiceDetail) error); ok {
+	if rf, ok := ret.Get(0).(func(model.ServiceDetail) error); ok {
 		r0 = rf(serviceDetail)
 	} else {
 		r0 = ret.Error(0)
@@ -123,11 +123,11 @@ func (_m *ServiceController) RegisterService(serviceDetail core.ServiceDetail) e
 }
 
 // ReverseProxy provides a mock function with given fields: w, r, service, handler
-func (_m *ServiceController) ReverseProxy(w http.ResponseWriter, r *http.Request, service core.Service, handler func(string, *http.Response) error) error {
+func (_m *ServiceController) ReverseProxy(w http.ResponseWriter, r *http.Request, service model.Service, handler func(string, *http.Response) error) error {
 	ret := _m.Called(w, r, service, handler)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(http.ResponseWriter, *http.Request, core.Service, func(string, *http.Response) error) error); ok {
+	if rf, ok := ret.Get(0).(func(http.ResponseWriter, *http.Request, model.Service, func(string, *http.Response) error) error); ok {
 		r0 = rf(w, r, service, handler)
 	} else {
 		r0 = ret.Error(0)
@@ -137,11 +137,11 @@ func (_m *ServiceController) ReverseProxy(w http.ResponseWriter, r *http.Request
 }
 
 // UpdateServiceStatus provides a mock function with given fields: key, status
-func (_m *ServiceController) UpdateServiceStatus(key string, status core.ServiceStatus) error {
+func (_m *ServiceController) UpdateServiceStatus(key string, status model.ServiceStatus) error {
 	ret := _m.Called(key, status)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, core.ServiceStatus) error); ok {
+	if rf, ok := ret.Get(0).(func(string, model.ServiceStatus) error); ok {
 		r0 = rf(key, status)
 	} else {
 		r0 = ret.Error(0)

@@ -6,11 +6,11 @@ import (
 	"net/url"
 
 	"github.com/gotway/gotway/internal/config"
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 )
 
 type clientREST struct {
-	service core.Service
+	service model.Service
 }
 
 func (c clientREST) getHealthURL() (*url.URL, error) {

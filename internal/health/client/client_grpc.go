@@ -8,11 +8,11 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/gotway/gotway/internal/config"
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 )
 
 type clientGRPC struct {
-	service core.Service
+	service model.Service
 }
 
 func getConn(server string) (*grpc.ClientConn, error) {

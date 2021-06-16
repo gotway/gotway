@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/pquerna/cachecontrol/cacheobject"
 )
 
@@ -78,12 +78,12 @@ func (c BasicCacheController) cacheResponse(res response) error {
 	ttl := getTTL(res.httpResponse, config)
 	tags := getTags(res.httpResponse, config)
 
-	cache := core.CacheDetail{
-		Cache: core.Cache{
+	cache := model.CacheDetail{
+		Cache: model.Cache{
 			Path:       path,
 			StatusCode: res.httpResponse.StatusCode,
 			Headers:    res.httpResponse.Header,
-			Body: core.CacheBody{
+			Body: model.CacheBody{
 				Reader: *res.body,
 			},
 		},
@@ -103,7 +103,7 @@ func getPath(r *http.Request) string {
 	return path
 }
 
-func getTTL(r *http.Response, config core.CacheConfig) core.CacheTTL {
+func getTTL(r *http.Response, config model.CacheConfig) model.CacheTTL {
 	ttl, err := getCacheTTLHeader(r)
 	var seconds int64
 	if err != nil {
@@ -111,10 +111,10 @@ func getTTL(r *http.Response, config core.CacheConfig) core.CacheTTL {
 	} else {
 		seconds = ttl
 	}
-	return core.NewCacheTTL(seconds)
+	return model.NewCacheTTL(seconds)
 }
 
-func getTags(r *http.Response, config core.CacheConfig) []string {
+func getTags(r *http.Response, config model.CacheConfig) []string {
 	tags, err := getCacheTagsHeader(r)
 	if err != nil {
 		return config.Tags

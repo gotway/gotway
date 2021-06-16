@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 )
 
 func (s *Server) getServicesHandler(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +32,7 @@ func (s *Server) getServicesHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) registerServiceHandler(w http.ResponseWriter, r *http.Request) {
 	decoded := json.NewDecoder(r.Body)
 
-	var serviceDetail core.ServiceDetail
+	var serviceDetail model.ServiceDetail
 	err := decoded.Decode(&serviceDetail)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -47,7 +47,7 @@ func (s *Server) registerServiceHandler(w http.ResponseWriter, r *http.Request) 
 	err = s.serviceController.RegisterService(serviceDetail)
 	if err != nil {
 		s.logger.Error(err)
-		if errors.Is(err, core.ErrServiceAlreadyRegistered) {
+		if errors.Is(err, model.ErrServiceAlreadyRegistered) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -81,10 +81,10 @@ func (s *Server) deleteServiceHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) deleteCacheHandler(w http.ResponseWriter, r *http.Request) {
 	decoded := json.NewDecoder(r.Body)
 
-	var payload core.DeleteCache
+	var payload model.DeleteCache
 	err := decoded.Decode(&payload)
 	if err != nil {
-		http.Error(w, core.ErrInvalidDeleteCache.Error(), http.StatusBadRequest)
+		http.Error(w, model.ErrInvalidDeleteCache.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (s *Server) deleteCacheHandler(w http.ResponseWriter, r *http.Request) {
 	if len(payload.Paths) > 0 {
 		err := s.cacheController.DeleteCacheByPath(payload.Paths)
 		if err != nil {
-			if _, ok := err.(*core.ErrCachePathNotFound); ok {
+			if _, ok := err.(*model.ErrCachePathNotFound); ok {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			}
@@ -122,7 +122,7 @@ func (s *Server) getCacheHandler(w http.ResponseWriter, r *http.Request) {
 
 	cacheDetail, err := s.cacheController.GetCacheDetail(r, "api/cache", servicePath)
 	if err != nil {
-		if errors.Is(err, core.ErrCacheNotFound) {
+		if errors.Is(err, model.ErrCacheNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
@@ -158,7 +158,7 @@ func (s *Server) proxyHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleServiceError(err error, w http.ResponseWriter, r *http.Request) {
 	s.logger.Error(err)
 	key := getServiceKey(r)
-	if errors.Is(err, core.ErrServiceNotFound) {
+	if errors.Is(err, model.ErrServiceNotFound) {
 		http.Error(w, fmt.Sprintf("'%s' service not found", key), http.StatusNotFound)
 		return
 	}

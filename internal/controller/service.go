@@ -3,24 +3,24 @@ package controller
 import (
 	"net/http"
 
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/internal/proxy"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/pkg/log"
 )
 
 type ServiceController interface {
-	GetServices(offset, limit int) (core.ServicePage, error)
+	GetServices(offset, limit int) (model.ServicePage, error)
 	GetAllServiceKeys() []string
-	RegisterService(serviceDetail core.ServiceDetail) error
-	GetService(key string) (core.Service, error)
-	GetServiceDetail(key string) (core.ServiceDetail, error)
+	RegisterService(serviceDetail model.ServiceDetail) error
+	GetService(key string) (model.Service, error)
+	GetServiceDetail(key string) (model.ServiceDetail, error)
 	DeleteService(key string) error
-	UpdateServiceStatus(key string, status core.ServiceStatus) error
+	UpdateServiceStatus(key string, status model.ServiceStatus) error
 	ReverseProxy(
 		w http.ResponseWriter,
 		r *http.Request,
-		service core.Service,
+		service model.Service,
 		handler proxy.ResponseHandler,
 	) error
 }
@@ -31,25 +31,25 @@ type BasicServiceController struct {
 }
 
 // GetServices get services paginated
-func (c BasicServiceController) GetServices(offset, limit int) (core.ServicePage, error) {
+func (c BasicServiceController) GetServices(offset, limit int) (model.ServicePage, error) {
 	keys := c.GetAllServiceKeys()
 	if len(keys) == 0 || offset > len(keys) {
-		return core.ServicePage{}, core.ErrServiceNotFound
+		return model.ServicePage{}, model.ErrServiceNotFound
 	}
 
 	lowerIndex := offset
 	upperIndex := min(offset+limit, len(keys))
 	slicedKeys := keys[lowerIndex:upperIndex]
 	if len(slicedKeys) == 0 {
-		return core.ServicePage{}, core.ErrServiceNotFound
+		return model.ServicePage{}, model.ErrServiceNotFound
 	}
 
 	services, err := c.serviceRepo.GetServices(slicedKeys...)
 	if err != nil {
-		return core.ServicePage{}, err
+		return model.ServicePage{}, err
 	}
 
-	return core.ServicePage{Services: services, TotalCount: len(keys)}, nil
+	return model.ServicePage{Services: services, TotalCount: len(keys)}, nil
 }
 
 // GetAllServiceKeys retrieves all service keys
@@ -58,17 +58,17 @@ func (c BasicServiceController) GetAllServiceKeys() []string {
 }
 
 // RegisterService adds a new service
-func (c BasicServiceController) RegisterService(serviceDetail core.ServiceDetail) error {
+func (c BasicServiceController) RegisterService(serviceDetail model.ServiceDetail) error {
 	return c.serviceRepo.StoreService(serviceDetail)
 }
 
 // GetService gets a service
-func (c BasicServiceController) GetService(key string) (core.Service, error) {
+func (c BasicServiceController) GetService(key string) (model.Service, error) {
 	return c.serviceRepo.GetService(key)
 }
 
 // GetServiceDetail gets a service with extra info
-func (c BasicServiceController) GetServiceDetail(key string) (core.ServiceDetail, error) {
+func (c BasicServiceController) GetServiceDetail(key string) (model.ServiceDetail, error) {
 	return c.serviceRepo.GetServiceDetail(key)
 }
 
@@ -78,7 +78,7 @@ func (c BasicServiceController) DeleteService(key string) error {
 }
 
 // UpdateServiceStatus updates the status of a service
-func (c BasicServiceController) UpdateServiceStatus(key string, status core.ServiceStatus) error {
+func (c BasicServiceController) UpdateServiceStatus(key string, status model.ServiceStatus) error {
 	return c.serviceRepo.UpdateServiceStatus(key, status)
 }
 
@@ -86,7 +86,7 @@ func (c BasicServiceController) UpdateServiceStatus(key string, status core.Serv
 func (c BasicServiceController) ReverseProxy(
 	w http.ResponseWriter,
 	r *http.Request,
-	service core.Service,
+	service model.Service,
 	handler proxy.ResponseHandler,
 ) error {
 	p, err := proxy.New(service, handler, c.logger.WithField("type", "proxy"))

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gotway/gotway/internal/core"
 	"github.com/gotway/gotway/internal/mocks"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/stretchr/testify/assert"
 )
@@ -52,7 +52,7 @@ func TestGetCache(t *testing.T) {
 
 	reqCacheError, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	cacheError := errors.New("Cache not found")
-	cacheRepo.On("GetCache", "/foo", "service").Return(core.Cache{}, cacheError)
+	cacheRepo.On("GetCache", "/foo", "service").Return(model.Cache{}, cacheError)
 
 	reqSuccess, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/catalog/products", nil)
 	reqPrefix, _ := http.NewRequest(
@@ -60,7 +60,7 @@ func TestGetCache(t *testing.T) {
 		"http://api.gotway.com/api/cache/catalog/products",
 		nil,
 	)
-	cache := core.Cache{
+	cache := model.Cache{
 		Path:       "/products",
 		StatusCode: 200,
 	}
@@ -71,7 +71,7 @@ func TestGetCache(t *testing.T) {
 		req        *http.Request
 		pathPrefix string
 		serviceKey string
-		wantCache  core.Cache
+		wantCache  model.Cache
 		wantErr    error
 	}{
 		{
@@ -79,8 +79,8 @@ func TestGetCache(t *testing.T) {
 			req:        reqSuccess,
 			pathPrefix: "",
 			serviceKey: "bar",
-			wantCache:  core.Cache{},
-			wantErr: &core.ErrServiceNotFoundInURL{
+			wantCache:  model.Cache{},
+			wantErr: &model.ErrServiceNotFoundInURL{
 				URL:         reqSuccess.URL,
 				ServicePath: "bar",
 			},
@@ -90,7 +90,7 @@ func TestGetCache(t *testing.T) {
 			req:        reqCacheError,
 			pathPrefix: "",
 			serviceKey: "service",
-			wantCache:  core.Cache{},
+			wantCache:  model.Cache{},
 			wantErr:    cacheError,
 		},
 		{
@@ -128,7 +128,7 @@ func TestGetCacheDetail(t *testing.T) {
 
 	reqCacheError, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	cacheError := errors.New("Cache not found")
-	cacheRepo.On("GetCacheDetail", "/foo", "service").Return(core.CacheDetail{}, cacheError)
+	cacheRepo.On("GetCacheDetail", "/foo", "service").Return(model.CacheDetail{}, cacheError)
 
 	reqSuccess, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/catalog/products", nil)
 	reqPrefix, _ := http.NewRequest(
@@ -136,8 +136,8 @@ func TestGetCacheDetail(t *testing.T) {
 		"http://api.gotway.com/api/cache/catalog/products",
 		nil,
 	)
-	cacheDetail := core.CacheDetail{
-		Cache: core.Cache{
+	cacheDetail := model.CacheDetail{
+		Cache: model.Cache{
 			Path:       "/products",
 			StatusCode: 200,
 		},
@@ -151,7 +151,7 @@ func TestGetCacheDetail(t *testing.T) {
 		req             *http.Request
 		pathPrefix      string
 		serviceKey      string
-		wantCacheDetail core.CacheDetail
+		wantCacheDetail model.CacheDetail
 		wantErr         error
 	}{
 		{
@@ -159,8 +159,8 @@ func TestGetCacheDetail(t *testing.T) {
 			req:             reqSuccess,
 			pathPrefix:      "",
 			serviceKey:      "bar",
-			wantCacheDetail: core.CacheDetail{},
-			wantErr: &core.ErrServiceNotFoundInURL{
+			wantCacheDetail: model.CacheDetail{},
+			wantErr: &model.ErrServiceNotFoundInURL{
 				URL:         reqSuccess.URL,
 				ServicePath: "bar",
 			},
@@ -170,7 +170,7 @@ func TestGetCacheDetail(t *testing.T) {
 			req:             reqCacheError,
 			pathPrefix:      "",
 			serviceKey:      "service",
-			wantCacheDetail: core.CacheDetail{},
+			wantCacheDetail: model.CacheDetail{},
 			wantErr:         cacheError,
 		},
 		{
@@ -206,7 +206,7 @@ func TestDeleteCacheByPath(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
 	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
 
-	paths := []core.CachePath{
+	paths := []model.CachePath{
 		{
 			ServicePath: "service",
 			Path:        "foo",

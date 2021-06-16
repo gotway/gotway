@@ -6,19 +6,19 @@ import (
 	"strconv"
 
 	goRedis "github.com/go-redis/redis/v8"
-	"github.com/gotway/gotway/internal/core"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/pkg/redis"
 )
 
 type ServiceRepo interface {
-	StoreService(service core.ServiceDetail) error
+	StoreService(service model.ServiceDetail) error
 	GetAllServiceKeys() []string
-	GetService(key string) (core.Service, error)
-	GetServiceDetail(key string) (core.ServiceDetail, error)
-	GetServices(keys ...string) ([]core.Service, error)
+	GetService(key string) (model.Service, error)
+	GetServiceDetail(key string) (model.ServiceDetail, error)
+	GetServices(keys ...string) ([]model.Service, error)
 	DeleteService(key string) error
-	UpdateServiceStatus(key string, status core.ServiceStatus) error
-	GetServiceCache(key string) (core.CacheConfig, error)
+	UpdateServiceStatus(key string, status model.ServiceStatus) error
+	GetServiceCache(key string) (model.CacheConfig, error)
 	IsCacheableStatusCode(key string, statusCode int) bool
 }
 
@@ -34,7 +34,7 @@ const (
 var ctx = context.Background()
 
 // StoreService stores a service into redis
-func (s ServiceRepoRedis) StoreService(service core.ServiceDetail) error {
+func (s ServiceRepoRedis) StoreService(service model.ServiceDetail) error {
 	healthPath, err := service.HealthPathForType()
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (s ServiceRepoRedis) StoreService(service core.ServiceDetail) error {
 		"url":        service.URL,
 		"path":       service.Path,
 		"healthPath": healthPath,
-		"status":     core.ServiceStatusHealthy,
+		"status":     model.ServiceStatusHealthy,
 	}
 
 	serviceKey := getServiceRedisKey(service.Path)
@@ -71,7 +71,7 @@ func (s ServiceRepoRedis) StoreService(service core.ServiceDetail) error {
 		}
 
 		if storeService.Val() == 0 {
-			return core.ErrServiceAlreadyRegistered
+			return model.ErrServiceAlreadyRegistered
 		}
 
 		return nil
@@ -86,21 +86,21 @@ func (s ServiceRepoRedis) GetAllServiceKeys() []string {
 }
 
 // GetService gets a service from redis
-func (s ServiceRepoRedis) GetService(key string) (core.Service, error) {
+func (s ServiceRepoRedis) GetService(key string) (model.Service, error) {
 	redisKey := getServiceRedisKey(key)
 	values := s.redis.HGetAll(ctx, redisKey).Val()
 	return newService(values)
 }
 
 // GetServiceDetail gets a service with extra info
-func (s ServiceRepoRedis) GetServiceDetail(key string) (core.ServiceDetail, error) {
+func (s ServiceRepoRedis) GetServiceDetail(key string) (model.ServiceDetail, error) {
 	serviceKey := getServiceRedisKey(key)
 	cacheKey := getServiceCacheRedisKey(key)
 	statusesKey := getStatusesRedisKey(key)
 	tagsKey := getTagsRedisKey(key)
 	keys := []string{serviceKey, cacheKey, statusesKey, tagsKey}
 
-	serviceDetail := core.ServiceDetail{}
+	serviceDetail := model.ServiceDetail{}
 	txFn := func(tx *goRedis.Tx) error {
 		pipe := tx.TxPipeline()
 
@@ -122,9 +122,9 @@ func (s ServiceRepoRedis) GetServiceDetail(key string) (core.ServiceDetail, erro
 		tags, errTags := getTags.Result()
 		errs := []error{errTTL, errStatuses, errTags}
 
-		var cacheConfig core.CacheConfig
+		var cacheConfig model.CacheConfig
 		if redis.AnyEmptyErr(errs...) {
-			cacheConfig = core.DefaultCacheConfig
+			cacheConfig = model.DefaultCacheConfig
 		} else {
 			cacheConfig, err = newCacheConfig(ttl, statuses, tags)
 			if err != nil {
@@ -132,7 +132,7 @@ func (s ServiceRepoRedis) GetServiceDetail(key string) (core.ServiceDetail, erro
 			}
 		}
 
-		serviceDetail = core.ServiceDetail{
+		serviceDetail = model.ServiceDetail{
 			Service: service,
 			Cache:   cacheConfig,
 		}
@@ -144,8 +144,8 @@ func (s ServiceRepoRedis) GetServiceDetail(key string) (core.ServiceDetail, erro
 }
 
 // GetServices gets services from redis
-func (s ServiceRepoRedis) GetServices(keys ...string) ([]core.Service, error) {
-	var services []core.Service
+func (s ServiceRepoRedis) GetServices(keys ...string) ([]model.Service, error) {
+	var services []model.Service
 	txFn := func(tx *goRedis.Tx) error {
 		pipe := tx.TxPipeline()
 
@@ -199,7 +199,7 @@ func (s ServiceRepoRedis) DeleteService(key string) error {
 
 		deleted := delService.Val()
 		if deleted == 0 {
-			return core.ErrServiceNotFound
+			return model.ErrServiceNotFound
 		}
 
 		return err
@@ -209,7 +209,7 @@ func (s ServiceRepoRedis) DeleteService(key string) error {
 }
 
 // UpdateServiceStatus updates the status of a service
-func (s ServiceRepoRedis) UpdateServiceStatus(key string, status core.ServiceStatus) error {
+func (s ServiceRepoRedis) UpdateServiceStatus(key string, status model.ServiceStatus) error {
 	serviceKey := getServiceRedisKey(key)
 	if err := status.Validate(); err != nil {
 		return err
@@ -218,13 +218,13 @@ func (s ServiceRepoRedis) UpdateServiceStatus(key string, status core.ServiceSta
 }
 
 // GetServiceCache gets cache configuration of a service
-func (s ServiceRepoRedis) GetServiceCache(key string) (core.CacheConfig, error) {
+func (s ServiceRepoRedis) GetServiceCache(key string) (model.CacheConfig, error) {
 	cacheKey := getServiceCacheRedisKey(key)
 	statusesKey := getStatusesRedisKey(key)
 	tagsKey := getTagsRedisKey(key)
 	keys := []string{cacheKey, statusesKey, tagsKey}
 
-	cache := core.CacheConfig{}
+	cache := model.CacheConfig{}
 	txFn := func(tx *goRedis.Tx) error {
 		pipe := tx.TxPipeline()
 
@@ -240,7 +240,7 @@ func (s ServiceRepoRedis) GetServiceCache(key string) (core.CacheConfig, error) 
 		errs := []error{errTTL, errStatuses, errTags}
 
 		if redis.AnyEmptyErr(errs...) {
-			return core.ErrCacheConfigNotFound
+			return model.ErrCacheConfigNotFound
 		}
 
 		var err error
@@ -274,27 +274,27 @@ func getTagsRedisKey(key string) string {
 	return getServiceCacheRedisKey(key) + ":tags"
 }
 
-func newService(values map[string]string) (core.Service, error) {
+func newService(values map[string]string) (model.Service, error) {
 	if len(values) == 0 {
-		return core.Service{}, core.ErrServiceNotFound
+		return model.Service{}, model.ErrServiceNotFound
 	}
 	service, err := processServiceMap(values)
 	if err != nil {
-		return core.Service{}, err
+		return model.Service{}, err
 	}
 	return service, nil
 }
 
-func processServiceMap(values map[string]string) (core.Service, error) {
-	serviceType := core.ServiceType(values["type"])
+func processServiceMap(values map[string]string) (model.Service, error) {
+	serviceType := model.ServiceType(values["type"])
 	if err := serviceType.Validate(); err != nil {
-		return core.Service{}, err
+		return model.Service{}, err
 	}
-	serviceStatus := core.ServiceStatus(values["status"])
+	serviceStatus := model.ServiceStatus(values["status"])
 	if err := serviceStatus.Validate(); err != nil {
-		return core.Service{}, err
+		return model.Service{}, err
 	}
-	return core.Service{
+	return model.Service{
 		Type:       serviceType,
 		URL:        values["url"],
 		Path:       values["path"],
@@ -307,22 +307,22 @@ func newCacheConfig(
 	ttlString string,
 	statusesStr []string,
 	tags []string,
-) (core.CacheConfig, error) {
+) (model.CacheConfig, error) {
 	ttl, err := strconv.ParseInt(ttlString, 10, 64)
 	if err != nil {
-		return core.CacheConfig{}, err
+		return model.CacheConfig{}, err
 	}
 
 	statuses := make([]int, len(statusesStr))
 	for i, s := range statusesStr {
 		status, err := strconv.Atoi(s)
 		if err != nil {
-			return core.CacheConfig{}, err
+			return model.CacheConfig{}, err
 		}
 		statuses[i] = status
 	}
 
-	return core.CacheConfig{
+	return model.CacheConfig{
 		TTL:      int64(ttl),
 		Statuses: statuses,
 		Tags:     tags,
