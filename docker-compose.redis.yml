@@ -2,6 +2,9 @@ version: "3.3"
 
 services:
   redis:
-    image: redis
+    image: redis:6.2.4-alpine3.13
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - ./data/redis:/data
