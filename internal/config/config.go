@@ -15,7 +15,7 @@ var (
 	// LogLevel indicates the log level
 	LogLevel = c.GetEnv("LOG_LEVEL", "debug")
 	// RedisUrl indicates the URL for the redis client
-	RedisUrl = c.GetEnv("REDIS_SERVER", "redis://localhost:6379/0")
+	RedisUrl = c.GetEnv("REDIS_URL", "redis://localhost:6379/0")
 	// HealthCheckInterval is the interval between health checks
 	HealthCheckInterval = time.Duration(
 		c.GetIntEnv("HEALTH_CHECK_INTERVAL_SECONDS", 10),
