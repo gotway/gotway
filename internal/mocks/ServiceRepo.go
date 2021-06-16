@@ -162,13 +162,20 @@ func (_m *ServiceRepo) StoreService(service model.ServiceDetail) error {
 	return r0
 }
 
-// UpdateServiceStatus provides a mock function with given fields: key, status
-func (_m *ServiceRepo) UpdateServiceStatus(key string, status model.ServiceStatus) error {
-	ret := _m.Called(key, status)
+// UpdateServicesStatus provides a mock function with given fields: status, keys
+func (_m *ServiceRepo) UpdateServicesStatus(status model.ServiceStatus, keys ...string) error {
+	_va := make([]interface{}, len(keys))
+	for _i := range keys {
+		_va[_i] = keys[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, status)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, model.ServiceStatus) error); ok {
-		r0 = rf(key, status)
+	if rf, ok := ret.Get(0).(func(model.ServiceStatus, ...string) error); ok {
+		r0 = rf(status, keys...)
 	} else {
 		r0 = ret.Error(0)
 	}

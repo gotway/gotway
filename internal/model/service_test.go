@@ -9,67 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHealthPath(t *testing.T) {
-	tests := []struct {
-		name     string
-		service  Service
-		wantPath string
-		wantErr  error
-	}{
-		{
-			name: "Health path for unknown service",
-			service: Service{
-				Type: "foo",
-			},
-			wantPath: "",
-			wantErr:  ErrInvalidServiceType,
-		},
-		{
-			name: "Default health path for REST service",
-			service: Service{
-				Type: ServiceTypeREST,
-			},
-			wantPath: "health",
-			wantErr:  nil,
-		},
-		{
-			name: "Custom health path for REST service",
-			service: Service{
-				Type:       ServiceTypeREST,
-				HealthPath: "ping",
-			},
-			wantPath: "ping",
-			wantErr:  nil,
-		},
-		{
-			name: "Default health path for gRPC service",
-			service: Service{
-				Type: ServiceTypeGRPC,
-			},
-			wantPath: "grpc.health.v1.Health/Check",
-			wantErr:  nil,
-		},
-		{
-			name: "Custom health path for gRPC service",
-			service: Service{
-				Type: ServiceTypeGRPC,
-				Path: "ping",
-			},
-			wantPath: "grpc.health.v1.Health/Check",
-			wantErr:  nil,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			path, err := tt.service.HealthPathForType()
-
-			assert.Equal(t, path, tt.wantPath)
-			assert.Equal(t, err, tt.wantErr)
-		})
-	}
-}
-
 func TestIsHealthy(t *testing.T) {
 	tests := []struct {
 		name          string

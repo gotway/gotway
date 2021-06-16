@@ -1,46 +1,28 @@
 package client
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/gotway/gotway/internal/config"
-	"github.com/gotway/gotway/internal/model"
 )
 
 type clientREST struct {
-	service model.Service
-}
-
-func (c clientREST) getHealthURL() (*url.URL, error) {
-	healthPath, err := c.service.HealthPathForType()
-	if err != nil {
-		return nil, err
-	}
-	urlString := fmt.Sprintf("%s/%s", c.service.URL, healthPath)
-	url, err := url.Parse(urlString)
-	if err != nil {
-		return nil, err
-	}
-	return url, nil
+	client http.Client
 }
 
 // HealthCheck performs health check
-func (c clientREST) HealthCheck() error {
-	healthURL, err := c.getHealthURL()
-	if err != nil {
-		return err
-	}
-
-	client := http.Client{Timeout: config.HealthCheckTimeout}
-
-	res, err := client.Get(healthURL.String())
+func (c clientREST) HealthCheck(url *url.URL) error {
+	res, err := c.client.Get(url.String())
 	if err != nil {
 		return err
 	}
 	if res.StatusCode != http.StatusOK {
-		return errServiceNotAvailable
+		return ErrServiceNotAvailable
 	}
 	return nil
+}
+
+func newClientREST() clientREST {
+	return clientREST{http.Client{Timeout: config.HealthCheckTimeout}}
 }

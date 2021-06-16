@@ -9,20 +9,19 @@ import (
 
 // Client interface
 type Client interface {
-	getHealthURL() (*url.URL, error)
-	HealthCheck() error
+	HealthCheck(url *url.URL) error
 }
 
+var ErrServiceNotAvailable = errors.New("Service not available")
+
 // New instanciates a new client
-func New(service model.Service) (Client, error) {
-	switch service.Type {
+func New(serviceType model.ServiceType) (Client, error) {
+	switch serviceType {
 	case model.ServiceTypeREST:
-		return clientREST{service}, nil
+		return newClientREST(), nil
 	case model.ServiceTypeGRPC:
-		return clientGRPC{service}, nil
+		return newClientGRPC(), nil
 	default:
 		return nil, model.ErrInvalidServiceType
 	}
 }
-
-var errServiceNotAvailable = errors.New("Service not available")

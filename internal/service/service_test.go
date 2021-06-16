@@ -212,15 +212,15 @@ func TestUpdateServiceStatus(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
 	controller := NewController(serviceRepo, log.Log)
 
-	serviceRepo.On("UpdateServiceStatus", mock.Anything, mock.Anything).Return(nil)
+	serviceRepo.On("UpdateServicesStatus", mock.Anything, mock.Anything).Return(nil)
 
-	err := controller.UpdateServiceStatus("catalog", model.ServiceStatusHealthy)
+	err := controller.UpdateServicesStatus(model.ServiceStatusHealthy, "catalog")
 	assert.Nil(t, err)
 
-	err = controller.UpdateServiceStatus("stock", model.ServiceStatusIdle)
+	err = controller.UpdateServicesStatus(model.ServiceStatusIdle, "stock")
 	assert.Nil(t, err)
 
-	serviceRepo.AssertNumberOfCalls(t, "UpdateServiceStatus", 2)
+	serviceRepo.AssertNumberOfCalls(t, "UpdateServicesStatus", 2)
 }
 
 func TestReverseProxy(t *testing.T) {

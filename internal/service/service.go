@@ -16,7 +16,7 @@ type Controller interface {
 	GetService(key string) (model.Service, error)
 	GetServiceDetail(key string) (model.ServiceDetail, error)
 	DeleteService(key string) error
-	UpdateServiceStatus(key string, status model.ServiceStatus) error
+	UpdateServicesStatus(status model.ServiceStatus, keys ...string) error
 	ReverseProxy(
 		w http.ResponseWriter,
 		r *http.Request,
@@ -78,8 +78,8 @@ func (c BasicController) DeleteService(key string) error {
 }
 
 // UpdateServiceStatus updates the status of a service
-func (c BasicController) UpdateServiceStatus(key string, status model.ServiceStatus) error {
-	return c.serviceRepo.UpdateServiceStatus(key, status)
+func (c BasicController) UpdateServicesStatus(status model.ServiceStatus, keys ...string) error {
+	return c.serviceRepo.UpdateServicesStatus(status, keys...)
 }
 
 // ReverseProxy forwards traffic to a service

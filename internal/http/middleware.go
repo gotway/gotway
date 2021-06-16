@@ -16,7 +16,7 @@ func (s *Server) cacheMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		s.logger.Debug("Checking cache")
+		s.logger.Debug("checking cache")
 		serviceKey := getServiceKey(r)
 		cache, err := s.cacheController.GetCache(r, "", serviceKey)
 		if err != nil {
@@ -27,7 +27,7 @@ func (s *Server) cacheMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		s.logger.Debug("Cached response")
+		s.logger.Debug("cached response")
 		bodyBytes, err := ioutil.ReadAll(cache.Body)
 		if err != nil {
 			s.logger.Error(err)

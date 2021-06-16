@@ -17,22 +17,15 @@ type Service struct {
 	Status     ServiceStatus `json:"status"`
 }
 
-// HealthPathForType returns the path used for health check for all service types
-func (s Service) HealthPathForType() (string, error) {
+// HealthURL returns the URL used for health check for all service types
+func (s Service) HealthURL() (*url.URL, error) {
 	switch s.Type {
 	case ServiceTypeREST:
-		var path string
-		if s.HealthPath != "" {
-			path = s.HealthPath
-		} else {
-			path = "health"
-		}
-		return path, nil
+		return url.Parse(fmt.Sprintf("%s/%s", s.URL, s.HealthPath))
 	case ServiceTypeGRPC:
-		path := "grpc.health.v1.Health/Check"
-		return path, nil
+		return url.Parse(s.URL)
 	default:
-		return "", ErrInvalidServiceType
+		return nil, ErrInvalidServiceType
 	}
 }
 

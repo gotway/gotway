@@ -15,8 +15,8 @@ import (
 
 type Health struct {
 	serviceController service.Controller
-
-	logger log.Logger
+	clientFactory     client.Factory
+	logger            log.Logger
 }
 
 // Listen checks for service health periodically
@@ -37,31 +37,25 @@ func (h *Health) Listen(ctx context.Context) {
 }
 
 func (h *Health) updateServiceStatus() {
-	setToHealthy, setToIdle := h.getServicesToChangeStatus()
-
-	for _, service := range setToHealthy {
-		err := h.serviceController.UpdateServiceStatus(service, model.ServiceStatusHealthy)
-		if err != nil {
-			h.logger.Error(err)
-		}
+	statusUpdate := h.getStatusUpdate()
+	if statusUpdate == nil {
+		return
 	}
-	for _, service := range setToIdle {
-		err := h.serviceController.UpdateServiceStatus(service, model.ServiceStatusIdle)
-		if err != nil {
-			h.logger.Error(err)
+	for status, services := range statusUpdate.Get() {
+		if err := h.serviceController.UpdateServicesStatus(status, services...); err != nil {
+			h.logger.Errorf("error updating services %v status to '%s' %v", services, status, err)
 		}
 	}
 }
 
-func (h *Health) getServicesToChangeStatus() (setToHealthy []string, setToIdle []string) {
-	var healthyServices []string
-	var idleServices []string
-
+func (h *Health) getStatusUpdate() *statusUpdate {
 	services := h.serviceController.GetAllServiceKeys()
-	var wg sync.WaitGroup
-	for _, serviceKey := range services {
-		wg.Add(1)
+	statusUpdate := NewStatusUpdate()
 
+	var wg sync.WaitGroup
+	wg.Add(len(services))
+
+	for _, serviceKey := range services {
 		go func(serviceKey string) {
 			defer wg.Done()
 
@@ -70,31 +64,42 @@ func (h *Health) getServicesToChangeStatus() (setToHealthy []string, setToIdle [
 				h.logger.Errorf("unable to get service with key '%s'", serviceKey, err)
 				return
 			}
-			client, err := client.New(service)
+
+			healthURL, err := service.HealthURL()
 			if err != nil {
-				h.logger.Error("error creating client", err)
+				h.logger.Error("error getting URL ", err)
 				return
 			}
 
-			err = client.HealthCheck()
+			client, err := h.clientFactory.GetClient(service.Type)
 			if err != nil {
+				h.logger.Error("error getting client ", err)
+				return
+			}
+
+			if err := client.HealthCheck(healthURL); err != nil {
 				if service.Status == model.ServiceStatusHealthy {
 					h.logger.Infof("service %s is now idle. Cause: %v", service.Path, err)
-					idleServices = append(idleServices, service.Path)
+					statusUpdate.Add(model.ServiceStatusIdle, service.Path)
 				}
 			} else {
 				if service.Status == model.ServiceStatusIdle {
-					h.logger.Infof("Service %s is now healthy", service.Path)
-					healthyServices = append(healthyServices, service.Path)
+					h.logger.Infof("service %s is now healthy", service.Path)
+					statusUpdate.Add(model.ServiceStatusHealthy, service.Path)
 				}
 			}
 
 		}(serviceKey)
 	}
 	wg.Wait()
-	return healthyServices, idleServices
+
+	return statusUpdate
 }
 
 func New(serviceController service.Controller, logger log.Logger) *Health {
-	return &Health{serviceController, logger}
+	return &Health{
+		serviceController: serviceController,
+		clientFactory:     client.NewFactory(),
+		logger:            logger,
+	}
 }

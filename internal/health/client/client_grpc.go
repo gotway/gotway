@@ -8,37 +8,13 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/gotway/gotway/internal/config"
-	"github.com/gotway/gotway/internal/model"
 )
 
-type clientGRPC struct {
-	service model.Service
-}
-
-func getConn(server string) (*grpc.ClientConn, error) {
-	opts := []grpc.DialOption{
-		grpc.WithBlock(),
-		grpc.WithTimeout(config.HealthCheckTimeout),
-		grpc.WithInsecure(),
-	}
-	return grpc.Dial(server, opts...)
-}
-
-func (c clientGRPC) getHealthURL() (*url.URL, error) {
-	url, err := url.Parse(c.service.URL)
-	if err != nil {
-		return nil, err
-	}
-	return url, nil
-}
+type clientGRPC struct{}
 
 // HealthCheck performs health check
-func (c clientGRPC) HealthCheck() error {
-	healthURL, err := c.getHealthURL()
-	if err != nil {
-		return err
-	}
-	conn, err := getConn(healthURL.Host)
+func (c clientGRPC) HealthCheck(url *url.URL) error {
+	conn, err := getConn(url.Host)
 	if err != nil {
 		return err
 	}
@@ -52,7 +28,19 @@ func (c clientGRPC) HealthCheck() error {
 		return err
 	}
 	if health.Status != healthpb.HealthCheckResponse_SERVING {
-		return errServiceNotAvailable
+		return ErrServiceNotAvailable
 	}
 	return nil
+}
+
+func getConn(server string) (*grpc.ClientConn, error) {
+	return grpc.Dial(server,
+		grpc.WithBlock(),
+		grpc.WithTimeout(config.HealthCheckTimeout),
+		grpc.WithInsecure(),
+	)
+}
+
+func newClientGRPC() clientGRPC {
+	return clientGRPC{}
 }

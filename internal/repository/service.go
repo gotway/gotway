@@ -17,7 +17,7 @@ type ServiceRepo interface {
 	GetServiceDetail(key string) (model.ServiceDetail, error)
 	GetServices(keys ...string) ([]model.Service, error)
 	DeleteService(key string) error
-	UpdateServiceStatus(key string, status model.ServiceStatus) error
+	UpdateServicesStatus(status model.ServiceStatus, keys ...string) error
 	GetServiceCache(key string) (model.CacheConfig, error)
 	IsCacheableStatusCode(key string, statusCode int) bool
 }
@@ -35,16 +35,11 @@ var ctx = context.Background()
 
 // StoreService stores a service into redis
 func (s ServiceRepoRedis) StoreService(service model.ServiceDetail) error {
-	healthPath, err := service.HealthPathForType()
-	if err != nil {
-		return err
-	}
-
 	serviceMap := map[string]interface{}{
 		"type":       service.Type,
 		"url":        service.URL,
 		"path":       service.Path,
-		"healthPath": healthPath,
+		"healthPath": service.HealthPath,
 		"status":     model.ServiceStatusHealthy,
 	}
 
@@ -209,12 +204,18 @@ func (s ServiceRepoRedis) DeleteService(key string) error {
 }
 
 // UpdateServiceStatus updates the status of a service
-func (s ServiceRepoRedis) UpdateServiceStatus(key string, status model.ServiceStatus) error {
-	serviceKey := getServiceRedisKey(key)
-	if err := status.Validate(); err != nil {
-		return err
+func (s ServiceRepoRedis) UpdateServicesStatus(status model.ServiceStatus, keys ...string) error {
+	pipe := s.redis.TxPipeline()
+	for _, key := range keys {
+		serviceKey := getServiceRedisKey(key)
+		if err := status.Validate(); err != nil {
+			return err
+		}
+		pipe.HSet(ctx, serviceKey, "status", status)
 	}
-	return s.redis.HSet(ctx, serviceKey, "status", status).Err()
+
+	_, err := pipe.Exec(ctx)
+	return err
 }
 
 // GetServiceCache gets cache configuration of a service
