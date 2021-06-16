@@ -1,4 +1,4 @@
-package controller
+package cache
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/gotway/gotway/pkg/log"
 )
 
-type CacheController interface {
+type Controller interface {
 	IsCacheableRequest(r *http.Request) bool
 	GetCache(r *http.Request, pathPrefix, serviceKey string) (model.Cache, error)
 	GetCacheDetail(r *http.Request, pathPrefix, serviceKey string) (model.CacheDetail, error)
@@ -20,7 +20,7 @@ type CacheController interface {
 	isCacheableResponse(r *http.Response, serviceKey string) bool
 }
 
-type BasicCacheController struct {
+type BasicController struct {
 	cacheRepo   repository.CacheRepo
 	serviceRepo repository.ServiceRepo
 	resChan     chan response
@@ -28,12 +28,12 @@ type BasicCacheController struct {
 }
 
 // IsCacheableRequest determines if a request's response can be retrieved from cache
-func (c BasicCacheController) IsCacheableRequest(r *http.Request) bool {
+func (c BasicController) IsCacheableRequest(r *http.Request) bool {
 	return r.Method == http.MethodGet
 }
 
 // GetCache gets a cached response for a request
-func (c BasicCacheController) GetCache(
+func (c BasicController) GetCache(
 	r *http.Request,
 	pathPrefix, serviceKey string,
 ) (model.Cache, error) {
@@ -49,7 +49,7 @@ func (c BasicCacheController) GetCache(
 }
 
 // GetCacheDetail gets a cache with extra info
-func (c BasicCacheController) GetCacheDetail(
+func (c BasicController) GetCacheDetail(
 	r *http.Request,
 	pathPrefix, serviceKey string,
 ) (model.CacheDetail, error) {
@@ -65,22 +65,22 @@ func (c BasicCacheController) GetCacheDetail(
 }
 
 // DeleteCacheByPath deletes cache defined by its path
-func (c BasicCacheController) DeleteCacheByPath(paths []model.CachePath) error {
+func (c BasicController) DeleteCacheByPath(paths []model.CachePath) error {
 	return c.cacheRepo.DeleteCacheByPath(paths)
 }
 
 // DeleteCacheByTags deletes cache with tags
-func (c BasicCacheController) DeleteCacheByTags(tags []string) error {
+func (c BasicController) DeleteCacheByTags(tags []string) error {
 	return c.cacheRepo.DeleteCacheByTags(tags)
 }
 
-func NewCacheController(
+func NewController(
 	cacheRepo repository.CacheRepo,
 	serviceRepo repository.ServiceRepo,
 	logger log.Logger,
-) CacheController {
+) Controller {
 
-	return &BasicCacheController{
+	return &BasicController{
 		cacheRepo:   cacheRepo,
 		serviceRepo: serviceRepo,
 		resChan:     make(chan response),

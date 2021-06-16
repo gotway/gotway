@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/controller"
 	"github.com/gotway/gotway/pkg/log"
 )
@@ -21,7 +22,7 @@ type Server struct {
 	server  *http.Server
 	options ServerOptions
 
-	cacheController   controller.CacheController
+	cacheController   cache.Controller
 	serviceController controller.ServiceController
 
 	logger log.Logger
@@ -95,7 +96,7 @@ func (s *Server) addCacheRouter(root *mux.Router) {
 	cache.Methods(http.MethodDelete).HandlerFunc(s.deleteCacheHandler)
 }
 
-func NewServer(options ServerOptions, cacheController controller.CacheController,
+func NewServer(options ServerOptions, cacheController cache.Controller,
 	serviceController controller.ServiceController, logger log.Logger) *Server {
 
 	addr := ":" + options.Port

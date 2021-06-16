@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/controller"
 	"github.com/gotway/gotway/internal/health"
@@ -70,7 +71,7 @@ func main() {
 		serviceRepo,
 		logger.WithField("type", "service-ctrl"),
 	)
-	cacheController := controller.NewCacheController(
+	cacheController := cache.NewController(
 		cacheRepo,
 		serviceRepo,
 		logger.WithField("type", "cache-ctrl"),

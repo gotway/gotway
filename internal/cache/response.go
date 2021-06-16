@@ -1,4 +1,4 @@
-package controller
+package cache
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ type response struct {
 }
 
 // ListenResponses starts listening for responses
-func (c BasicCacheController) ListenResponses(ctx context.Context) {
+func (c BasicController) ListenResponses(ctx context.Context) {
 	c.logger.Info("starting cache handler")
 	for {
 		select {
@@ -37,7 +37,7 @@ func (c BasicCacheController) ListenResponses(ctx context.Context) {
 }
 
 // HandleResponse handles a response ans sends it to the channel
-func (c BasicCacheController) HandleResponse(serviceKey string, r *http.Response) error {
+func (c BasicController) HandleResponse(serviceKey string, r *http.Response) error {
 	if !c.isCacheableResponse(r, serviceKey) {
 		return nil
 	}
@@ -62,14 +62,14 @@ func (c BasicCacheController) HandleResponse(serviceKey string, r *http.Response
 }
 
 // IsCacheableResponse checks if a response is cacheable
-func (c BasicCacheController) isCacheableResponse(r *http.Response, serviceKey string) bool {
+func (c BasicController) isCacheableResponse(r *http.Response, serviceKey string) bool {
 	if !c.IsCacheableRequest(r.Request) || headersDisallowCaching(r) {
 		return false
 	}
 	return c.serviceRepo.IsCacheableStatusCode(serviceKey, r.StatusCode)
 }
 
-func (c BasicCacheController) cacheResponse(res response) error {
+func (c BasicController) cacheResponse(res response) error {
 	config, err := c.serviceRepo.GetServiceCache(res.serviceKey)
 	if err != nil {
 		return err

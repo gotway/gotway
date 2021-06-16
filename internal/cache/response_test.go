@@ -1,4 +1,4 @@
-package controller
+package cache
 
 import (
 	"bytes"
@@ -22,7 +22,7 @@ import (
 func TestListenResponses(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	body := ioutil.NopCloser(bytes.NewBufferString("{}"))
 	url, _ := url.Parse("http://api.gotway.com/catalog/products?offset=0&limit=10")
@@ -69,7 +69,7 @@ func TestListenResponses(t *testing.T) {
 func TestListenCacheControlResponses(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	body := ioutil.NopCloser(bytes.NewBufferString("{}"))
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
@@ -136,7 +136,7 @@ func TestListenCacheControlResponses(t *testing.T) {
 func TestListenCacheTagsResponses(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	body := ioutil.NopCloser(bytes.NewBufferString("{}"))
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
@@ -195,7 +195,7 @@ func (errReader) Read(p []byte) (n int, err error) {
 func TestErrReadingBody(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
 	testRequest := httptest.NewRequest(http.MethodPost, "/foo", errReader(0))
@@ -225,7 +225,7 @@ func TestErrReadingBody(t *testing.T) {
 func TestCachePolicy(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
 	notCacheableHeader := http.Header{}

@@ -1,4 +1,4 @@
-package controller
+package cache
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ import (
 func TestIsCacheable(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	cacheableReq, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	notCacheableReq, _ := http.NewRequest(http.MethodPost, "http://api.gotway.com/service/foo", nil)
@@ -48,7 +48,7 @@ func TestIsCacheable(t *testing.T) {
 func TestGetCache(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	reqCacheError, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	cacheError := errors.New("Cache not found")
@@ -124,7 +124,7 @@ func TestGetCache(t *testing.T) {
 func TestGetCacheDetail(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	reqCacheError, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	cacheError := errors.New("Cache not found")
@@ -204,7 +204,7 @@ func TestGetCacheDetail(t *testing.T) {
 func TestDeleteCacheByPath(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	paths := []model.CachePath{
 		{
@@ -223,7 +223,7 @@ func TestDeleteCacheByPath(t *testing.T) {
 func TestDeleteCacheByTags(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewCacheController(cacheRepo, serviceRepo, log.Log)
+	controller := NewController(cacheRepo, serviceRepo, log.Log)
 
 	tags := []string{"foo"}
 	cacheRepo.On("DeleteCacheByTags", tags).Return(nil)
