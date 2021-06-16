@@ -8,10 +8,10 @@ import (
 
 	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/config"
-	"github.com/gotway/gotway/internal/controller"
 	"github.com/gotway/gotway/internal/health"
 	"github.com/gotway/gotway/internal/http"
 	"github.com/gotway/gotway/internal/repository"
+	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/gotway/pkg/redis"
 
@@ -67,7 +67,7 @@ func main() {
 	serviceRepo := repository.NewServiceRepoRedis(redisClient)
 	cacheRepo := repository.NewCacheRepoRedis(redisClient)
 
-	serviceController := controller.NewServiceController(
+	serviceController := service.NewController(
 		serviceRepo,
 		logger.WithField("type", "service-ctrl"),
 	)

@@ -1,4 +1,4 @@
-package controller
+package service
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	"github.com/gotway/gotway/pkg/log"
 )
 
-type ServiceController interface {
+type Controller interface {
 	GetServices(offset, limit int) (model.ServicePage, error)
 	GetAllServiceKeys() []string
 	RegisterService(serviceDetail model.ServiceDetail) error
@@ -25,13 +25,13 @@ type ServiceController interface {
 	) error
 }
 
-type BasicServiceController struct {
+type BasicController struct {
 	serviceRepo repository.ServiceRepo
 	logger      log.Logger
 }
 
 // GetServices get services paginated
-func (c BasicServiceController) GetServices(offset, limit int) (model.ServicePage, error) {
+func (c BasicController) GetServices(offset, limit int) (model.ServicePage, error) {
 	keys := c.GetAllServiceKeys()
 	if len(keys) == 0 || offset > len(keys) {
 		return model.ServicePage{}, model.ErrServiceNotFound
@@ -53,37 +53,37 @@ func (c BasicServiceController) GetServices(offset, limit int) (model.ServicePag
 }
 
 // GetAllServiceKeys retrieves all service keys
-func (c BasicServiceController) GetAllServiceKeys() []string {
+func (c BasicController) GetAllServiceKeys() []string {
 	return c.serviceRepo.GetAllServiceKeys()
 }
 
 // RegisterService adds a new service
-func (c BasicServiceController) RegisterService(serviceDetail model.ServiceDetail) error {
+func (c BasicController) RegisterService(serviceDetail model.ServiceDetail) error {
 	return c.serviceRepo.StoreService(serviceDetail)
 }
 
 // GetService gets a service
-func (c BasicServiceController) GetService(key string) (model.Service, error) {
+func (c BasicController) GetService(key string) (model.Service, error) {
 	return c.serviceRepo.GetService(key)
 }
 
 // GetServiceDetail gets a service with extra info
-func (c BasicServiceController) GetServiceDetail(key string) (model.ServiceDetail, error) {
+func (c BasicController) GetServiceDetail(key string) (model.ServiceDetail, error) {
 	return c.serviceRepo.GetServiceDetail(key)
 }
 
 // DeleteService deletes a service
-func (c BasicServiceController) DeleteService(key string) error {
+func (c BasicController) DeleteService(key string) error {
 	return c.serviceRepo.DeleteService(key)
 }
 
 // UpdateServiceStatus updates the status of a service
-func (c BasicServiceController) UpdateServiceStatus(key string, status model.ServiceStatus) error {
+func (c BasicController) UpdateServiceStatus(key string, status model.ServiceStatus) error {
 	return c.serviceRepo.UpdateServiceStatus(key, status)
 }
 
 // ReverseProxy forwards traffic to a service
-func (c BasicServiceController) ReverseProxy(
+func (c BasicController) ReverseProxy(
 	w http.ResponseWriter,
 	r *http.Request,
 	service model.Service,
@@ -103,9 +103,9 @@ func min(x, y int) int {
 	return x
 }
 
-func NewServiceController(
+func NewController(
 	serviceRepo repository.ServiceRepo,
 	logger log.Logger,
-) ServiceController {
-	return BasicServiceController{serviceRepo, logger}
+) Controller {
+	return BasicController{serviceRepo, logger}
 }

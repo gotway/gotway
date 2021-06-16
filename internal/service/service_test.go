@@ -1,4 +1,4 @@
-package controller
+package service
 
 import (
 	"errors"
@@ -18,7 +18,7 @@ import (
 
 func TestGetServices(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewServiceController(serviceRepo, log.Log)
+	controller := NewController(serviceRepo, log.Log)
 
 	catalogPath := "catalog"
 	stockPath := "stock"
@@ -113,7 +113,7 @@ func TestGetServices(t *testing.T) {
 
 func TestGetServicesRepoError(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewServiceController(serviceRepo, log.Log)
+	controller := NewController(serviceRepo, log.Log)
 
 	serviceRepo.On("GetAllServiceKeys").Return([]string{"foo"})
 	repoErr := errors.New("Error getting services")
@@ -130,7 +130,7 @@ func TestGetServicesRepoError(t *testing.T) {
 
 func TestRegisterService(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewServiceController(serviceRepo, log.Log)
+	controller := NewController(serviceRepo, log.Log)
 
 	service := model.Service{
 		Type: model.ServiceTypeREST,
@@ -155,7 +155,7 @@ func TestRegisterService(t *testing.T) {
 
 func TestGetService(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewServiceController(serviceRepo, log.Log)
+	controller := NewController(serviceRepo, log.Log)
 
 	service := model.Service{
 		Type: model.ServiceTypeREST,
@@ -171,7 +171,7 @@ func TestGetService(t *testing.T) {
 
 func TestGetServiceDetail(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewServiceController(serviceRepo, log.Log)
+	controller := NewController(serviceRepo, log.Log)
 
 	catalog := model.Service{
 		Type: model.ServiceTypeREST,
@@ -197,7 +197,7 @@ func TestGetServiceDetail(t *testing.T) {
 
 func TestDeleteService(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewServiceController(serviceRepo, log.Log)
+	controller := NewController(serviceRepo, log.Log)
 
 	service := "service"
 
@@ -210,7 +210,7 @@ func TestDeleteService(t *testing.T) {
 
 func TestUpdateServiceStatus(t *testing.T) {
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewServiceController(serviceRepo, log.Log)
+	controller := NewController(serviceRepo, log.Log)
 
 	serviceRepo.On("UpdateServiceStatus", mock.Anything, mock.Anything).Return(nil)
 
@@ -244,7 +244,7 @@ func TestReverseProxy(t *testing.T) {
 		httpmock.NewStringResponder(200, `[{"id": 1, "stock": 10}]`))
 
 	serviceRepo := new(mocks.ServiceRepo)
-	controller := NewServiceController(serviceRepo, log.Log)
+	controller := NewController(serviceRepo, log.Log)
 
 	cache := new(mocks.CacheController)
 

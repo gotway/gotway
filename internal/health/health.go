@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gotway/gotway/internal/controller"
 	"github.com/gotway/gotway/internal/model"
+	"github.com/gotway/gotway/internal/service"
 
 	"github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/health/client"
@@ -14,7 +14,7 @@ import (
 )
 
 type Health struct {
-	serviceController controller.ServiceController
+	serviceController service.Controller
 
 	logger log.Logger
 }
@@ -95,6 +95,6 @@ func (h *Health) getServicesToChangeStatus() (setToHealthy []string, setToIdle [
 	return healthyServices, idleServices
 }
 
-func New(serviceController controller.ServiceController, logger log.Logger) *Health {
+func New(serviceController service.Controller, logger log.Logger) *Health {
 	return &Health{serviceController, logger}
 }

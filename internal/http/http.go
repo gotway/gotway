@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/internal/cache"
-	"github.com/gotway/gotway/internal/controller"
+	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
 )
 
@@ -23,7 +23,7 @@ type Server struct {
 	options ServerOptions
 
 	cacheController   cache.Controller
-	serviceController controller.ServiceController
+	serviceController service.Controller
 
 	logger log.Logger
 }
@@ -97,7 +97,7 @@ func (s *Server) addCacheRouter(root *mux.Router) {
 }
 
 func NewServer(options ServerOptions, cacheController cache.Controller,
-	serviceController controller.ServiceController, logger log.Logger) *Server {
+	serviceController service.Controller, logger log.Logger) *Server {
 
 	addr := ":" + options.Port
 	server := &http.Server{Addr: addr}
