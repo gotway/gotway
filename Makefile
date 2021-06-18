@@ -1,8 +1,11 @@
 PROJECT := gotway
-VERSION=$(git describe --abbrev=0 --tags)
+VERSION := $(git describe --abbrev=0 --tags)
 LD_FLAGS := -X main.version=$(VERSION) -s -w
 SOURCE_FILES ?= ./internal/... ./pkg/... ./cmd/...
-UNAME		:= $(uname -s)
+UNAME := $(uname -s)
+
+export CGO_ENABLED=0
+export GO111MODULE=on
 
 .PHONY: all
 all: help
@@ -19,7 +22,7 @@ endif
 
 .PHONY: clean
 clean: ### Clean build files
-	@rm -rf ./build
+	@rm -rf ./bin
 	@go clean
 
 .PHONY: build

@@ -1,12 +1,20 @@
 version: "3.3"
 
 services:
+  redis:
+    image: redis:6.2.4-alpine3.13
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+
   gotway:
     image: gotwaygateway/gotway
     depends_on:
       - redis
     environment: 
-      - GOTWAY_SERVICE_PORT=8000
+      - GOTWAY_SERVICE_PORT=11000
       - ENV=production
       - REDIS_SERVER=redis:6379 
       - HEALTH_CHECK_INTERVAL_SECONDS=10
@@ -15,6 +23,6 @@ services:
       - TLS_CERT=/etc/ssl/server.pem
       - TLS_KEY=/etc/ssl/server.key
     ports:
-      - "8000:8000"
+      - "11000:11000"
     volumes:
       - "./cert:/etc/ssl"

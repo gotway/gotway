@@ -63,6 +63,7 @@ func main() {
 		logger.Fatal("error connecting to redis")
 	}
 	redisClient := redis.New(client)
+	logger.Info("connected to redis")
 
 	serviceRepo := repository.NewServiceRepoRedis(redisClient)
 	cacheRepo := repository.NewCacheRepoRedis(redisClient)
