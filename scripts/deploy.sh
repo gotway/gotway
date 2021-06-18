@@ -7,14 +7,10 @@ release="gotway"
 chart="gotway/gotway"
 
 git fetch --all
-tag=$(git describe --abbrev=0 --tags)
+tag=$(git describe --tags $(git rev-list --tags --max-count=1))
 
 helm repo add "$repo" https://charts.gotway.duckdns.org
 helm repo update
 
 echo "🚀 Deploying '$chart' with image version '$tag'..."
-helm upgrade --install "$release" "$chart" \
-  --set image.tag=$tag \
-  --set catalog.image.tag=$tag \
-  --set stock.image.tag=$tag \
-  --set route.image.tag=$tag
+helm upgrade --install "$release" "$chart" --set image.tag=$tag
