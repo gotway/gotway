@@ -19,11 +19,13 @@ import (
 	goRedis "github.com/go-redis/redis/v8"
 )
 
-func handleExit(
+type stoppable interface{ Stop() }
+
+func gracefulShutdown(
 	logger log.Logger,
 	sigs <-chan os.Signal,
 	cancel context.CancelFunc,
-	stoppables ...interface{ Stop() },
+	stoppables ...stoppable,
 ) {
 	sig := <-sigs
 	logger.Infof("received signal %s", sig.String())
@@ -43,8 +45,8 @@ func main() {
 		syscall.SIGHUP,
 		syscall.SIGQUIT,
 	)
-
 	ctx, cancel := context.WithCancel(context.Background())
+	stoppables := []stoppable{}
 
 	logger := log.NewLogger(log.Fields{
 		"service": "gotway",
@@ -62,12 +64,15 @@ func main() {
 	redisClient := redis.New(client)
 	logger.Info("connected to redis")
 
-	metricsOptions := metrics.MetricsOptions{
-		Path: config.MetricsPath,
-		Port: config.MetricsPort,
+	if config.Metrics {
+		metricsOptions := metrics.MetricsOptions{
+			Path: config.MetricsPath,
+			Port: config.MetricsPort,
+		}
+		m := metrics.New(metricsOptions, logger.WithField("type", "metrics"))
+		go m.Start()
+		stoppables = append(stoppables, m)
 	}
-	m := metrics.New(metricsOptions, logger.WithField("type", "metrics"))
-	go m.Start()
 
 	serviceRepo := repository.NewServiceRepoRedis(redisClient)
 	cacheRepo := repository.NewCacheRepoRedis(redisClient)
@@ -96,9 +101,10 @@ func main() {
 		logger.WithField("type", "http"),
 	)
 	go s.Start()
+	stoppables = append(stoppables, s)
 
 	health := health.New(serviceController, logger.WithField("type", "health"))
 	go health.Listen(ctx)
 
-	handleExit(logger, signals, cancel, s, m)
+	gracefulShutdown(logger, signals, cancel, stoppables...)
 }
