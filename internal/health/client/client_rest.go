@@ -3,8 +3,6 @@ package client
 import (
 	"net/http"
 	"net/url"
-
-	"github.com/gotway/gotway/internal/config"
 )
 
 type clientREST struct {
@@ -23,6 +21,6 @@ func (c clientREST) HealthCheck(url *url.URL) error {
 	return nil
 }
 
-func newClientREST() clientREST {
-	return clientREST{http.Client{Timeout: config.HealthCheckTimeout}}
+func newClientREST(options Options) clientREST {
+	return clientREST{http.Client{Timeout: options.Timeout}}
 }
