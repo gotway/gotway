@@ -32,7 +32,7 @@ build: clean ### Build binary
 
 .PHONY: run
 run: ### Quick run
-	@go run -race cmd/gotway/*.go
+	@CGO_ENABLED=1 go run -race cmd/gotway/*.go
 
 .PHONY: deps
 deps: ### Optimize dependencies

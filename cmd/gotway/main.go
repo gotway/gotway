@@ -13,20 +13,17 @@ import (
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
+	"github.com/gotway/gotway/pkg/metrics"
 	"github.com/gotway/gotway/pkg/redis"
 
 	goRedis "github.com/go-redis/redis/v8"
 )
 
-type stoppable interface {
-	Stop()
-}
-
 func handleExit(
 	logger log.Logger,
 	sigs <-chan os.Signal,
 	cancel context.CancelFunc,
-	stoppables ...stoppable,
+	stoppables ...interface{ Stop() },
 ) {
 	sig := <-sigs
 	logger.Infof("received signal %s", sig.String())
@@ -65,6 +62,13 @@ func main() {
 	redisClient := redis.New(client)
 	logger.Info("connected to redis")
 
+	metricsOptions := metrics.MetricsOptions{
+		Path: config.MetricsPath,
+		Port: config.MetricsPort,
+	}
+	m := metrics.New(metricsOptions, logger.WithField("type", "metrics"))
+	go m.Start()
+
 	serviceRepo := repository.NewServiceRepoRedis(redisClient)
 	cacheRepo := repository.NewCacheRepoRedis(redisClient)
 
@@ -79,14 +83,14 @@ func main() {
 	)
 	go cacheController.ListenResponses(ctx)
 
-	options := http.ServerOptions{
+	httpOptions := http.ServerOptions{
 		Port:       config.Port,
 		TLSenabled: config.TLS,
 		TLScert:    config.TLScert,
 		TLSkey:     config.TLSkey,
 	}
 	s := http.NewServer(
-		options,
+		httpOptions,
 		cacheController,
 		serviceController,
 		logger.WithField("type", "http"),
@@ -96,5 +100,5 @@ func main() {
 	health := health.New(serviceController, logger.WithField("type", "health"))
 	go health.Listen(ctx)
 
-	handleExit(logger, signals, cancel, s)
+	handleExit(logger, signals, cancel, s, m)
 }

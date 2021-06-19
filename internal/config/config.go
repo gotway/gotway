@@ -28,4 +28,8 @@ var (
 	TLScert = c.GetEnv("TLS_CERT", cert.Path("server.pem"))
 	// TLSkey is the key file for TLS
 	TLSkey = c.GetEnv("TLS_KEY", cert.Path("server.key"))
+	// MetricsPath indices the metrics server path
+	MetricsPath = c.GetEnv("METRICS_PATH", "/metrics")
+	// MetricsPort indicates the metrics server port
+	MetricsPort = c.GetEnv("METRICS_PORT", "2112")
 )
