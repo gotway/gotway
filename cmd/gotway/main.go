@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/config"
@@ -12,42 +10,17 @@ import (
 	"github.com/gotway/gotway/internal/http"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/internal/service"
+	gs "github.com/gotway/gotway/pkg/graceful_shutdown"
 	"github.com/gotway/gotway/pkg/log"
+	"github.com/gotway/gotway/pkg/metrics"
 	"github.com/gotway/gotway/pkg/redis"
 
 	goRedis "github.com/go-redis/redis/v8"
 )
 
-type stoppable interface {
-	Stop()
-}
-
-func handleExit(
-	logger log.Logger,
-	sigs <-chan os.Signal,
-	cancel context.CancelFunc,
-	stoppables ...stoppable,
-) {
-	sig := <-sigs
-	logger.Infof("received signal %s", sig.String())
-	cancel()
-	for _, s := range stoppables {
-		s.Stop()
-	}
-}
-
 func main() {
-	signals := make(chan os.Signal)
-	signal.Notify(
-		signals,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGKILL,
-		syscall.SIGHUP,
-		syscall.SIGQUIT,
-	)
-
 	ctx, cancel := context.WithCancel(context.Background())
+	stoppables := []gs.Stoppable{}
 
 	logger := log.NewLogger(log.Fields{
 		"service": "gotway",
@@ -65,6 +38,16 @@ func main() {
 	redisClient := redis.New(client)
 	logger.Info("connected to redis")
 
+	if config.Metrics {
+		metricsOptions := metrics.MetricsOptions{
+			Path: config.MetricsPath,
+			Port: config.MetricsPort,
+		}
+		m := metrics.New(metricsOptions, logger.WithField("type", "metrics"))
+		go m.Start()
+		stoppables = append(stoppables, m)
+	}
+
 	serviceRepo := repository.NewServiceRepoRedis(redisClient)
 	cacheRepo := repository.NewCacheRepoRedis(redisClient)
 
@@ -79,22 +62,23 @@ func main() {
 	)
 	go cacheController.ListenResponses(ctx)
 
-	options := http.ServerOptions{
+	httpOptions := http.ServerOptions{
 		Port:       config.Port,
 		TLSenabled: config.TLS,
 		TLScert:    config.TLScert,
 		TLSkey:     config.TLSkey,
 	}
 	s := http.NewServer(
-		options,
+		httpOptions,
 		cacheController,
 		serviceController,
 		logger.WithField("type", "http"),
 	)
 	go s.Start()
+	stoppables = append(stoppables, s)
 
 	health := health.New(serviceController, logger.WithField("type", "health"))
 	go health.Listen(ctx)
 
-	handleExit(logger, signals, cancel, s)
+	gs.GracefulShutdown(cancel, stoppables...)
 }

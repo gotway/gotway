@@ -1,9 +1,7 @@
 # gotway
-[![Lint](https://github.com/gotway/gotway/workflows/Lint/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ALint)
-[![Build](https://github.com/gotway/gotway/workflows/Build/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ABuild)
-[![Test](https://github.com/gotway/gotway/workflows/Test/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ATest)
-[![Release](https://github.com/gotway/gotway/workflows/Release/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ARelease)
-[![Deploy](https://github.com/gotway/gotway/workflows/Deploy/badge.svg)](https://github.com/gotway/gotway/actions?query=workflow%3ADeploy)
+[![CI](https://github.com/gotway/gotway/actions/workflows/ci.yml/badge.svg)](https://github.com/gotway/gotway/actions/workflows/ci.yml)
+[![Release](https://github.com/gotway/gotway/actions/workflows/release.yml/badge.svg)](https://github.com/gotway/gotway/actions/workflows/release.yml)
+[![Deploy](https://github.com/gotway/gotway/actions/workflows/deploy.yml/badge.svg)](https://github.com/gotway/gotway/actions/workflows/deploy.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gotway/gotway)](https://goreportcard.com/report/github.com/gotway/gotway)
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/gotway)](https://artifacthub.io/packages/search?repo=gotway)
 
