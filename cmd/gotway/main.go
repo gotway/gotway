@@ -39,7 +39,7 @@ func main() {
 	logger.Info("connected to redis")
 
 	if config.Metrics {
-		metricsOptions := metrics.MetricsOptions{
+		metricsOptions := metrics.Options{
 			Path: config.MetricsPath,
 			Port: config.MetricsPort,
 		}
@@ -77,7 +77,13 @@ func main() {
 	go s.Start()
 	stoppables = append(stoppables, s)
 
-	health := health.New(serviceController, logger.WithField("type", "health"))
+	healthOptions := health.Options{
+		CheckInterval: config.HealthCheckInterval,
+		Timeout:       config.HealthCheckTimeout,
+		NumWorkers:    config.HealthNumWorkers,
+		BufferSize:    config.HealthBufferSize,
+	}
+	health := health.New(healthOptions, serviceController, logger.WithField("type", "health"))
 	go health.Listen(ctx)
 
 	gs.GracefulShutdown(cancel, stoppables...)

@@ -2,18 +2,26 @@ package health
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/internal/service"
 
-	"github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/health/client"
 	"github.com/gotway/gotway/pkg/log"
 )
 
+type Options struct {
+	CheckInterval time.Duration
+	Timeout       time.Duration
+	NumWorkers    int
+	BufferSize    int
+}
+
 type Health struct {
+	options           Options
+	clientOptions     client.Options
+	serviceChan       chan string
 	serviceController service.Controller
 	clientFactory     client.Factory
 	logger            log.Logger
@@ -21,9 +29,13 @@ type Health struct {
 
 // Listen checks for service health periodically
 func (h *Health) Listen(ctx context.Context) {
-	ticker := time.NewTicker(config.HealthCheckInterval)
-
 	h.logger.Info("starting health check")
+
+	for i := 0; i < h.options.NumWorkers; i++ {
+		go h.checkServices(ctx)
+	}
+
+	ticker := time.NewTicker(h.options.CheckInterval)
 	for {
 		select {
 		case <-ctx.Done():
@@ -31,74 +43,62 @@ func (h *Health) Listen(ctx context.Context) {
 			return
 		case <-ticker.C:
 			h.logger.Debug("checking health")
-			h.updateServiceStatus()
+			for _, s := range h.serviceController.GetAllServiceKeys() {
+				h.serviceChan <- s
+			}
 		}
 	}
 }
 
-func (h *Health) updateServiceStatus() {
-	statusUpdate := h.getStatusUpdate()
-	if statusUpdate == nil {
+func (h *Health) checkServices(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case serviceKey := <-h.serviceChan:
+			h.updateService(serviceKey)
+		}
+	}
+}
+
+func (h *Health) updateService(serviceKey string) {
+	service, err := h.serviceController.GetService(serviceKey)
+	if err != nil {
+		h.logger.Errorf("unable to get service with key '%s'", serviceKey, err)
 		return
 	}
-	for status, services := range statusUpdate.Get() {
-		if err := h.serviceController.UpdateServicesStatus(status, services...); err != nil {
-			h.logger.Errorf("error updating services %v status to '%s' %v", services, status, err)
+
+	healthURL, err := service.HealthURL()
+	if err != nil {
+		h.logger.Error("error getting URL ", err)
+		return
+	}
+
+	client, err := h.clientFactory.GetClient(service.Type, h.clientOptions)
+	if err != nil {
+		h.logger.Error("error getting client ", err)
+		return
+	}
+
+	if err := client.HealthCheck(healthURL); err != nil {
+		if service.Status == model.ServiceStatusHealthy {
+			h.logger.Infof("service %s is now idle. Cause: %v", service.Path, err)
+			h.serviceController.UpdateServicesStatus(model.ServiceStatusIdle, service.Path)
+		}
+	} else {
+		if service.Status == model.ServiceStatusIdle {
+			h.logger.Infof("service %s is now healthy", service.Path)
+			h.serviceController.UpdateServicesStatus(model.ServiceStatusHealthy, service.Path)
 		}
 	}
 }
 
-func (h *Health) getStatusUpdate() *statusUpdate {
-	services := h.serviceController.GetAllServiceKeys()
-	statusUpdate := NewStatusUpdate()
-
-	var wg sync.WaitGroup
-	wg.Add(len(services))
-
-	for _, serviceKey := range services {
-		go func(serviceKey string) {
-			defer wg.Done()
-
-			service, err := h.serviceController.GetService(serviceKey)
-			if err != nil {
-				h.logger.Errorf("unable to get service with key '%s'", serviceKey, err)
-				return
-			}
-
-			healthURL, err := service.HealthURL()
-			if err != nil {
-				h.logger.Error("error getting URL ", err)
-				return
-			}
-
-			client, err := h.clientFactory.GetClient(service.Type)
-			if err != nil {
-				h.logger.Error("error getting client ", err)
-				return
-			}
-
-			if err := client.HealthCheck(healthURL); err != nil {
-				if service.Status == model.ServiceStatusHealthy {
-					h.logger.Infof("service %s is now idle. Cause: %v", service.Path, err)
-					statusUpdate.Add(model.ServiceStatusIdle, service.Path)
-				}
-			} else {
-				if service.Status == model.ServiceStatusIdle {
-					h.logger.Infof("service %s is now healthy", service.Path)
-					statusUpdate.Add(model.ServiceStatusHealthy, service.Path)
-				}
-			}
-
-		}(serviceKey)
-	}
-	wg.Wait()
-
-	return statusUpdate
-}
-
-func New(serviceController service.Controller, logger log.Logger) *Health {
+func New(options Options, serviceController service.Controller, logger log.Logger) *Health {
 	return &Health{
+		options:           options,
+		serviceChan:       make(chan string, options.BufferSize),
 		serviceController: serviceController,
+		clientOptions:     client.Options{Timeout: options.Timeout},
 		clientFactory:     client.NewFactory(),
 		logger:            logger,
 	}

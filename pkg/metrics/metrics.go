@@ -8,13 +8,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type MetricsOptions struct {
+type Options struct {
 	Path string
 	Port string
 }
 
 type Metrics struct {
-	options MetricsOptions
+	options Options
 	server  *http.Server
 	logger  log.Logger
 }
@@ -34,7 +34,7 @@ func (m *Metrics) Stop() {
 	}
 }
 
-func New(options MetricsOptions, logger log.Logger) *Metrics {
+func New(options Options, logger log.Logger) *Metrics {
 	addr := ":" + options.Port
 	server := &http.Server{Addr: addr}
 	return &Metrics{options, server, logger}
