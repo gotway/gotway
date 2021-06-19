@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/config"
@@ -12,6 +10,7 @@ import (
 	"github.com/gotway/gotway/internal/http"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/internal/service"
+	gs "github.com/gotway/gotway/pkg/graceful_shutdown"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/gotway/pkg/metrics"
 	"github.com/gotway/gotway/pkg/redis"
@@ -19,34 +18,9 @@ import (
 	goRedis "github.com/go-redis/redis/v8"
 )
 
-type stoppable interface{ Stop() }
-
-func gracefulShutdown(
-	logger log.Logger,
-	sigs <-chan os.Signal,
-	cancel context.CancelFunc,
-	stoppables ...stoppable,
-) {
-	sig := <-sigs
-	logger.Infof("received signal %s", sig.String())
-	cancel()
-	for _, s := range stoppables {
-		s.Stop()
-	}
-}
-
 func main() {
-	signals := make(chan os.Signal)
-	signal.Notify(
-		signals,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGKILL,
-		syscall.SIGHUP,
-		syscall.SIGQUIT,
-	)
 	ctx, cancel := context.WithCancel(context.Background())
-	stoppables := []stoppable{}
+	stoppables := []gs.Stoppable{}
 
 	logger := log.NewLogger(log.Fields{
 		"service": "gotway",
@@ -106,5 +80,5 @@ func main() {
 	health := health.New(serviceController, logger.WithField("type", "health"))
 	go health.Listen(ctx)
 
-	gracefulShutdown(logger, signals, cancel, stoppables...)
+	gs.GracefulShutdown(cancel, stoppables...)
 }
