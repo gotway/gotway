@@ -18,6 +18,7 @@ func (c clientGRPC) HealthCheck(url *url.URL) error {
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	healthClient := healthpb.NewHealthClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), c.options.Timeout)
