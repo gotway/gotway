@@ -11,7 +11,7 @@ type Factory struct {
 	mux          sync.Mutex
 }
 
-func (f *Factory) GetClient(serviceType model.ServiceType, options Options) (Client, error) {
+func (f *Factory) Get(serviceType model.ServiceType, options Options) (Client, error) {
 	f.mux.Lock()
 	defer f.mux.Unlock()
 
@@ -26,6 +26,15 @@ func (f *Factory) GetClient(serviceType model.ServiceType, options Options) (Cli
 	f.clientByType[serviceType] = client
 
 	return client, nil
+}
+
+func (f *Factory) Release() {
+	f.mux.Lock()
+	defer f.mux.Unlock()
+
+	for _, c := range f.clientByType {
+		c.Release()
+	}
 }
 
 func NewFactory() Factory {

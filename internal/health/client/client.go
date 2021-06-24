@@ -15,6 +15,7 @@ type Options struct {
 // Client interface
 type Client interface {
 	HealthCheck(url *url.URL) error
+	Release()
 }
 
 var ErrServiceNotAvailable = errors.New("Service not available")
