@@ -40,7 +40,6 @@ func (h *Health) Listen(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			h.logger.Info("stopping health check")
-			h.clientFactory.Release()
 			return
 		case <-ticker.C:
 			h.logger.Debug("checking health")
