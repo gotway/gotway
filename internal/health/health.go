@@ -74,7 +74,7 @@ func (h *Health) updateService(serviceKey string) {
 		return
 	}
 
-	client, err := h.clientFactory.Get(service.Type, h.clientOptions)
+	client, err := h.clientFactory.GetClient(service.Type, h.clientOptions)
 	if err != nil {
 		h.logger.Error("error getting client ", err)
 		return
