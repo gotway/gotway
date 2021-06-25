@@ -21,11 +21,6 @@ func (c clientREST) HealthCheck(url *url.URL) error {
 	return nil
 }
 
-// Release connections
-func (c clientREST) Release() {
-	c.client.CloseIdleConnections()
-}
-
 func newClientREST(options Options) clientREST {
 	return clientREST{http.Client{Timeout: options.Timeout}}
 }
