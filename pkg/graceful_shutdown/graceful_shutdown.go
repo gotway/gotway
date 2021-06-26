@@ -7,11 +7,11 @@ import (
 	"syscall"
 )
 
-type Stoppable interface{ Stop() }
+type ShutdownHook func()
 
 func GracefulShutdown(
 	cancel context.CancelFunc,
-	stoppables ...Stoppable,
+	shutdownHooks ...ShutdownHook,
 ) {
 	signals := make(chan os.Signal)
 	signal.Notify(
@@ -24,7 +24,7 @@ func GracefulShutdown(
 	)
 	<-signals
 	cancel()
-	for _, s := range stoppables {
-		s.Stop()
+	for _, hook := range shutdownHooks {
+		hook()
 	}
 }
