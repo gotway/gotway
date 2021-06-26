@@ -86,5 +86,5 @@ func main() {
 	health := health.New(healthOptions, serviceController, logger.WithField("type", "health"))
 	go health.Listen(ctx)
 
-	gs.GracefulShutdown(cancel, shutdownHooks...)
+	gs.GracefulShutdown(logger, cancel, shutdownHooks...)
 }
