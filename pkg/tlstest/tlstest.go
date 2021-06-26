@@ -1,4 +1,4 @@
-package cert
+package tls_test
 
 import (
 	"path/filepath"
@@ -17,4 +17,12 @@ func Path(rel string) string {
 	}
 
 	return filepath.Join(basepath, rel)
+}
+
+func Cert() string {
+	return Path("server.pem")
+}
+
+func Key() string {
+	return Path("server.key")
 }
