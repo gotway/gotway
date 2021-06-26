@@ -5,10 +5,10 @@ import (
 	"runtime"
 )
 
-// Path returns the absolute path the given relative file or directory path,
+// path returns the absolute path the given relative file or directory path,
 // relative to the cert directory in the user's GOPATH.
 // If rel is already absolute, it is returned unmodified.
-func Path(rel string) string {
+func path(rel string) string {
 	_, currentFile, _, _ := runtime.Caller(0)
 	basepath := filepath.Dir(currentFile)
 
@@ -19,10 +19,14 @@ func Path(rel string) string {
 	return filepath.Join(basepath, rel)
 }
 
+func CA() string {
+	return path("ca.pem")
+}
+
 func Cert() string {
-	return Path("server.pem")
+	return path("server.pem")
 }
 
 func Key() string {
-	return Path("server.key")
+	return path("server.key")
 }
