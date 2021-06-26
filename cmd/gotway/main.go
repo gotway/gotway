@@ -20,7 +20,7 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	stoppables := []gs.Stoppable{}
+	shutdownHooks := []gs.ShutdownHook{}
 
 	logger := log.NewLogger(log.Fields{
 		"service": "gotway",
@@ -45,7 +45,7 @@ func main() {
 		}
 		m := metrics.New(metricsOptions, logger.WithField("type", "metrics"))
 		go m.Start()
-		stoppables = append(stoppables, m)
+		shutdownHooks = append(shutdownHooks, m.Stop)
 	}
 
 	serviceRepo := repository.NewServiceRepoRedis(redisClient)
@@ -75,7 +75,7 @@ func main() {
 		logger.WithField("type", "http"),
 	)
 	go s.Start()
-	stoppables = append(stoppables, s)
+	shutdownHooks = append(shutdownHooks, s.Stop)
 
 	healthOptions := health.Options{
 		CheckInterval: config.HealthCheckInterval,
@@ -86,5 +86,5 @@ func main() {
 	health := health.New(healthOptions, serviceController, logger.WithField("type", "health"))
 	go health.Listen(ctx)
 
-	gs.GracefulShutdown(cancel, stoppables...)
+	gs.GracefulShutdown(cancel, shutdownHooks...)
 }
