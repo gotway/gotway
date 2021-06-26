@@ -5,11 +5,14 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gotway/gotway/pkg/log"
 )
 
 type ShutdownHook func()
 
 func GracefulShutdown(
+	logger log.Logger,
 	cancel context.CancelFunc,
 	shutdownHooks ...ShutdownHook,
 ) {
@@ -22,7 +25,8 @@ func GracefulShutdown(
 		syscall.SIGHUP,
 		syscall.SIGQUIT,
 	)
-	<-signals
+	s := <-signals
+	logger.Info("received signal ", s.String())
 	cancel()
 	for _, hook := range shutdownHooks {
 		hook()
