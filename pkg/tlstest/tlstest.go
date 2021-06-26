@@ -1,4 +1,4 @@
-package tls_test
+package tlstest
 
 import (
 	"path/filepath"

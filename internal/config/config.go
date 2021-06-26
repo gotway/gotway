@@ -4,7 +4,7 @@ import (
 	"time"
 
 	c "github.com/gotway/gotway/pkg/config"
-	tlsTest "github.com/gotway/gotway/pkg/tlstest"
+	"github.com/gotway/gotway/pkg/tlstest"
 )
 
 var (
@@ -29,9 +29,9 @@ var (
 	// TLS indicates if TLS is enabled
 	TLS = c.GetBoolEnv("TLS", true)
 	// TLScert is the certificate file for TLS
-	TLScert = c.GetEnv("TLS_CERT", tlsTest.Cert())
+	TLScert = c.GetEnv("TLS_CERT", tlstest.Cert())
 	// TLSkey is the key file for TLS
-	TLSkey = c.GetEnv("TLS_KEY", tlsTest.Key())
+	TLSkey = c.GetEnv("TLS_KEY", tlstest.Key())
 	// Metrics indicates whether the metrics are enabled
 	Metrics = c.GetBoolEnv("METRICS", true)
 	// MetricsPath indices the metrics server path
