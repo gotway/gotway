@@ -23,6 +23,10 @@ func CA() string {
 	return path("ca.pem")
 }
 
+func Server() string {
+	return "x.test.youtube.com"
+}
+
 func Cert() string {
 	return path("server.pem")
 }
