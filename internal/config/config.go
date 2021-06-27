@@ -38,4 +38,8 @@ var (
 	MetricsPath = c.GetEnv("METRICS_PATH", "/metrics")
 	// MetricsPort indicates the metrics server port
 	MetricsPort = c.GetEnv("METRICS_PORT", "2112")
+	// PProf indicates whether profiling is enabled
+	PProf = c.GetBoolEnv("PPROF", false)
+	// PProfPort indicates the port of the profiling server
+	PProfPort = c.GetEnv("PPROF_PORT", "6060")
 )

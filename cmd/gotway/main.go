@@ -13,6 +13,7 @@ import (
 	gs "github.com/gotway/gotway/pkg/graceful_shutdown"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/gotway/pkg/metrics"
+	"github.com/gotway/gotway/pkg/pprof"
 	"github.com/gotway/gotway/pkg/redis"
 
 	goRedis "github.com/go-redis/redis/v8"
@@ -46,6 +47,13 @@ func main() {
 		m := metrics.New(metricsOptions, logger.WithField("type", "metrics"))
 		go m.Start()
 		shutdownHooks = append(shutdownHooks, m.Stop)
+	}
+
+	if config.PProf {
+		pprofOptions := pprof.Options{Port: config.PProfPort}
+		p := pprof.New(pprofOptions, logger.WithField("type", "pprof"))
+		go p.Start()
+		shutdownHooks = append(shutdownHooks, p.Stop)
 	}
 
 	serviceRepo := repository.NewServiceRepoRedis(redisClient)
