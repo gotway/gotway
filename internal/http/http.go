@@ -45,7 +45,7 @@ func (s *Server) Start() {
 }
 
 func (s *Server) Stop() {
-	s.logger.Info("stopping server...")
+	s.logger.Info("stopping server")
 	if err := s.server.Shutdown(context.Background()); err != nil {
 		s.logger.Error("error stopping server ", err)
 	}
