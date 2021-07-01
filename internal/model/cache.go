@@ -4,40 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"time"
 )
 
 // Cache is a cached service response
 type Cache struct {
-	Path       string      `json:"path"`
-	StatusCode int         `json:"statusCode"`
-	Headers    http.Header `json:"headers"`
-	Body       CacheBody   `json:"body"`
-}
-
-// CacheBody is a cache body
-type CacheBody struct {
-	io.Reader
-}
-
-// MarshalJSON serializes a cache body
-func (c CacheBody) MarshalJSON() ([]byte, error) {
-	bytes, err := ioutil.ReadAll(c)
-	if err != nil || len(bytes) == 0 {
-		var data struct{}
-		return json.Marshal(data)
-	}
-	return bytes, nil
-}
-
-// CacheDetail provides extra information about a cache
-type CacheDetail struct {
-	Cache
-	TTL  CacheTTL `json:"ttl"`
-	Tags []string `json:"tags"`
+	Path       string   `json:"path"`
+	StatusCode int      `json:"statusCode"`
+	Body       []byte   `json:"body"`
+	TTL        CacheTTL `json:"ttl"`
+	Tags       []string `json:"tags"`
 }
 
 // CacheTTL is the cache time to live in seconds

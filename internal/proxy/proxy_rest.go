@@ -4,24 +4,17 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-
-	"github.com/gotway/gotway/internal/model"
 )
 
-type proxyREST struct {
-	proxy
-}
+type proxyREST struct{ proxy }
 
 func (p proxyREST) getTargetURL(r *http.Request) (*url.URL, error) {
-	path, err := model.GetServiceRelativePath(r, p.service.Path)
+	url, err := url.Parse(p.service.Backend.URL)
 	if err != nil {
 		return nil, err
 	}
-	target, err := url.Parse(p.service.URL + path)
-	if err != nil {
-		return nil, err
-	}
-	return target, nil
+	url.Path = r.URL.Path
+	return url, nil
 }
 
 // ReverseProxy forwards traffic to a service
@@ -35,7 +28,7 @@ func (p proxyREST) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
 		Director: getDirector(target),
 		ModifyResponse: func(res *http.Response) error {
 			p.log(r, res, target)
-			return p.handleResponse(p.service.Path, res)
+			return p.handleResponse(res, p.service)
 		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			p.handleError(w, err)

@@ -11,7 +11,7 @@ type Factory struct {
 	mux          sync.Mutex
 }
 
-func (f *Factory) GetClient(serviceType model.ServiceType, options Options) (Client, error) {
+func (f *Factory) Get(serviceType model.ServiceType, options Options) (Client, error) {
 	f.mux.Lock()
 	defer f.mux.Unlock()
 

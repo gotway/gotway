@@ -10,12 +10,11 @@ import (
 
 // Proxy interface
 type Proxy interface {
-	getTargetURL(r *http.Request) (*url.URL, error)
 	ReverseProxy(w http.ResponseWriter, r *http.Request) error
 }
 
 // ResponseHandler is a function hook for handling responses
-type ResponseHandler = func(serviceKey string, res *http.Response) error
+type ResponseHandler = func(r *http.Response, service model.Service) error
 
 type proxy struct {
 	service        model.Service

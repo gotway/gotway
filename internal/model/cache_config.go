@@ -2,14 +2,13 @@ package model
 
 import (
 	"errors"
-	"strconv"
 )
 
 // CacheConfig defines cache configuration params for a service
 type CacheConfig struct {
-	TTL      int64               `json:"ttl"`
-	Statuses CacheConfigStatuses `json:"statuses"`
-	Tags     []string            `json:"tags"`
+	TTL      int64    `json:"ttl"`
+	Statuses []int    `json:"statuses"`
+	Tags     []string `json:"tags"`
 }
 
 // DefaultCacheConfig is the value by default
@@ -33,18 +32,6 @@ func (c CacheConfig) Validate() error {
 		return nil
 	}
 	return ErrInvalidCacheConfig
-}
-
-// CacheConfigStatuses defines http cacheable statuses
-type CacheConfigStatuses []int
-
-// Serialize serializes cache statuses
-func (cs CacheConfigStatuses) Serialize() []string {
-	statuses := make([]string, len(cs))
-	for i, s := range cs {
-		statuses[i] = strconv.Itoa(s)
-	}
-	return statuses
 }
 
 // ErrCacheConfigNotFound error for not found service

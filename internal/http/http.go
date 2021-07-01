@@ -2,10 +2,13 @@ package http
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/internal/cache"
+	"github.com/gotway/gotway/internal/middleware"
+	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
 )
@@ -19,13 +22,12 @@ type ServerOptions struct {
 }
 
 type Server struct {
-	server  *http.Server
-	options ServerOptions
-
-	cacheController   cache.Controller
+	server            *http.Server
+	options           ServerOptions
+	middleware        *middleware.Middleware
 	serviceController service.Controller
-
-	logger log.Logger
+	cacheController   cache.Controller
+	logger            log.Logger
 }
 
 func (s *Server) Start() {
@@ -51,49 +53,57 @@ func (s *Server) Stop() {
 	}
 }
 
-func (s *Server) getSchemes() []string {
-	var schemes = []string{"http"}
-	if s.options.TLSenabled {
-		schemes = append(schemes, "https")
-	}
-	return schemes
+func (s *Server) createRouter() *mux.Router {
+	root := mux.NewRouter()
+
+	s.addApiRouter(root)
+
+	proxy := root.MatcherFunc(s.matchRequest).Subrouter()
+	proxy.Use(s.middleware.RequestDecorator)
+	proxy.Use(s.middleware.Cache)
+	proxy.PathPrefix("/").HandlerFunc(s.proxy)
+
+	return root
 }
 
-func (s *Server) createRouter() *mux.Router {
-	router := mux.NewRouter()
-
-	api := router.PathPrefix("/api").Subrouter()
+func (s *Server) addApiRouter(root *mux.Router) {
+	api := root.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods(http.MethodGet)
-
 	s.addServiceRouter(api)
 	s.addCacheRouter(api)
-
-	proxy := router.PathPrefix("/{service}").Subrouter()
-	proxy.Use(s.cacheMiddleware)
-	proxy.Schemes(s.getSchemes()...).HandlerFunc(s.proxyHandler)
-
-	return router
 }
 
 func (s *Server) addServiceRouter(root *mux.Router) {
 	root.HandleFunc("/services", s.getServicesHandler).Methods(http.MethodGet)
 
 	service := root.PathPrefix("/service").Subrouter()
-	service.Methods(http.MethodPost).HandlerFunc(s.registerServiceHandler)
+	service.Methods(http.MethodPost).HandlerFunc(s.createService)
 
 	serviceID := service.PathPrefix("/{service}").Subrouter()
-	serviceID.Methods(http.MethodGet).HandlerFunc(s.getServiceHandler)
-	serviceID.Methods(http.MethodDelete).HandlerFunc(s.deleteServiceHandler)
+	serviceID.Methods(http.MethodGet).HandlerFunc(s.getService)
+	serviceID.Methods(http.MethodDelete).HandlerFunc(s.deleteService)
 }
 
 func (s *Server) addCacheRouter(root *mux.Router) {
-	cache := root.PathPrefix("/cache").Subrouter()
+	root.PathPrefix("/cache").Methods(http.MethodDelete).HandlerFunc(s.deleteCache)
+}
 
-	cache.PathPrefix("/{service}").Methods(http.MethodGet).HandlerFunc(s.getCacheHandler)
+func (s *Server) matchRequest(r *http.Request, _ *mux.RouteMatch) bool {
+	service, err := getRequestService(r)
+	if err != nil {
+		return false
+	}
+	return service.MatchRequest(r)
+}
 
-	cache.Methods(http.MethodDelete).HandlerFunc(s.deleteCacheHandler)
+func getRequestService(r *http.Request) (model.Service, error) {
+	service, ok := r.Context().Value("service").(model.Service)
+	if !ok {
+		return model.Service{}, errors.New("service not found in request context")
+	}
+	return service, nil
 }
 
 func NewServer(options ServerOptions, cacheController cache.Controller,
@@ -101,11 +111,18 @@ func NewServer(options ServerOptions, cacheController cache.Controller,
 
 	addr := ":" + options.Port
 	server := &http.Server{Addr: addr}
+	middleware := middleware.New(
+		cacheController,
+		serviceController,
+		logger.WithField("type", "middleware"),
+	)
+
 	return &Server{
 		server:            server,
 		options:           options,
-		cacheController:   cacheController,
+		middleware:        middleware,
 		serviceController: serviceController,
+		cacheController:   cacheController,
 		logger:            logger,
 	}
 }

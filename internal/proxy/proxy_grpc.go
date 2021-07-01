@@ -10,12 +10,10 @@ import (
 	"golang.org/x/net/http2"
 )
 
-type proxyGRPC struct {
-	proxy
-}
+type proxyGRPC struct{ proxy }
 
 func (p proxyGRPC) getTargetURL(r *http.Request) (*url.URL, error) {
-	url, err := url.Parse(p.service.URL)
+	url, err := url.Parse(p.service.Backend.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +37,7 @@ func (p proxyGRPC) ReverseProxy(w http.ResponseWriter, r *http.Request) error {
 		},
 		ModifyResponse: func(res *http.Response) error {
 			p.log(r, res, target)
-			return p.handleResponse(p.service.Path, res)
+			return p.handleResponse(res, p.service)
 		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			p.handleError(w, err)

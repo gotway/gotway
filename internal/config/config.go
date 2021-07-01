@@ -16,10 +16,14 @@ var (
 	LogLevel = c.GetEnv("LOG_LEVEL", "debug")
 	// RedisUrl indicates the URL for the redis client
 	RedisUrl = c.GetEnv("REDIS_URL", "redis://localhost:6379/0")
-	//HealthNumWorkers is the number of workers used to perform health check
+	// HealthNumWorkers is the number of workers used to perform health check
 	HealthNumWorkers = c.GetIntEnv("HEALTH_CHECK_NUM_WORKERS", 10)
-	//HealthBufferSize is the size of the buffered channel used to perform health check
+	// HealthBufferSize is the size of the buffered channel used to perform health check
 	HealthBufferSize = c.GetIntEnv("HEALTH_CHECK_BUFFER_SIZE", 10)
+	// CacheNumWorkers is the number of workers used to perform health check
+	CacheNumWorkers = c.GetIntEnv("CACHE_NUM_WORKERS", 10)
+	// CacheBufferSize is the size of the buffered channel used to perform health check
+	CacheBufferSize = c.GetIntEnv("CACHE_BUFFER_SIZE", 10)
 	// HealthCheckInterval is the interval between health checks
 	HealthCheckInterval = time.Duration(
 		c.GetIntEnv("HEALTH_CHECK_INTERVAL_SECONDS", 10),
