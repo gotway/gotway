@@ -81,13 +81,13 @@ func (h *Health) updateService(service model.Service) {
 
 	if err := client.HealthCheck(healthURL); err != nil {
 		if service.Status == model.ServiceStatusHealthy {
-			h.logger.Infof("service '%s' is now idle. Cause: %v", service.Name, err)
+			h.logger.Infof("service '%s' is now idle. Cause: %v", service.ID, err)
 			service.Status = model.ServiceStatusIdle
 			h.serviceController.UpsertService(service)
 		}
 	} else {
 		if service.Status == model.ServiceStatusIdle {
-			h.logger.Infof("service '%s' is now healthy", service.Name)
+			h.logger.Infof("service '%s' is now healthy", service.ID)
 			service.Status = model.ServiceStatusHealthy
 			h.serviceController.UpsertService(service)
 		}

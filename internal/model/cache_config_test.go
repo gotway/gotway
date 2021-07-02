@@ -94,30 +94,3 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
-
-func TestSerializeStatuses(t *testing.T) {
-	tests := []struct {
-		name         string
-		statuses     CacheConfigStatuses
-		wantStatuses []string
-	}{
-		{
-			name:         "Empty statuses",
-			statuses:     []int{},
-			wantStatuses: []string{},
-		},
-		{
-			name:         "Statuses",
-			statuses:     []int{200, 400, 404},
-			wantStatuses: []string{"200", "400", "404"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			statuses := tt.statuses.Serialize()
-
-			assert.Equal(t, statuses, tt.wantStatuses)
-		})
-	}
-}

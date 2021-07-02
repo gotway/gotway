@@ -58,10 +58,10 @@ func (s *Server) createRouter() *mux.Router {
 
 	s.addApiRouter(root)
 
-	proxy := root.MatcherFunc(s.matchRequest).Subrouter()
+	proxy := root.PathPrefix("/").Subrouter()
+	proxy.PathPrefix("/").HandlerFunc(s.proxy)
 	proxy.Use(s.middleware.RequestDecorator)
 	proxy.Use(s.middleware.Cache)
-	proxy.PathPrefix("/").HandlerFunc(s.proxy)
 
 	return root
 }
@@ -91,11 +91,13 @@ func (s *Server) addCacheRouter(root *mux.Router) {
 }
 
 func (s *Server) matchRequest(r *http.Request, _ *mux.RouteMatch) bool {
-	service, err := getRequestService(r)
-	if err != nil {
-		return false
-	}
-	return service.MatchRequest(r)
+	s.logger.Debug("match request")
+	return true
+	// service, err := getRequestService(r)
+	// if err != nil {
+	// 	return false
+	// }
+	// return service.MatchRequest(r)
 }
 
 func getRequestService(r *http.Request) (model.Service, error) {

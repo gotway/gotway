@@ -10,7 +10,6 @@ import (
 )
 
 type Match struct {
-	Scheme     string `json:"scheme"`
 	Method     string `json:"method"`
 	Host       string `json:"host"`
 	Path       string `json:"path"`
@@ -41,8 +40,8 @@ func (b Backend) Validate() error {
 
 // Service defines the relevant info about a microservice
 type Service struct {
+	ID      string        `json:"id"`
 	Type    ServiceType   `json:"type"`
-	Name    string        `json:"name"`
 	Match   Match         `json:"match"`
 	Backend Backend       `json:"backend"`
 	Status  ServiceStatus `json:"status"`
@@ -57,7 +56,7 @@ func (s Service) HealthURL() (*url.URL, error) {
 		if healthPath == "" {
 			healthPath = "/health"
 		}
-		return url.Parse(fmt.Sprintf("%s/%s", s.Backend.URL, s.Backend.HealthPath))
+		return url.Parse(fmt.Sprintf("%s/%s", s.Backend.URL, healthPath))
 	case ServiceTypeGRPC:
 		return url.Parse(s.Backend.URL)
 	default:
@@ -71,9 +70,6 @@ func (s Service) IsHealthy() bool {
 }
 
 func (s Service) MatchRequest(r *http.Request) bool {
-	if s.Match.Scheme != "" && s.Match.Scheme != r.URL.Scheme {
-		return false
-	}
 	if s.Match.Method != "" && s.Match.Method != r.Method {
 		return false
 	}
@@ -91,8 +87,10 @@ func (s Service) MatchRequest(r *http.Request) bool {
 
 // Validate checks whether a service is valid
 func (s Service) Validate() error {
-	err := s.Type.Validate()
-	if err != nil {
+	if s.ID == "" {
+		return errors.New("service id is mandatory")
+	}
+	if err := s.Type.Validate(); err != nil {
 		return err
 	}
 	if s.Status != "" {
@@ -106,7 +104,7 @@ func (s Service) Validate() error {
 	if err := s.Backend.Validate(); err != nil {
 		return err
 	}
-	if !s.Cache.IsEmpty() {
+	if s.Type == ServiceTypeREST && !s.Cache.IsEmpty() {
 		if err := s.Cache.Validate(); err != nil {
 			return err
 		}

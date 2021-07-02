@@ -26,7 +26,7 @@ var ctx = context.Background()
 
 // Create stores a service into redis
 func (s ServiceRepoRedis) Create(service model.Service) error {
-	if s.redis.Exists(ctx, getServiceRedisKey(service.Name)).Val() == 1 {
+	if s.redis.Exists(ctx, getServiceRedisKey(service.ID)).Val() == 1 {
 		return model.ErrServiceAlreadyRegistered
 	}
 	return s.Upsert(service)
@@ -41,7 +41,8 @@ func (s ServiceRepoRedis) GetAll() ([]model.Service, error) {
 
 	services := make([]model.Service, len(keys))
 	for i, key := range keys {
-		s, err := s.Get(key)
+		rediskey := strings.TrimPrefix(key, "service::")
+		s, err := s.Get(rediskey)
 		if err != nil {
 			return nil, err
 		}
@@ -75,7 +76,7 @@ func (s ServiceRepoRedis) Upsert(service model.Service) error {
 	if err != nil {
 		return fmt.Errorf("error serializing service %v", err)
 	}
-	return s.redis.Set(ctx, getServiceRedisKey(service.Name), string(bytes), 0).Err()
+	return s.redis.Set(ctx, getServiceRedisKey(service.ID), string(bytes), 0).Err()
 }
 
 func getServiceRedisKey(key string) string {

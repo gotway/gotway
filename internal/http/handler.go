@@ -112,7 +112,7 @@ func (s *Server) proxy(w http.ResponseWriter, r *http.Request) {
 	if !service.IsHealthy() {
 		http.Error(
 			w,
-			fmt.Sprintf("'%s' service is not responding", service.Name),
+			fmt.Sprintf("'%s' service is not responding", service.ID),
 			http.StatusBadGateway,
 		)
 		return

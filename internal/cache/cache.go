@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 
 	"github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/model"
@@ -44,7 +45,7 @@ func (c BasicController) IsCacheableRequest(r *http.Request, service model.Servi
 
 // GetCache gets a cached response for a request and a service
 func (c BasicController) GetCache(r *http.Request, service model.Service) (model.Cache, error) {
-	cache, err := c.cacheRepo.Get(r.URL.Path, service.Name)
+	cache, err := c.cacheRepo.Get(r.URL.Path, service.ID)
 	if err != nil {
 		return model.Cache{}, err
 	}
@@ -64,9 +65,24 @@ func (c BasicController) DeleteCacheByTags(tags []string) error {
 // ListenResponses starts listening for responses
 func (c BasicController) ListenResponses(ctx context.Context) {
 	c.logger.Info("starting cache handler")
+	var logOnce sync.Once
+
 	for i := 0; i < config.CacheNumWorkers; i++ {
 		go func() {
-			c.checkCache(ctx)
+			for {
+				select {
+				case <-ctx.Done():
+					logOnce.Do(func() {
+						c.logger.Info("stopping cache handler")
+					})
+					return
+				case response := <-c.pendingCache:
+					c.logger.Debug("caching response")
+					if err := c.cacheResponse(response); err != nil {
+						c.logger.Error("error caching response", err)
+					}
+				}
+			}
 		}()
 	}
 }
@@ -105,21 +121,6 @@ func (c BasicController) isCacheableResponse(r *http.Response, service model.Ser
 	return false
 }
 
-func (c BasicController) checkCache(ctx context.Context) {
-	c.logger.Info("stopping cache handler")
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case response := <-c.pendingCache:
-			c.logger.Debug("caching response")
-			if err := c.cacheResponse(response); err != nil {
-				c.logger.Error("error caching response", err)
-			}
-		}
-	}
-}
-
 func (c BasicController) cacheResponse(res response) error {
 	path := getPath(res.httpResponse.Request)
 	ttl := getTTL(res.httpResponse, res.service.Cache)
@@ -133,7 +134,7 @@ func (c BasicController) cacheResponse(res response) error {
 		Tags:       tags,
 	}
 
-	return c.cacheRepo.Create(cache, res.service.Name)
+	return c.cacheRepo.Create(cache, res.service.ID)
 }
 
 func getPath(r *http.Request) string {

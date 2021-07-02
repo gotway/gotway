@@ -30,6 +30,7 @@ type BasicController struct {
 
 // CreateService creates a new service
 func (c BasicController) CreateService(service model.Service) error {
+	service.Status = model.ServiceStatusIdle
 	return c.serviceRepo.Create(service)
 }
 
