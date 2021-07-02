@@ -44,9 +44,9 @@ func (h *Health) Listen(ctx context.Context) {
 		case <-ticker.C:
 			h.logger.Debug("checking health")
 			services, err := h.serviceController.GetServices()
-			if err != nil {
+			if err != nil && err != model.ErrServiceNotFound {
 				h.logger.Error("error getting services ", err)
-				return
+				continue
 			}
 			for _, s := range services {
 				h.pendingHealth <- s

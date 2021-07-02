@@ -17,7 +17,7 @@ type Middleware struct {
 	logger            log.Logger
 }
 
-func (m *Middleware) RequestDecorator(next http.Handler) http.Handler {
+func (m *Middleware) MatchService(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		services, err := m.serviceController.GetServices()
 		if err != nil {

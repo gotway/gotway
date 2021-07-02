@@ -49,8 +49,8 @@ func (p DeleteCache) Validate() error {
 
 // CachePath defines the paths that conform a cache
 type CachePath struct {
-	ServicePath string `json:"servicePath"`
-	Path        string `json:"path"`
+	Service string `json:"service"`
+	Path    string `json:"path"`
 }
 
 // ErrCachePathNotFound used when a cache defined by its path was not found
@@ -59,7 +59,7 @@ type ErrCachePathNotFound struct {
 }
 
 func (e *ErrCachePathNotFound) Error() string {
-	return fmt.Sprintf("Cache path not found: %s%s", e.ServicePath, e.Path)
+	return fmt.Sprintf("Cache path not found: %s%s", e.Service, e.Path)
 }
 
 // ErrCacheNotFound error for not found cache

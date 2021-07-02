@@ -8,6 +8,8 @@ import (
 
 	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/pkg/redis"
+
+	goRedis "github.com/go-redis/redis/v8"
 )
 
 type ServiceRepo interface {
@@ -38,13 +40,16 @@ func (s ServiceRepoRedis) GetAll() ([]model.Service, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(keys) == 0 {
+		return nil, model.ErrServiceNotFound
+	}
 
 	services := make([]model.Service, len(keys))
 	for i, key := range keys {
 		rediskey := strings.TrimPrefix(key, "service::")
 		s, err := s.Get(rediskey)
 		if err != nil {
-			return nil, err
+			return nil, redisServiceError(err)
 		}
 		services[i] = s
 	}
@@ -56,7 +61,7 @@ func (s ServiceRepoRedis) GetAll() ([]model.Service, error) {
 func (s ServiceRepoRedis) Get(key string) (model.Service, error) {
 	val, err := s.redis.Get(ctx, getServiceRedisKey(key)).Result()
 	if err != nil {
-		return model.Service{}, err
+		return model.Service{}, redisServiceError(err)
 	}
 	var Service model.Service
 	if err := json.Unmarshal([]byte(val), &Service); err != nil {
@@ -67,7 +72,14 @@ func (s ServiceRepoRedis) Get(key string) (model.Service, error) {
 
 // Delete deletes a service from redis
 func (s ServiceRepoRedis) Delete(key string) error {
-	return s.redis.Del(ctx, getServiceRedisKey(key)).Err()
+	val, err := s.redis.Del(ctx, getServiceRedisKey(key)).Result()
+	if err != nil {
+		return err
+	}
+	if val == 0 {
+		return model.ErrServiceNotFound
+	}
+	return nil
 }
 
 // Upsert creates or updates a service in redis
@@ -81,6 +93,16 @@ func (s ServiceRepoRedis) Upsert(service model.Service) error {
 
 func getServiceRedisKey(key string) string {
 	return "service::" + strings.ToLower(key)
+}
+
+func redisServiceError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if err == goRedis.Nil {
+		return model.ErrServiceNotFound
+	}
+	return err
 }
 
 func NewServiceRepoRedis(redis redis.Cmdable) ServiceRepo {

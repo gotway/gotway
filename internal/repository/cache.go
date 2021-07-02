@@ -39,10 +39,9 @@ func (r CacheRepoRedis) Create(cache model.Cache, serviceKey string) error {
 
 	txFn := func(tx *goRedis.Tx) error {
 		pipe := tx.TxPipeline()
-
 		pipe.SAdd(ctx, tagsKey, cache.Tags)
+		pipe.Expire(ctx, tagsKey, time.Duration(cache.TTL))
 		pipe.Set(ctx, cacheKey, string(bytes), time.Duration(cache.TTL))
-
 		_, err := pipe.Exec(ctx)
 		return err
 	}
@@ -56,7 +55,7 @@ func (r CacheRepoRedis) Get(path string, serviceKey string) (model.Cache, error)
 
 	result, err := r.redis.Get(ctx, cacheKey).Result()
 	if err != nil {
-		return model.Cache{}, err
+		return model.Cache{}, redisCacheError(err)
 	}
 
 	var cache model.Cache
@@ -70,7 +69,7 @@ func (r CacheRepoRedis) Get(path string, serviceKey string) (model.Cache, error)
 func (r CacheRepoRedis) DeleteByPath(paths []model.CachePath) error {
 	cacheKeys := make([]string, len(paths))
 	for index, item := range paths {
-		cacheKeys[index] = getCacheRedisKey(item.Path, item.ServicePath)
+		cacheKeys[index] = getCacheRedisKey(item.Path, item.Service)
 	}
 
 	ok, notFoundIndex, err := r.redis.AllExist(ctx, cacheKeys...)
@@ -86,11 +85,10 @@ func (r CacheRepoRedis) DeleteByPath(paths []model.CachePath) error {
 	return r.deleteCaches(cacheKeys...)
 }
 
-// DeleteByTags deletes caches by specifying its tags
+// DeleteByTags deletes caches defined by its tags
 func (r CacheRepoRedis) DeleteByTags(tags []string) error {
 	tmpTagsToDeleteKey := fmt.Sprintf("tmp::tags::delete::%d", time.Now().UnixNano())
-	err := r.redis.SAdd(ctx, tmpTagsToDeleteKey, tags).Err()
-	if err != nil {
+	if err := r.redis.SAdd(ctx, tmpTagsToDeleteKey, tags).Err(); err != nil {
 		return err
 	}
 	defer func() error {
@@ -99,13 +97,12 @@ func (r CacheRepoRedis) DeleteByTags(tags []string) error {
 
 	var cursor uint64
 	var wg sync.WaitGroup
-
 	for {
 		var keys []string
 		var err error
 		keys, cursor, err = r.redis.Scan(ctx, cursor, "cache::*::tags", 20).Result()
 		if err != nil {
-			return err
+			return redisCacheError(err)
 		}
 
 		if len(keys) > 0 {
@@ -114,14 +111,11 @@ func (r CacheRepoRedis) DeleteByTags(tags []string) error {
 				defer wg.Done()
 
 				pipe := r.redis.Pipeline()
-				var cmds []*goRedis.StringSliceCmd
-				for _, key := range keys {
-					cmd := pipe.SInter(ctx, key, tmpTagsToDeleteKey)
-					cmds = append(cmds, cmd)
+				cmds := make([]*goRedis.StringSliceCmd, len(keys))
+				for i, key := range keys {
+					cmds[i] = pipe.SInter(ctx, key, tmpTagsToDeleteKey)
 				}
-
-				_, err := pipe.Exec(ctx)
-				if err != nil {
+				if _, err := pipe.Exec(ctx); err != nil {
 					return
 				}
 
@@ -133,7 +127,6 @@ func (r CacheRepoRedis) DeleteByTags(tags []string) error {
 				}
 			}(keys, tags, &wg)
 		}
-
 		if cursor == 0 {
 			break
 		}
@@ -149,12 +142,15 @@ func (r CacheRepoRedis) deleteCaches(cacheKeys ...string) error {
 		cacheTagsKey := fmt.Sprintf("%s::tags", cacheKey)
 		keys = append(keys, cacheKey, cacheTagsKey)
 	}
-	return r.redis.Del(ctx, keys...).Err()
+	if err := r.redis.Del(ctx, keys...).Err(); err != nil {
+		return redisCacheError(err)
+	}
+	return nil
 }
 
 func (r CacheRepoRedis) deleteCacheByCacheTagsKey(cacheTagsKey string) error {
-	key := strings.TrimSuffix(cacheTagsKey, "::tags")
-	return r.deleteCaches(key)
+	redisKey := strings.TrimSuffix(cacheTagsKey, "::tags")
+	return r.deleteCaches(redisKey)
 }
 
 func getCacheRedisKey(path, serviceKey string) string {
@@ -163,6 +159,16 @@ func getCacheRedisKey(path, serviceKey string) string {
 
 func getCacheTagsRedisKey(path, serviceKey string) string {
 	return fmt.Sprintf("%s::tags", getCacheRedisKey(path, serviceKey))
+}
+
+func redisCacheError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if err == goRedis.Nil {
+		return model.ErrCacheNotFound
+	}
+	return err
 }
 
 func NewCacheRepoRedis(redis redis.Cmdable) CacheRepo {
