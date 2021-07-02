@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/model"
@@ -62,6 +63,9 @@ func (m *Middleware) Cache(next http.Handler) http.Handler {
 		}
 
 		m.logger.Debug("cached response")
+		for key, header := range cache.Headers {
+			w.Header().Set(key, strings.Join(header[:], ","))
+		}
 		w.WriteHeader(cache.StatusCode)
 		w.Write(cache.Body)
 	})

@@ -4,16 +4,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 )
 
 // Cache is a cached service response
 type Cache struct {
-	Path       string   `json:"path"`
-	StatusCode int      `json:"statusCode"`
-	Body       []byte   `json:"body"`
-	TTL        CacheTTL `json:"ttl"`
-	Tags       []string `json:"tags"`
+	Path       string      `json:"path"`
+	StatusCode int         `json:"statusCode"`
+	Headers    http.Header `json:"headers"`
+	Body       []byte      `json:"body"`
+	TTL        CacheTTL    `json:"ttl"`
+	Tags       []string    `json:"tags"`
 }
 
 // CacheTTL is the cache time to live in seconds

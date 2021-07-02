@@ -129,6 +129,7 @@ func (c BasicController) cacheResponse(res response) error {
 	cache := model.Cache{
 		Path:       path,
 		StatusCode: res.httpResponse.StatusCode,
+		Headers:    res.httpResponse.Header,
 		Body:       res.bodyBytes,
 		TTL:        ttl,
 		Tags:       tags,
