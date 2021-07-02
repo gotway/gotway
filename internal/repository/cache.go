@@ -107,7 +107,7 @@ func (r CacheRepoRedis) DeleteByTags(tags []string) error {
 
 		if len(keys) > 0 {
 			wg.Add(1)
-			go func(keys, tags []string, wg *sync.WaitGroup) {
+			go func(keys []string) {
 				defer wg.Done()
 
 				pipe := r.redis.Pipeline()
@@ -125,7 +125,7 @@ func (r CacheRepoRedis) DeleteByTags(tags []string) error {
 						r.deleteCacheByCacheTagsKey(keys[index])
 					}
 				}
-			}(keys, tags, &wg)
+			}(keys)
 		}
 		if cursor == 0 {
 			break

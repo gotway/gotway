@@ -68,13 +68,6 @@ func (c BasicController) ReverseProxy(
 	return p.ReverseProxy(w, r)
 }
 
-func min(x, y int) int {
-	if x > y {
-		return y
-	}
-	return x
-}
-
 func NewController(
 	serviceRepo repository.ServiceRepo,
 	logger log.Logger,
