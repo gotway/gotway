@@ -76,10 +76,14 @@ func (s Service) MatchRequest(r *http.Request) bool {
 	if s.Match.Host != "" && s.Match.Host != r.Host {
 		return false
 	}
-	if s.Match.Path != "" && s.Match.Path != r.URL.RawPath {
+	u, err := url.Parse(r.URL.String())
+	if err != nil {
 		return false
 	}
-	if s.Match.PathPrefix != "" && !strings.HasPrefix(r.URL.RawPath, s.Match.PathPrefix) {
+	if s.Match.Path != "" && s.Match.Path != u.Path {
+		return false
+	}
+	if s.Match.PathPrefix != "" && !strings.HasPrefix(u.Path, s.Match.PathPrefix) {
 		return false
 	}
 	return true
