@@ -7,7 +7,6 @@ import (
 	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/internal/service"
 
-	"github.com/gotway/gotway/internal/health/client"
 	"github.com/gotway/gotway/pkg/log"
 )
 
@@ -20,8 +19,7 @@ type Options struct {
 
 type Health struct {
 	options           Options
-	clientOptions     client.Options
-	clientFactory     client.Factory
+	client            client
 	pendingHealth     chan model.Service
 	serviceController service.Controller
 	logger            log.Logger
@@ -73,13 +71,7 @@ func (h *Health) updateService(service model.Service) {
 		return
 	}
 
-	client, err := h.clientFactory.Get(service.Type, h.clientOptions)
-	if err != nil {
-		h.logger.Error("error getting client ", err)
-		return
-	}
-
-	if err := client.HealthCheck(healthURL); err != nil {
+	if err := h.client.healthCheck(healthURL); err != nil {
 		if service.Status == model.ServiceStatusHealthy {
 			h.logger.Infof("service '%s' is now idle. Cause: %v", service.ID, err)
 			service.Status = model.ServiceStatusIdle
@@ -97,10 +89,9 @@ func (h *Health) updateService(service model.Service) {
 func New(options Options, serviceController service.Controller, logger log.Logger) *Health {
 	return &Health{
 		options:           options,
+		client:            newClient(clientOptions{timeout: options.Timeout}),
 		pendingHealth:     make(chan model.Service, options.BufferSize),
 		serviceController: serviceController,
-		clientOptions:     client.Options{Timeout: options.Timeout},
-		clientFactory:     client.NewFactory(),
 		logger:            logger,
 	}
 }

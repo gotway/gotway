@@ -40,18 +40,23 @@ func main() {
 	logger.Info("connected to redis")
 
 	if config.Metrics {
-		metricsOptions := metrics.Options{
-			Path: config.MetricsPath,
-			Port: config.MetricsPort,
-		}
-		m := metrics.New(metricsOptions, logger.WithField("type", "metrics"))
+
+		m := metrics.New(
+			metrics.Options{
+				Path: config.MetricsPath,
+				Port: config.MetricsPort,
+			},
+			logger.WithField("type", "metrics"),
+		)
 		go m.Start()
 		shutdownHooks = append(shutdownHooks, m.Stop)
 	}
 
 	if config.PProf {
-		pprofOptions := pprof.Options{Port: config.PProfPort}
-		p := pprof.New(pprofOptions, logger.WithField("type", "pprof"))
+		p := pprof.New(
+			pprof.Options{Port: config.PProfPort},
+			logger.WithField("type", "pprof"),
+		)
 		go p.Start()
 		shutdownHooks = append(shutdownHooks, p.Stop)
 	}
@@ -70,14 +75,14 @@ func main() {
 	)
 	go cacheController.ListenResponses(ctx)
 
-	httpOptions := http.ServerOptions{
-		Port:       config.Port,
-		TLSenabled: config.TLS,
-		TLScert:    config.TLScert,
-		TLSkey:     config.TLSkey,
-	}
 	s := http.NewServer(
-		httpOptions,
+		http.ServerOptions{
+			Port:           config.Port,
+			GatewayTimeout: config.GatewayTimeout,
+			TLSenabled:     config.TLS,
+			TLScert:        config.TLScert,
+			TLSkey:         config.TLSkey,
+		},
 		cacheController,
 		serviceController,
 		logger.WithField("type", "http"),
@@ -85,13 +90,16 @@ func main() {
 	go s.Start()
 	shutdownHooks = append(shutdownHooks, s.Stop)
 
-	healthOptions := health.Options{
-		CheckInterval: config.HealthCheckInterval,
-		Timeout:       config.HealthCheckTimeout,
-		NumWorkers:    config.HealthNumWorkers,
-		BufferSize:    config.HealthBufferSize,
-	}
-	health := health.New(healthOptions, serviceController, logger.WithField("type", "health"))
+	health := health.New(
+		health.Options{
+			CheckInterval: config.HealthCheckInterval,
+			Timeout:       config.HealthCheckTimeout,
+			NumWorkers:    config.HealthNumWorkers,
+			BufferSize:    config.HealthBufferSize,
+		},
+		serviceController,
+		logger.WithField("type", "health"),
+	)
 	go health.Listen(ctx)
 
 	gs.GracefulShutdown(logger, cancel, shutdownHooks...)

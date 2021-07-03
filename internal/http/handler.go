@@ -116,24 +116,6 @@ func (h *handler) deleteCache(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *handler) proxy(w http.ResponseWriter, r *http.Request) {
-	service, err := getRequestService(r)
-	if !service.IsHealthy() {
-		http.Error(
-			w,
-			fmt.Sprintf("'%s' service is not responding", service.ID),
-			http.StatusBadGateway,
-		)
-		return
-	}
-
-	err = h.serviceController.ReverseProxy(w, r, service, h.cacheController.HandleResponse)
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-}
-
 func (h *handler) handleServiceError(err error, w http.ResponseWriter, r *http.Request) {
 	h.logger.Error(err)
 	if errors.Is(err, model.ErrServiceNotFound) {
@@ -148,10 +130,15 @@ func getServiceKey(r *http.Request) string {
 	return params["service"]
 }
 
-func getRequestService(r *http.Request) (model.Service, error) {
-	service, ok := r.Context().Value(serviceKey).(model.Service)
-	if !ok {
-		return model.Service{}, errors.New("service not found in request context")
+func newHandler(
+	serviceController service.Controller,
+	cacheController cache.Controller,
+	logger log.Logger,
+) *handler {
+
+	return &handler{
+		serviceController: serviceController,
+		cacheController:   cacheController,
+		logger:            logger,
 	}
-	return service, nil
 }

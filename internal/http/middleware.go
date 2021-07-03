@@ -3,20 +3,25 @@ package http
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gotway/gotway/internal/cache"
-	"github.com/gotway/gotway/internal/config"
-	"github.com/gotway/gotway/internal/http/client"
 	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
 )
 
+type middlewareOptions struct {
+	gatewayTimeout time.Duration
+}
+
 type middleware struct {
+	client            *http.Client
 	cacheController   cache.Controller
 	serviceController service.Controller
 	logger            log.Logger
@@ -52,7 +57,7 @@ func (m *middleware) matchService(next http.Handler) http.Handler {
 func (m *middleware) cacheIn(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Debug("cacheIn")
-		service, err := getServiceFromReq(r)
+		service, err := getServiceFromRequest(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
@@ -85,27 +90,25 @@ func (m *middleware) cacheIn(next http.Handler) http.Handler {
 func (m *middleware) gateway(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Debug("gateway")
-		service, err := getServiceFromReq(r)
+		service, err := getServiceFromRequest(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
 		}
 
-		backendReq, err := getRequestForBackend(r, service)
+		backendReq, err := getBackendRequest(r, service)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
 		}
-		c := client.New(client.ClientOptions{
-			Timeout: config.GatewayTimeout,
-			Type:    service.Type,
-		})
-		res, err := c.Request(backendReq)
+
+		res, err := m.client.Do(backendReq)
 		if err != nil {
 			m.logger.Error("error requesting service ", err)
 			w.WriteHeader(http.StatusBadGateway)
 			return
 		}
+		m.log(r, res, backendReq.URL)
 
 		decorated := r.WithContext(context.WithValue(r.Context(), responseKey, res))
 		next.ServeHTTP(w, decorated)
@@ -115,12 +118,12 @@ func (m *middleware) gateway(next http.Handler) http.Handler {
 func (m *middleware) cacheOut(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Debug("cacheOut")
-		res, err := getResponseFromReq(r)
+		res, err := getResponseFromRequest(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
 		}
-		service, err := getServiceFromReq(r)
+		service, err := getServiceFromRequest(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
@@ -137,7 +140,7 @@ func (m *middleware) cacheOut(next http.Handler) http.Handler {
 
 func (m *middleware) writeResponse(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		res, err := getResponseFromReq(r)
+		res, err := getResponseFromRequest(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
@@ -163,7 +166,11 @@ func (m *middleware) handleInternalError(err error, w http.ResponseWriter) {
 	http.Error(w, "Internal server error", http.StatusInternalServerError)
 }
 
-func getServiceFromReq(r *http.Request) (model.Service, error) {
+func (p *middleware) log(req *http.Request, res *http.Response, target *url.URL) {
+	p.logger.Infof("%s %s => %s %d", req.Method, req.URL, target, res.StatusCode)
+}
+
+func getServiceFromRequest(r *http.Request) (model.Service, error) {
 	service, ok := r.Context().Value(serviceKey).(model.Service)
 	if !ok {
 		return model.Service{}, errors.New("service not found in request context")
@@ -171,7 +178,7 @@ func getServiceFromReq(r *http.Request) (model.Service, error) {
 	return service, nil
 }
 
-func getResponseFromReq(r *http.Request) (*http.Response, error) {
+func getResponseFromRequest(r *http.Request) (*http.Response, error) {
 	res, ok := r.Context().Value(responseKey).(*http.Response)
 	if !ok {
 		return nil, errors.New("response not found in request context")
@@ -179,16 +186,31 @@ func getResponseFromReq(r *http.Request) (*http.Response, error) {
 	return res, nil
 }
 
-func getRequestForBackend(incomingReq *http.Request, service model.Service) (*http.Request, error) {
-	url, err := url.Parse(service.Backend.URL)
+func getBackendRequest(r *http.Request, service model.Service) (*http.Request, error) {
+	url := service.Backend.URL + r.URL.Path
+	if r.URL.RawQuery != "" {
+		url = fmt.Sprintf("%s?%s", url, r.URL.RawQuery)
+	}
+	backendReq, err := http.NewRequest(r.Method, url, r.Body)
 	if err != nil {
 		return nil, err
 	}
+	backendReq.Header.Add("X-Forwarded-Host", r.Host)
+	backendReq.Header.Add("X-Origin-Host", backendReq.Host)
+	return backendReq, nil
+}
 
-	url.Path = incomingReq.URL.Path
-	if service.Type == model.ServiceTypeGRPC {
-		url.Scheme = "https"
+func newMiddleware(
+	options middlewareOptions,
+	serviceController service.Controller,
+	cacheController cache.Controller,
+	logger log.Logger,
+) *middleware {
+
+	return &middleware{
+		client:            &http.Client{Timeout: options.gatewayTimeout},
+		serviceController: serviceController,
+		cacheController:   cacheController,
+		logger:            logger,
 	}
-
-	return http.NewRequest(incomingReq.Method, url.String(), incomingReq.Body)
 }

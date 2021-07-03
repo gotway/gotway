@@ -1,10 +1,7 @@
 package service
 
 import (
-	"net/http"
-
 	"github.com/gotway/gotway/internal/model"
-	"github.com/gotway/gotway/internal/proxy"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/pkg/log"
 )
@@ -15,12 +12,6 @@ type Controller interface {
 	GetService(key string) (model.Service, error)
 	DeleteService(key string) error
 	UpsertService(service model.Service) error
-	ReverseProxy(
-		w http.ResponseWriter,
-		r *http.Request,
-		service model.Service,
-		handler proxy.ResponseHandler,
-	) error
 }
 
 type BasicController struct {
@@ -52,20 +43,6 @@ func (c BasicController) DeleteService(key string) error {
 // UpdateServiceStatus updates the status of a service
 func (c BasicController) UpsertService(service model.Service) error {
 	return c.serviceRepo.Upsert(service)
-}
-
-// ReverseProxy forwards traffic to a service
-func (c BasicController) ReverseProxy(
-	w http.ResponseWriter,
-	r *http.Request,
-	service model.Service,
-	handler proxy.ResponseHandler,
-) error {
-	p, err := proxy.New(service, handler, c.logger.WithField("type", "proxy"))
-	if err != nil {
-		return err
-	}
-	return p.ReverseProxy(w, r)
 }
 
 func NewController(

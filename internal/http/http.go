@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/internal/cache"
@@ -11,7 +12,8 @@ import (
 )
 
 type ServerOptions struct {
-	Port string
+	Port           string
+	GatewayTimeout time.Duration
 
 	TLSenabled bool
 	TLScert    string
@@ -107,16 +109,17 @@ func NewServer(
 	return &Server{
 		options: options,
 		server:  &http.Server{Addr: addr},
-		handler: &handler{
-			cacheController:   cacheController,
-			serviceController: serviceController,
-			logger:            logger.WithField("type", "handler"),
-		},
-		middleware: &middleware{
-			cacheController:   cacheController,
-			serviceController: serviceController,
-			logger:            logger.WithField("type", "middleware"),
-		},
+		handler: newHandler(
+			serviceController,
+			cacheController,
+			logger.WithField("type", "handler"),
+		),
+		middleware: newMiddleware(
+			middlewareOptions{gatewayTimeout: options.GatewayTimeout},
+			serviceController,
+			cacheController,
+			logger.WithField("type", "middleware"),
+		),
 		logger: logger,
 	}
 }

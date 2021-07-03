@@ -41,7 +41,6 @@ func (b Backend) Validate() error {
 // Service defines the relevant info about a microservice
 type Service struct {
 	ID      string        `json:"id"`
-	Type    ServiceType   `json:"type"`
 	Match   Match         `json:"match"`
 	Backend Backend       `json:"backend"`
 	Status  ServiceStatus `json:"status"`
@@ -50,18 +49,11 @@ type Service struct {
 
 // HealthURL returns the URL used for health check for all service types
 func (s Service) HealthURL() (*url.URL, error) {
-	switch s.Type {
-	case ServiceTypeREST:
-		healthPath := s.Backend.HealthPath
-		if healthPath == "" {
-			healthPath = "/health"
-		}
-		return url.Parse(fmt.Sprintf("%s/%s", s.Backend.URL, healthPath))
-	case ServiceTypeGRPC:
-		return url.Parse(s.Backend.URL)
-	default:
-		return nil, ErrInvalidServiceType
+	healthPath := s.Backend.HealthPath
+	if healthPath == "" {
+		healthPath = "/health"
 	}
+	return url.Parse(fmt.Sprintf("%s/%s", s.Backend.URL, healthPath))
 }
 
 // IsHealthy returns whether a service is healthy
@@ -76,14 +68,10 @@ func (s Service) MatchRequest(r *http.Request) bool {
 	if s.Match.Host != "" && s.Match.Host != r.Host {
 		return false
 	}
-	u, err := url.Parse(r.URL.String())
-	if err != nil {
+	if s.Match.Path != "" && s.Match.Path != r.URL.RawPath {
 		return false
 	}
-	if s.Match.Path != "" && s.Match.Path != u.Path {
-		return false
-	}
-	if s.Match.PathPrefix != "" && !strings.HasPrefix(u.Path, s.Match.PathPrefix) {
+	if s.Match.PathPrefix != "" && !strings.HasPrefix(r.URL.RawPath, s.Match.PathPrefix) {
 		return false
 	}
 	return true
@@ -93,9 +81,6 @@ func (s Service) MatchRequest(r *http.Request) bool {
 func (s Service) Validate() error {
 	if s.ID == "" {
 		return errors.New("service id is mandatory")
-	}
-	if err := s.Type.Validate(); err != nil {
-		return err
 	}
 	if s.Status != "" {
 		if err := s.Status.Validate(); err != nil {
@@ -108,7 +93,7 @@ func (s Service) Validate() error {
 	if err := s.Backend.Validate(); err != nil {
 		return err
 	}
-	if s.Type == ServiceTypeREST && !s.Cache.IsEmpty() {
+	if !s.Cache.IsEmpty() {
 		if err := s.Cache.Validate(); err != nil {
 			return err
 		}

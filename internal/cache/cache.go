@@ -40,7 +40,7 @@ type BasicController struct {
 
 // IsCacheableRequest determines if a request's response can be retrieved from cache
 func (c BasicController) IsCacheableRequest(r *http.Request, service model.Service) bool {
-	return r.Method == http.MethodGet && service.Type == model.ServiceTypeREST
+	return r.Method == http.MethodGet
 }
 
 // GetCache gets a cached response for a request and a service
@@ -140,9 +140,8 @@ func (c BasicController) cacheResponse(res response) error {
 
 func getPath(r *http.Request) string {
 	path := r.URL.Path
-	query := r.URL.RawQuery
-	if query != "" {
-		return fmt.Sprintf("%s?%s", path, query)
+	if r.URL.RawQuery != "" {
+		return fmt.Sprintf("%s?%s", path, r.URL.RawQuery)
 	}
 	return path
 }
