@@ -32,19 +32,19 @@ func configureMiddlewares(
 	return []middleware.Middleware{
 		matchserviceMw.New(
 			serviceController,
-			logger.WithField("subtype", "match-service"),
+			logger.WithField("middleware", "match-service"),
 		),
 		cacheMw.NewCacheIn(
 			cacheController,
-			logger.WithField("subtype", "cache-in"),
+			logger.WithField("middleware", "cache-in"),
 		),
 		gatewayMw.New(
 			gatewayMw.GatewayOptions{Timeout: config.GatewayTimeout},
-			logger.WithField("subtype", "gateway"),
+			logger.WithField("middleware", "gateway"),
 		),
 		cacheMw.NewCacheOut(
 			cacheController,
-			logger.WithField("subtype", "cache-out"),
+			logger.WithField("middleware", "cache-out"),
 		),
 	}
 }
