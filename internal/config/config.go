@@ -16,6 +16,8 @@ var (
 	LogLevel = c.GetEnv("LOG_LEVEL", "debug")
 	// RedisUrl indicates the URL for the redis client
 	RedisUrl = c.GetEnv("REDIS_URL", "redis://localhost:6379/11")
+	// GatewayTimeout is the timeout when requesting services
+	GatewayTimeout = time.Duration(c.GetIntEnv("GATEWAY_TIMEOUT_SECONDS", 5)) * time.Second
 	// HealthNumWorkers is the number of workers used to perform health check
 	HealthNumWorkers = c.GetIntEnv("HEALTH_CHECK_NUM_WORKERS", 10)
 	// HealthBufferSize is the size of the buffered channel used to perform health check

@@ -7,11 +7,20 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/model"
+	"github.com/gotway/gotway/internal/service"
+	"github.com/gotway/gotway/pkg/log"
 )
 
-func (s *Server) getServicesHandler(w http.ResponseWriter, r *http.Request) {
-	services, err := s.serviceController.GetServices()
+type handler struct {
+	serviceController service.Controller
+	cacheController   cache.Controller
+	logger            log.Logger
+}
+
+func (h *handler) getServices(w http.ResponseWriter, r *http.Request) {
+	services, err := h.serviceController.GetServices()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -20,7 +29,7 @@ func (s *Server) getServicesHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(services)
 }
 
-func (s *Server) createService(w http.ResponseWriter, r *http.Request) {
+func (h *handler) createService(w http.ResponseWriter, r *http.Request) {
 	decoded := json.NewDecoder(r.Body)
 	var service model.Service
 	err := decoded.Decode(&service)
@@ -34,9 +43,9 @@ func (s *Server) createService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.serviceController.CreateService(service)
+	err = h.serviceController.CreateService(service)
 	if err != nil {
-		s.logger.Error("error creating service", err)
+		h.logger.Error("error creating service", err)
 		if errors.Is(err, model.ErrServiceAlreadyRegistered) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -47,28 +56,28 @@ func (s *Server) createService(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *Server) getService(w http.ResponseWriter, r *http.Request) {
+func (h *handler) getService(w http.ResponseWriter, r *http.Request) {
 	key := getServiceKey(r)
-	serviceDetail, err := s.serviceController.GetService(key)
+	serviceDetail, err := h.serviceController.GetService(key)
 	if err != nil {
-		s.handleServiceError(err, w, r)
+		h.handleServiceError(err, w, r)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(serviceDetail)
 }
 
-func (s *Server) deleteService(w http.ResponseWriter, r *http.Request) {
+func (h *handler) deleteService(w http.ResponseWriter, r *http.Request) {
 	key := getServiceKey(r)
-	err := s.serviceController.DeleteService(key)
+	err := h.serviceController.DeleteService(key)
 	if err != nil {
-		s.handleServiceError(err, w, r)
+		h.handleServiceError(err, w, r)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *Server) deleteCache(w http.ResponseWriter, r *http.Request) {
+func (h *handler) deleteCache(w http.ResponseWriter, r *http.Request) {
 	decoded := json.NewDecoder(r.Body)
 
 	var payload model.DeleteCache
@@ -85,7 +94,7 @@ func (s *Server) deleteCache(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(payload.Paths) > 0 {
-		err := s.cacheController.DeleteCacheByPath(payload.Paths)
+		err := h.cacheController.DeleteCacheByPath(payload.Paths)
 		if err != nil {
 			if _, ok := err.(*model.ErrCachePathNotFound); ok {
 				http.Error(w, err.Error(), http.StatusNotFound)
@@ -97,7 +106,7 @@ func (s *Server) deleteCache(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(payload.Tags) > 0 {
-		err := s.cacheController.DeleteCacheByTags(payload.Tags)
+		err := h.cacheController.DeleteCacheByTags(payload.Tags)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -107,7 +116,7 @@ func (s *Server) deleteCache(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (s *Server) proxy(w http.ResponseWriter, r *http.Request) {
+func (h *handler) proxy(w http.ResponseWriter, r *http.Request) {
 	service, err := getRequestService(r)
 	if !service.IsHealthy() {
 		http.Error(
@@ -118,15 +127,15 @@ func (s *Server) proxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.serviceController.ReverseProxy(w, r, service, s.cacheController.HandleResponse)
+	err = h.serviceController.ReverseProxy(w, r, service, h.cacheController.HandleResponse)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 }
 
-func (s *Server) handleServiceError(err error, w http.ResponseWriter, r *http.Request) {
-	s.logger.Error(err)
+func (h *handler) handleServiceError(err error, w http.ResponseWriter, r *http.Request) {
+	h.logger.Error(err)
 	if errors.Is(err, model.ErrServiceNotFound) {
 		http.Error(w, fmt.Sprintf("service not found"), http.StatusNotFound)
 		return
@@ -137,4 +146,12 @@ func (s *Server) handleServiceError(err error, w http.ResponseWriter, r *http.Re
 func getServiceKey(r *http.Request) string {
 	params := mux.Vars(r)
 	return params["service"]
+}
+
+func getRequestService(r *http.Request) (model.Service, error) {
+	service, ok := r.Context().Value(serviceKey).(model.Service)
+	if !ok {
+		return model.Service{}, errors.New("service not found in request context")
+	}
+	return service, nil
 }
