@@ -132,7 +132,7 @@ func (h *handler) writeResponse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.logger.Debug("writeResponse")
+	h.logger.Debug("write response")
 	for key, header := range res.Header {
 		w.Header().Set(key, strings.Join(header[:], ","))
 	}

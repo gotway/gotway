@@ -14,7 +14,7 @@ import (
 	matchserviceMw "github.com/gotway/gotway/internal/middleware/matchservice"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/internal/service"
-	gs "github.com/gotway/gotway/pkg/graceful_shutdown"
+	gs "github.com/gotway/gotway/pkg/gracefulshutdown"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/gotway/pkg/metrics"
 	"github.com/gotway/gotway/pkg/pprof"

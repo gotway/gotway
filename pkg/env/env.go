@@ -1,18 +1,19 @@
-package config
+package env
 
 import (
 	"os"
 	"strconv"
+	"time"
 )
 
-func GetEnv(key string, defaultValue string) string {
+func Get(key string, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
 	return defaultValue
 }
 
-func GetBoolEnv(key string, defaultValue bool) bool {
+func GetBool(key string, defaultValue bool) bool {
 	value, exists := os.LookupEnv(key)
 	if !exists {
 		return defaultValue
@@ -24,7 +25,7 @@ func GetBoolEnv(key string, defaultValue bool) bool {
 	return boolVal
 }
 
-func GetIntEnv(key string, defaultValue int) int {
+func GetInt(key string, defaultValue int) int {
 	value, exists := os.LookupEnv(key)
 	if !exists {
 		return defaultValue
@@ -34,4 +35,12 @@ func GetIntEnv(key string, defaultValue int) int {
 		return defaultValue
 	}
 	return intVal
+}
+
+func GetDuration(key string, defaultValue time.Duration) time.Duration {
+	val := GetInt(key, 0)
+	if val == 0 {
+		return defaultValue
+	}
+	return time.Duration(val)
 }
