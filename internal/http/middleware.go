@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/model"
+	"github.com/gotway/gotway/internal/request"
 	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
 )
@@ -27,11 +27,6 @@ type middleware struct {
 	logger            log.Logger
 }
 
-const (
-	serviceKey  = "service"
-	responseKey = "response"
-)
-
 func (m *middleware) matchService(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Debug("matchService")
@@ -44,8 +39,7 @@ func (m *middleware) matchService(next http.Handler) http.Handler {
 
 		for _, s := range services {
 			if s.MatchRequest(r) {
-				decorated := r.WithContext(context.WithValue(r.Context(), serviceKey, s))
-				next.ServeHTTP(w, decorated)
+				next.ServeHTTP(w, request.WithService(r, s))
 				return
 			}
 		}
@@ -57,7 +51,7 @@ func (m *middleware) matchService(next http.Handler) http.Handler {
 func (m *middleware) cacheIn(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Debug("cacheIn")
-		service, err := getServiceFromRequest(r)
+		service, err := request.GetService(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
@@ -90,7 +84,7 @@ func (m *middleware) cacheIn(next http.Handler) http.Handler {
 func (m *middleware) gateway(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Debug("gateway")
-		service, err := getServiceFromRequest(r)
+		service, err := request.GetService(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
@@ -110,20 +104,19 @@ func (m *middleware) gateway(next http.Handler) http.Handler {
 		}
 		m.log(r, res, backendReq.URL)
 
-		decorated := r.WithContext(context.WithValue(r.Context(), responseKey, res))
-		next.ServeHTTP(w, decorated)
+		next.ServeHTTP(w, request.WithResponse(r, res))
 	})
 }
 
 func (m *middleware) cacheOut(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.logger.Debug("cacheOut")
-		res, err := getResponseFromRequest(r)
+		res, err := request.GetResponse(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
 		}
-		service, err := getServiceFromRequest(r)
+		service, err := request.GetService(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
@@ -140,7 +133,7 @@ func (m *middleware) cacheOut(next http.Handler) http.Handler {
 
 func (m *middleware) writeResponse(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		res, err := getResponseFromRequest(r)
+		res, err := request.GetResponse(r)
 		if err != nil {
 			m.handleInternalError(err, w)
 			return
@@ -168,22 +161,6 @@ func (m *middleware) handleInternalError(err error, w http.ResponseWriter) {
 
 func (p *middleware) log(req *http.Request, res *http.Response, target *url.URL) {
 	p.logger.Infof("%s %s => %s %d", req.Method, req.URL, target, res.StatusCode)
-}
-
-func getServiceFromRequest(r *http.Request) (model.Service, error) {
-	service, ok := r.Context().Value(serviceKey).(model.Service)
-	if !ok {
-		return model.Service{}, errors.New("service not found in request context")
-	}
-	return service, nil
-}
-
-func getResponseFromRequest(r *http.Request) (*http.Response, error) {
-	res, ok := r.Context().Value(responseKey).(*http.Response)
-	if !ok {
-		return nil, errors.New("response not found in request context")
-	}
-	return res, nil
 }
 
 func getBackendRequest(r *http.Request, service model.Service) (*http.Request, error) {
