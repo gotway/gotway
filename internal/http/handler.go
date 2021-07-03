@@ -3,12 +3,15 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/internal/cache"
+	httpError "github.com/gotway/gotway/internal/http/error"
 	"github.com/gotway/gotway/internal/model"
+	"github.com/gotway/gotway/internal/request"
 	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
 )
@@ -60,7 +63,7 @@ func (h *handler) getService(w http.ResponseWriter, r *http.Request) {
 	key := getServiceKey(r)
 	serviceDetail, err := h.serviceController.GetService(key)
 	if err != nil {
-		h.handleServiceError(err, w, r)
+		httpError.Handle(err, w, h.logger)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -71,7 +74,7 @@ func (h *handler) deleteService(w http.ResponseWriter, r *http.Request) {
 	key := getServiceKey(r)
 	err := h.serviceController.DeleteService(key)
 	if err != nil {
-		h.handleServiceError(err, w, r)
+		httpError.Handle(err, w, h.logger)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -116,13 +119,25 @@ func (h *handler) deleteCache(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *handler) handleServiceError(err error, w http.ResponseWriter, r *http.Request) {
-	h.logger.Error(err)
-	if errors.Is(err, model.ErrServiceNotFound) {
-		http.Error(w, fmt.Sprintf("service not found"), http.StatusNotFound)
+func (h *handler) writeResponse(w http.ResponseWriter, r *http.Request) {
+	res, err := request.GetResponse(r)
+	if err != nil {
+		httpError.Handle(err, w, h.logger)
 		return
 	}
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+
+	bytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		httpError.Handle(err, w, h.logger)
+		return
+	}
+
+	h.logger.Debug("writeResponse")
+	for key, header := range res.Header {
+		w.Header().Set(key, strings.Join(header[:], ","))
+	}
+	w.WriteHeader(res.StatusCode)
+	w.Write(bytes)
 }
 
 func getServiceKey(r *http.Request) string {

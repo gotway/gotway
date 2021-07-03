@@ -3,17 +3,16 @@ package http
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/internal/cache"
+	"github.com/gotway/gotway/internal/middleware"
 	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
 )
 
 type ServerOptions struct {
-	Port           string
-	GatewayTimeout time.Duration
+	Port string
 
 	TLSenabled bool
 	TLScert    string
@@ -21,11 +20,11 @@ type ServerOptions struct {
 }
 
 type Server struct {
-	options    ServerOptions
-	server     *http.Server
-	handler    *handler
-	middleware *middleware
-	logger     log.Logger
+	options     ServerOptions
+	server      *http.Server
+	handler     *handler
+	middlewares []middleware.Middleware
+	logger      log.Logger
 }
 
 func (s *Server) Start() {
@@ -69,19 +68,11 @@ func (s *Server) addApiRouter(root *mux.Router) {
 }
 
 func (s *Server) addGatewayRouter(root *mux.Router) {
-	middlewares := []mux.MiddlewareFunc{
-		s.middleware.matchService,
-		s.middleware.cacheIn,
-		s.middleware.gateway,
-		s.middleware.cacheOut,
-		s.middleware.writeResponse,
+	gateway := root.PathPrefix("/").Subrouter()
+	for _, m := range s.middlewares {
+		gateway.Use(m.MiddlewareFunc)
 	}
-
-	proxy := root.PathPrefix("/").Subrouter()
-	proxy.PathPrefix("/")
-	for _, m := range middlewares {
-		proxy.Use(m)
-	}
+	gateway.PathPrefix("/").HandlerFunc(s.handler.writeResponse)
 }
 
 func (s *Server) addServiceRouter(root *mux.Router) {
@@ -101,11 +92,14 @@ func (s *Server) addCacheRouter(root *mux.Router) {
 
 func NewServer(
 	options ServerOptions,
+	middlewares []middleware.Middleware,
 	cacheController cache.Controller,
 	serviceController service.Controller,
-	logger log.Logger) *Server {
+	logger log.Logger,
+) *Server {
 
 	addr := ":" + options.Port
+
 	return &Server{
 		options: options,
 		server:  &http.Server{Addr: addr},
@@ -114,12 +108,7 @@ func NewServer(
 			cacheController,
 			logger.WithField("type", "handler"),
 		),
-		middleware: newMiddleware(
-			middlewareOptions{gatewayTimeout: options.GatewayTimeout},
-			serviceController,
-			cacheController,
-			logger.WithField("type", "middleware"),
-		),
-		logger: logger,
+		middlewares: middlewares,
+		logger:      logger,
 	}
 }
