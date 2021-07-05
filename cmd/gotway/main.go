@@ -122,17 +122,19 @@ func main() {
 	go server.Start()
 	shutdownHooks = append(shutdownHooks, server.Stop)
 
-	health := health.New(
-		health.Options{
-			CheckInterval: config.HealthCheckInterval,
-			Timeout:       config.HealthCheckTimeout,
-			NumWorkers:    config.HealthNumWorkers,
-			BufferSize:    config.HealthBufferSize,
-		},
-		serviceController,
-		logger.WithField("type", "health"),
-	)
-	go health.Listen(ctx)
+	if config.HealthCheckEnabled {
+		health := health.New(
+			health.Options{
+				CheckInterval: config.HealthCheckInterval,
+				Timeout:       config.HealthCheckTimeout,
+				NumWorkers:    config.HealthNumWorkers,
+				BufferSize:    config.HealthBufferSize,
+			},
+			serviceController,
+			logger.WithField("type", "health"),
+		)
+		go health.Listen(ctx)
+	}
 
 	gs.GracefulShutdown(logger, cancel, shutdownHooks...)
 }
