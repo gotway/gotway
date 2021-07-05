@@ -27,7 +27,7 @@ func (c *cacheIn) MiddlewareFunc(next http.Handler) http.Handler {
 			return
 		}
 
-		if !c.cacheController.IsCacheableRequest(r, service) {
+		if !c.cacheController.IsCacheableRequest(r) {
 			next.ServeHTTP(w, r)
 			return
 		}

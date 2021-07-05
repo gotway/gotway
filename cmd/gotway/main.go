@@ -99,7 +99,6 @@ func main() {
 	)
 	cacheController := cache.NewController(
 		cacheRepo,
-		serviceRepo,
 		logger.WithField("type", "cache-ctrl"),
 	)
 	go cacheController.ListenResponses(ctx)

@@ -17,7 +17,7 @@ import (
 )
 
 type Controller interface {
-	IsCacheableRequest(r *http.Request, service model.Service) bool
+	IsCacheableRequest(r *http.Request) bool
 	GetCache(r *http.Request, service model.Service) (model.Cache, error)
 	DeleteCacheByPath(paths []model.CachePath) error
 	DeleteCacheByTags(tags []string) error
@@ -33,13 +33,12 @@ type response struct {
 
 type BasicController struct {
 	cacheRepo    repository.CacheRepo
-	serviceRepo  repository.ServiceRepo
 	pendingCache chan response
 	logger       log.Logger
 }
 
 // IsCacheableRequest determines if a request's response can be retrieved from cache
-func (c BasicController) IsCacheableRequest(r *http.Request, service model.Service) bool {
+func (c BasicController) IsCacheableRequest(r *http.Request) bool {
 	return r.Method == http.MethodGet
 }
 
@@ -110,7 +109,7 @@ func (c BasicController) HandleResponse(r *http.Response, service model.Service)
 }
 
 func (c BasicController) isCacheableResponse(r *http.Response, service model.Service) bool {
-	if !c.IsCacheableRequest(r.Request, service) || headersDisallowCaching(r) {
+	if !c.IsCacheableRequest(r.Request) || headersDisallowCaching(r) {
 		return false
 	}
 	for _, s := range service.Cache.Statuses {
@@ -196,13 +195,11 @@ func headersDisallowCaching(r *http.Response) bool {
 
 func NewController(
 	cacheRepo repository.CacheRepo,
-	serviceRepo repository.ServiceRepo,
 	logger log.Logger,
 ) Controller {
 
 	return &BasicController{
 		cacheRepo:    cacheRepo,
-		serviceRepo:  serviceRepo,
 		pendingCache: make(chan response, config.CacheBufferSize),
 		logger:       logger,
 	}

@@ -32,8 +32,12 @@ type Backend struct {
 }
 
 func (b Backend) Validate() error {
-	if b.URL == "" {
-		return errors.New("backend URL is mandatory")
+	u, err := url.Parse(b.URL)
+	if err != nil {
+		return err
+	}
+	if u.Scheme == "" || u.Host == "" {
+		return errors.New("invalid backend url")
 	}
 	return nil
 }

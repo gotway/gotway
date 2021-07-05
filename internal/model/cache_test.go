@@ -25,8 +25,8 @@ func TestDeleteValidate(t *testing.T) {
 			delete: DeleteCache{
 				Paths: []CachePath{
 					{
-						ServicePath: "catalog",
-						Path:        "/products",
+						Service: "catalog",
+						Path:    "/products",
 					},
 				},
 				Tags: []string{"catalog"},
@@ -54,8 +54,8 @@ func TestDeleteValidate(t *testing.T) {
 func TestErrCachePathFormat(t *testing.T) {
 	err := &ErrCachePathNotFound{
 		CachePath: CachePath{
-			ServicePath: "catalog",
-			Path:        "/products",
+			Service: "catalog",
+			Path:    "/products",
 		},
 	}
 
