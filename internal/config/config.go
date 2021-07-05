@@ -19,24 +19,23 @@ var (
 	// GatewayTimeout is the timeout when requesting services
 	GatewayTimeout = env.GetDuration("GATEWAY_TIMEOUT_SECONDS", 5) * time.Second
 
+	// HealthCheckEnabled determines if health check is enabled
+	HealthCheckEnabled = env.GetBool("HEALTH_CHECK_ENABLED", true)
 	// HealthNumWorkers is the number of workers used to perform health check
 	HealthNumWorkers = env.GetInt("HEALTH_CHECK_NUM_WORKERS", 10)
 	// HealthBufferSize is the size of the buffered channel used to perform health check
 	HealthBufferSize = env.GetInt("HEALTH_CHECK_BUFFER_SIZE", 10)
-
-	// CacheEnabled determines if cache is enabled
-	CacheEnabled = env.GetBool("CACHE_ENABLED", false)
-	// CacheNumWorkers is the number of workers used to perform health check
-	CacheNumWorkers = env.GetInt("CACHE_NUM_WORKERS", 10)
-	// CacheBufferSize is the size of the buffered channel used to perform health check
-	CacheBufferSize = env.GetInt("CACHE_BUFFER_SIZE", 10)
-
-	// HealthCheckEnabled determines if health check is enabled
-	HealthCheckEnabled = env.GetBool("HEALTH_CHECK_ENABLED", true)
 	// HealthCheckInterval is the interval between health checks
 	HealthCheckInterval = env.GetDuration("HEALTH_CHECK_INTERVAL_SECONDS", 10) * time.Second
 	// HealthCheckTimeout is the timeout for health check
 	HealthCheckTimeout = env.GetDuration("HEALTH_CHECK_TIMEOUT_SECONDS", 5) * time.Second
+
+	// CacheEnabled determines if cache is enabled
+	CacheEnabled = env.GetBool("CACHE_ENABLED", true)
+	// CacheNumWorkers is the number of workers used to perform health check
+	CacheNumWorkers = env.GetInt("CACHE_NUM_WORKERS", 10)
+	// CacheBufferSize is the size of the buffered channel used to perform health check
+	CacheBufferSize = env.GetInt("CACHE_BUFFER_SIZE", 10)
 
 	// TLS indicates if TLS is enabled
 	TLS = env.GetBool("TLS", true)
