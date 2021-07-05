@@ -8,9 +8,13 @@ import (
 	"github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/health"
 	"github.com/gotway/gotway/internal/http"
+	"github.com/gotway/gotway/internal/middleware"
+	cacheMw "github.com/gotway/gotway/internal/middleware/cache"
+	gatewayMw "github.com/gotway/gotway/internal/middleware/gateway"
+	matchserviceMw "github.com/gotway/gotway/internal/middleware/matchservice"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/internal/service"
-	gs "github.com/gotway/gotway/pkg/graceful_shutdown"
+	gs "github.com/gotway/gotway/pkg/gracefulshutdown"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/gotway/pkg/metrics"
 	"github.com/gotway/gotway/pkg/pprof"
@@ -18,6 +22,32 @@ import (
 
 	goRedis "github.com/go-redis/redis/v8"
 )
+
+func configureMiddlewares(
+	cacheController cache.Controller,
+	serviceController service.Controller,
+	logger log.Logger,
+) []middleware.Middleware {
+
+	return []middleware.Middleware{
+		matchserviceMw.New(
+			serviceController,
+			logger.WithField("middleware", "match-service"),
+		),
+		cacheMw.NewCacheIn(
+			cacheController,
+			logger.WithField("middleware", "cache-in"),
+		),
+		gatewayMw.New(
+			gatewayMw.GatewayOptions{Timeout: config.GatewayTimeout},
+			logger.WithField("middleware", "gateway"),
+		),
+		cacheMw.NewCacheOut(
+			cacheController,
+			logger.WithField("middleware", "cache-out"),
+		),
+	}
+}
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -40,18 +70,22 @@ func main() {
 	logger.Info("connected to redis")
 
 	if config.Metrics {
-		metricsOptions := metrics.Options{
-			Path: config.MetricsPath,
-			Port: config.MetricsPort,
-		}
-		m := metrics.New(metricsOptions, logger.WithField("type", "metrics"))
+		m := metrics.New(
+			metrics.Options{
+				Path: config.MetricsPath,
+				Port: config.MetricsPort,
+			},
+			logger.WithField("type", "metrics"),
+		)
 		go m.Start()
 		shutdownHooks = append(shutdownHooks, m.Stop)
 	}
 
 	if config.PProf {
-		pprofOptions := pprof.Options{Port: config.PProfPort}
-		p := pprof.New(pprofOptions, logger.WithField("type", "pprof"))
+		p := pprof.New(
+			pprof.Options{Port: config.PProfPort},
+			logger.WithField("type", "pprof"),
+		)
 		go p.Start()
 		shutdownHooks = append(shutdownHooks, p.Stop)
 	}
@@ -65,33 +99,39 @@ func main() {
 	)
 	cacheController := cache.NewController(
 		cacheRepo,
-		serviceRepo,
 		logger.WithField("type", "cache-ctrl"),
 	)
 	go cacheController.ListenResponses(ctx)
 
-	httpOptions := http.ServerOptions{
-		Port:       config.Port,
-		TLSenabled: config.TLS,
-		TLScert:    config.TLScert,
-		TLSkey:     config.TLSkey,
-	}
-	s := http.NewServer(
-		httpOptions,
+	server := http.NewServer(
+		http.ServerOptions{
+			Port:       config.Port,
+			TLSenabled: config.TLS,
+			TLScert:    config.TLScert,
+			TLSkey:     config.TLSkey,
+		},
+		configureMiddlewares(
+			cacheController,
+			serviceController,
+			logger.WithField("type", "middleware"),
+		),
 		cacheController,
 		serviceController,
 		logger.WithField("type", "http"),
 	)
-	go s.Start()
-	shutdownHooks = append(shutdownHooks, s.Stop)
+	go server.Start()
+	shutdownHooks = append(shutdownHooks, server.Stop)
 
-	healthOptions := health.Options{
-		CheckInterval: config.HealthCheckInterval,
-		Timeout:       config.HealthCheckTimeout,
-		NumWorkers:    config.HealthNumWorkers,
-		BufferSize:    config.HealthBufferSize,
-	}
-	health := health.New(healthOptions, serviceController, logger.WithField("type", "health"))
+	health := health.New(
+		health.Options{
+			CheckInterval: config.HealthCheckInterval,
+			Timeout:       config.HealthCheckTimeout,
+			NumWorkers:    config.HealthNumWorkers,
+			BufferSize:    config.HealthBufferSize,
+		},
+		serviceController,
+		logger.WithField("type", "health"),
+	)
 	go health.Listen(ctx)
 
 	gs.GracefulShutdown(logger, cancel, shutdownHooks...)

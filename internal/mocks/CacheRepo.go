@@ -12,8 +12,22 @@ type CacheRepo struct {
 	mock.Mock
 }
 
-// DeleteCacheByPath provides a mock function with given fields: paths
-func (_m *CacheRepo) DeleteCacheByPath(paths []model.CachePath) error {
+// Create provides a mock function with given fields: cache, serviceKey
+func (_m *CacheRepo) Create(cache model.Cache, serviceKey string) error {
+	ret := _m.Called(cache, serviceKey)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.Cache, string) error); ok {
+		r0 = rf(cache, serviceKey)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DeleteByPath provides a mock function with given fields: paths
+func (_m *CacheRepo) DeleteByPath(paths []model.CachePath) error {
 	ret := _m.Called(paths)
 
 	var r0 error
@@ -26,8 +40,8 @@ func (_m *CacheRepo) DeleteCacheByPath(paths []model.CachePath) error {
 	return r0
 }
 
-// DeleteCacheByTags provides a mock function with given fields: tags
-func (_m *CacheRepo) DeleteCacheByTags(tags []string) error {
+// DeleteByTags provides a mock function with given fields: tags
+func (_m *CacheRepo) DeleteByTags(tags []string) error {
 	ret := _m.Called(tags)
 
 	var r0 error
@@ -40,8 +54,8 @@ func (_m *CacheRepo) DeleteCacheByTags(tags []string) error {
 	return r0
 }
 
-// GetCache provides a mock function with given fields: path, serviceKey
-func (_m *CacheRepo) GetCache(path string, serviceKey string) (model.Cache, error) {
+// Get provides a mock function with given fields: path, serviceKey
+func (_m *CacheRepo) Get(path string, serviceKey string) (model.Cache, error) {
 	ret := _m.Called(path, serviceKey)
 
 	var r0 model.Cache
@@ -59,39 +73,4 @@ func (_m *CacheRepo) GetCache(path string, serviceKey string) (model.Cache, erro
 	}
 
 	return r0, r1
-}
-
-// GetCacheDetail provides a mock function with given fields: path, serviceKey
-func (_m *CacheRepo) GetCacheDetail(path string, serviceKey string) (model.CacheDetail, error) {
-	ret := _m.Called(path, serviceKey)
-
-	var r0 model.CacheDetail
-	if rf, ok := ret.Get(0).(func(string, string) model.CacheDetail); ok {
-		r0 = rf(path, serviceKey)
-	} else {
-		r0 = ret.Get(0).(model.CacheDetail)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(path, serviceKey)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// StoreCache provides a mock function with given fields: cache, serviceKey
-func (_m *CacheRepo) StoreCache(cache model.CacheDetail, serviceKey string) error {
-	ret := _m.Called(cache, serviceKey)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(model.CacheDetail, string) error); ok {
-		r0 = rf(cache, serviceKey)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
