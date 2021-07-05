@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/internal/cache"
+	"github.com/gotway/gotway/internal/middleware"
 	"github.com/gotway/gotway/internal/service"
 	"github.com/gotway/gotway/pkg/log"
 )
@@ -19,93 +20,95 @@ type ServerOptions struct {
 }
 
 type Server struct {
-	server  *http.Server
-	options ServerOptions
-
-	cacheController   cache.Controller
-	serviceController service.Controller
-
-	logger log.Logger
+	options     ServerOptions
+	server      *http.Server
+	handler     *handler
+	middlewares []middleware.Middleware
+	logger      log.Logger
 }
 
 func (s *Server) Start() {
-	addr := ":" + s.options.Port
-	router := s.createRouter()
-
+	http.Handle("/", s.createRouter())
 	s.logger.Infof("server listening on port %s", s.options.Port)
+
 	var err error
 	if s.options.TLSenabled {
-		err = http.ListenAndServeTLS(addr, s.options.TLScert, s.options.TLSkey, router)
+		err = s.server.ListenAndServeTLS(s.options.TLScert, s.options.TLSkey)
 	} else {
-		err = http.ListenAndServe(addr, router)
+		err = s.server.ListenAndServe()
 	}
 	if err != nil && err != http.ErrServerClosed {
 		s.logger.Error("error starting server ", err)
+		return
 	}
 }
 
 func (s *Server) Stop() {
-	s.logger.Info("stopping server")
 	if err := s.server.Shutdown(context.Background()); err != nil {
 		s.logger.Error("error stopping server ", err)
+		return
 	}
-}
-
-func (s *Server) getSchemes() []string {
-	var schemes = []string{"http"}
-	if s.options.TLSenabled {
-		schemes = append(schemes, "https")
-	}
-	return schemes
+	s.logger.Info("stopped server")
 }
 
 func (s *Server) createRouter() *mux.Router {
-	router := mux.NewRouter()
+	root := mux.NewRouter()
+	s.addApiRouter(root)
+	s.addGatewayRouter(root)
+	return root
+}
 
-	api := router.PathPrefix("/api").Subrouter()
+func (s *Server) addApiRouter(root *mux.Router) {
+	api := root.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods(http.MethodGet)
-
 	s.addServiceRouter(api)
 	s.addCacheRouter(api)
+}
 
-	proxy := router.PathPrefix("/{service}").Subrouter()
-	proxy.Use(s.cacheMiddleware)
-	proxy.Schemes(s.getSchemes()...).HandlerFunc(s.proxyHandler)
-
-	return router
+func (s *Server) addGatewayRouter(root *mux.Router) {
+	gateway := root.PathPrefix("/").Subrouter()
+	for _, m := range s.middlewares {
+		gateway.Use(m.MiddlewareFunc)
+	}
+	gateway.PathPrefix("/").HandlerFunc(s.handler.writeResponse)
 }
 
 func (s *Server) addServiceRouter(root *mux.Router) {
-	root.HandleFunc("/services", s.getServicesHandler).Methods(http.MethodGet)
+	root.HandleFunc("/services", s.handler.getServices).Methods(http.MethodGet)
 
 	service := root.PathPrefix("/service").Subrouter()
-	service.Methods(http.MethodPost).HandlerFunc(s.registerServiceHandler)
+	service.Methods(http.MethodPost).HandlerFunc(s.handler.createService)
 
 	serviceID := service.PathPrefix("/{service}").Subrouter()
-	serviceID.Methods(http.MethodGet).HandlerFunc(s.getServiceHandler)
-	serviceID.Methods(http.MethodDelete).HandlerFunc(s.deleteServiceHandler)
+	serviceID.Methods(http.MethodGet).HandlerFunc(s.handler.getService)
+	serviceID.Methods(http.MethodDelete).HandlerFunc(s.handler.deleteService)
 }
 
 func (s *Server) addCacheRouter(root *mux.Router) {
-	cache := root.PathPrefix("/cache").Subrouter()
-
-	cache.PathPrefix("/{service}").Methods(http.MethodGet).HandlerFunc(s.getCacheHandler)
-
-	cache.Methods(http.MethodDelete).HandlerFunc(s.deleteCacheHandler)
+	root.PathPrefix("/cache").Methods(http.MethodDelete).HandlerFunc(s.handler.deleteCache)
 }
 
-func NewServer(options ServerOptions, cacheController cache.Controller,
-	serviceController service.Controller, logger log.Logger) *Server {
+func NewServer(
+	options ServerOptions,
+	middlewares []middleware.Middleware,
+	cacheController cache.Controller,
+	serviceController service.Controller,
+	logger log.Logger,
+) *Server {
 
 	addr := ":" + options.Port
-	server := &http.Server{Addr: addr}
+
 	return &Server{
-		server:            server,
-		options:           options,
-		cacheController:   cacheController,
-		serviceController: serviceController,
-		logger:            logger,
+		options: options,
+		server:  &http.Server{Addr: addr},
+		handler: newHandler(
+			serviceController,
+			cacheController,
+			logger.WithField("type", "handler"),
+		),
+		middlewares: middlewares,
+		logger:      logger,
 	}
 }

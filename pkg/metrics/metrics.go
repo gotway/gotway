@@ -20,18 +20,21 @@ type Metrics struct {
 }
 
 func (m *Metrics) Start() {
-	m.logger.Infof("metrics server listening in %v:%s", m.options.Path, m.options.Port)
 	http.Handle(m.options.Path, promhttp.Handler())
+	m.logger.Infof("metrics server listening in %v:%s", m.options.Path, m.options.Port)
+
 	if err := m.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		m.logger.Error("error staring metrics server ", err)
+		return
 	}
 }
 
 func (m *Metrics) Stop() {
-	m.logger.Info("stopping metrics server")
 	if err := m.server.Shutdown(context.Background()); err != nil {
 		m.logger.Error("error stopping metrics server ", err)
+		return
 	}
+	m.logger.Info("stopped metrics server")
 }
 
 func New(options Options, logger log.Logger) *Metrics {

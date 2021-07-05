@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -15,29 +13,9 @@ type Cache struct {
 	Path       string      `json:"path"`
 	StatusCode int         `json:"statusCode"`
 	Headers    http.Header `json:"headers"`
-	Body       CacheBody   `json:"body"`
-}
-
-// CacheBody is a cache body
-type CacheBody struct {
-	io.Reader
-}
-
-// MarshalJSON serializes a cache body
-func (c CacheBody) MarshalJSON() ([]byte, error) {
-	bytes, err := ioutil.ReadAll(c)
-	if err != nil || len(bytes) == 0 {
-		var data struct{}
-		return json.Marshal(data)
-	}
-	return bytes, nil
-}
-
-// CacheDetail provides extra information about a cache
-type CacheDetail struct {
-	Cache
-	TTL  CacheTTL `json:"ttl"`
-	Tags []string `json:"tags"`
+	Body       []byte      `json:"body"`
+	TTL        CacheTTL    `json:"ttl"`
+	Tags       []string    `json:"tags"`
 }
 
 // CacheTTL is the cache time to live in seconds
@@ -73,8 +51,8 @@ func (p DeleteCache) Validate() error {
 
 // CachePath defines the paths that conform a cache
 type CachePath struct {
-	ServicePath string `json:"servicePath"`
-	Path        string `json:"path"`
+	Service string `json:"service"`
+	Path    string `json:"path"`
 }
 
 // ErrCachePathNotFound used when a cache defined by its path was not found
@@ -83,7 +61,7 @@ type ErrCachePathNotFound struct {
 }
 
 func (e *ErrCachePathNotFound) Error() string {
-	return fmt.Sprintf("Cache path not found: %s%s", e.ServicePath, e.Path)
+	return fmt.Sprintf("Cache path not found: %s%s", e.Service, e.Path)
 }
 
 // ErrCacheNotFound error for not found cache

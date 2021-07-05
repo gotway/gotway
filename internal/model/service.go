@@ -5,28 +5,59 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 )
 
+type Match struct {
+	Method     string `json:"method"`
+	Host       string `json:"host"`
+	Path       string `json:"path"`
+	PathPrefix string `json:"pathPrefix"`
+}
+
+func (m Match) Validate() error {
+	val := reflect.ValueOf(m)
+	for i := 0; i < val.NumField(); i++ {
+		if str := val.Field(i).String(); str != "" {
+			return nil
+		}
+	}
+	return errors.New("no match criterias provided")
+}
+
+type Backend struct {
+	URL        string `json:"url"`
+	HealthPath string `json:"healthPath"`
+}
+
+func (b Backend) Validate() error {
+	u, err := url.Parse(b.URL)
+	if err != nil {
+		return err
+	}
+	if u.Scheme == "" || u.Host == "" {
+		return errors.New("invalid backend url")
+	}
+	return nil
+}
+
 // Service defines the relevant info about a microservice
 type Service struct {
-	Type       ServiceType   `json:"type"`
-	URL        string        `json:"url"`
-	Path       string        `json:"path"`
-	HealthPath string        `json:"healthPath"`
-	Status     ServiceStatus `json:"status"`
+	ID      string        `json:"id"`
+	Match   Match         `json:"match"`
+	Backend Backend       `json:"backend"`
+	Status  ServiceStatus `json:"status"`
+	Cache   CacheConfig   `json:"cache"`
 }
 
 // HealthURL returns the URL used for health check for all service types
 func (s Service) HealthURL() (*url.URL, error) {
-	switch s.Type {
-	case ServiceTypeREST:
-		return url.Parse(fmt.Sprintf("%s/%s", s.URL, s.HealthPath))
-	case ServiceTypeGRPC:
-		return url.Parse(s.URL)
-	default:
-		return nil, ErrInvalidServiceType
+	healthPath := s.Backend.HealthPath
+	if healthPath == "" {
+		healthPath = "/health"
 	}
+	return url.Parse(fmt.Sprintf("%s/%s", s.Backend.URL, healthPath))
 }
 
 // IsHealthy returns whether a service is healthy
@@ -34,78 +65,44 @@ func (s Service) IsHealthy() bool {
 	return s.Status == ServiceStatusHealthy
 }
 
+func (s Service) MatchRequest(r *http.Request) bool {
+	if s.Match.Method != "" && s.Match.Method != r.Method {
+		return false
+	}
+	if s.Match.Host != "" && s.Match.Host != r.Host {
+		return false
+	}
+	if s.Match.Path != "" && s.Match.Path != r.URL.RawPath {
+		return false
+	}
+	if s.Match.PathPrefix != "" && !strings.HasPrefix(r.URL.RawPath, s.Match.PathPrefix) {
+		return false
+	}
+	return true
+}
+
 // Validate checks whether a service is valid
 func (s Service) Validate() error {
-	err := s.Type.Validate()
-	if err != nil {
-		return err
+	if s.ID == "" {
+		return errors.New("service id is mandatory")
 	}
 	if s.Status != "" {
 		if err := s.Status.Validate(); err != nil {
 			return err
 		}
 	}
-	if s.URL == "" {
-		return errInvalidField("url")
-	}
-	if s.Path == "" {
-		return errInvalidField("path")
-	}
-	return nil
-}
-
-// ServiceDetail model
-type ServiceDetail struct {
-	Service
-	Cache CacheConfig `json:"cache"`
-}
-
-// Validate checks whether a service detail is valid
-func (sd ServiceDetail) Validate() error {
-	err := sd.Service.Validate()
-	if err != nil {
+	if err := s.Match.Validate(); err != nil {
 		return err
 	}
-	return sd.Cache.Validate()
-}
-
-// ServicePage model
-type ServicePage struct {
-	Services   []Service `json:"services"`
-	TotalCount int       `json:"totalCount"`
-}
-
-// GetServiceRelativePathPrefixed retrieves the relative path of a service that has a prefix
-func GetServiceRelativePathPrefixed(
-	r *http.Request,
-	pathPrefix string,
-	servicePath string,
-) (string, error) {
-	var b strings.Builder
-	if r.URL.Scheme != "" && r.URL.Host != "" {
-		root := fmt.Sprintf("%s://%s", r.URL.Scheme, r.URL.Host)
-		b.WriteString(root)
+	if err := s.Backend.Validate(); err != nil {
+		return err
 	}
-	if pathPrefix != "" {
-		b.WriteString(fmt.Sprintf("/%s", pathPrefix))
+	if !s.Cache.IsEmpty() {
+		if err := s.Cache.Validate(); err != nil {
+			return err
+		}
 	}
-	if servicePath != "" {
-		b.WriteString(fmt.Sprintf("/%s", servicePath))
-	}
-
-	urlString := r.URL.String()
-	prefix := b.String()
-
-	if !strings.HasPrefix(urlString, prefix) {
-		return "", &ErrServiceNotFoundInURL{URL: r.URL, ServicePath: servicePath}
-	}
-
-	return strings.TrimPrefix(urlString, prefix), nil
-}
-
-// GetServiceRelativePath retrieves the relative path of a service
-func GetServiceRelativePath(r *http.Request, servicePath string) (string, error) {
-	return GetServiceRelativePathPrefixed(r, "", servicePath)
+	return nil
 }
 
 // ErrServiceNotFound error for not found service
@@ -113,17 +110,3 @@ var ErrServiceNotFound = errors.New("Service not found")
 
 // ErrServiceAlreadyRegistered error for service already registered
 var ErrServiceAlreadyRegistered = errors.New("Service is already registered")
-
-// ErrServiceNotFoundInURL is returned when a service is not found in a URL
-type ErrServiceNotFoundInURL struct {
-	URL         *url.URL
-	ServicePath string
-}
-
-func (e *ErrServiceNotFoundInURL) Error() string {
-	return fmt.Sprintf("Service path '%s' not found in URL: %s", e.ServicePath, e.URL.String())
-}
-
-func errInvalidField(f string) error {
-	return fmt.Errorf("Invalid field '%s'", f)
-}
