@@ -29,24 +29,36 @@ func configureMiddlewares(
 	logger log.Logger,
 ) []middleware.Middleware {
 
-	return []middleware.Middleware{
+	middlewares := []middleware.Middleware{
 		matchserviceMw.New(
 			serviceController,
 			logger.WithField("middleware", "match-service"),
 		),
-		cacheMw.NewCacheIn(
-			cacheController,
-			logger.WithField("middleware", "cache-in"),
-		),
+	}
+	if config.CacheEnabled {
+		middlewares = append(middlewares,
+			cacheMw.NewCacheIn(
+				cacheController,
+				logger.WithField("middleware", "cache-in"),
+			),
+		)
+	}
+	middlewares = append(middlewares,
 		gatewayMw.New(
 			gatewayMw.GatewayOptions{Timeout: config.GatewayTimeout},
 			logger.WithField("middleware", "gateway"),
 		),
-		cacheMw.NewCacheOut(
-			cacheController,
-			logger.WithField("middleware", "cache-out"),
-		),
+	)
+	if config.CacheEnabled {
+		middlewares = append(middlewares,
+			cacheMw.NewCacheOut(
+				cacheController,
+				logger.WithField("middleware", "cache-out"),
+			),
+		)
 	}
+
+	return middlewares
 }
 
 func main() {
@@ -101,7 +113,9 @@ func main() {
 		cacheRepo,
 		logger.WithField("type", "cache-ctrl"),
 	)
-	go cacheController.ListenResponses(ctx)
+	if config.CacheEnabled {
+		go cacheController.ListenResponses(ctx)
+	}
 
 	server := http.NewServer(
 		http.ServerOptions{
