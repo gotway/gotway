@@ -35,7 +35,7 @@ func configureMiddlewares(
 			logger.WithField("middleware", "match-service"),
 		),
 	}
-	if config.CacheEnabled {
+	if config.Cache {
 		middlewares = append(middlewares,
 			cacheMw.NewCacheIn(
 				cacheController,
@@ -49,7 +49,7 @@ func configureMiddlewares(
 			logger.WithField("middleware", "gateway"),
 		),
 	)
-	if config.CacheEnabled {
+	if config.Cache {
 		middlewares = append(middlewares,
 			cacheMw.NewCacheOut(
 				cacheController,
@@ -113,7 +113,7 @@ func main() {
 		cacheRepo,
 		logger.WithField("type", "cache-ctrl"),
 	)
-	if config.CacheEnabled {
+	if config.Cache {
 		go cacheController.ListenResponses(ctx)
 	}
 
@@ -136,7 +136,7 @@ func main() {
 	go server.Start()
 	shutdownHooks = append(shutdownHooks, server.Stop)
 
-	if config.HealthCheckEnabled {
+	if config.HealthCheck {
 		health := health.New(
 			health.Options{
 				CheckInterval: config.HealthCheckInterval,

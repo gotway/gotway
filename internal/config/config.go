@@ -19,8 +19,8 @@ var (
 	// GatewayTimeout is the timeout when requesting services
 	GatewayTimeout = env.GetDuration("GATEWAY_TIMEOUT_SECONDS", 5) * time.Second
 
-	// HealthCheckEnabled determines if health check is enabled
-	HealthCheckEnabled = env.GetBool("HEALTH_CHECK_ENABLED", true)
+	// HealthCheck determines if health check is enabled
+	HealthCheck = env.GetBool("HEALTH_CHECK", true)
 	// HealthNumWorkers is the number of workers used to perform health check
 	HealthNumWorkers = env.GetInt("HEALTH_CHECK_NUM_WORKERS", 10)
 	// HealthBufferSize is the size of the buffered channel used to perform health check
@@ -30,8 +30,8 @@ var (
 	// HealthCheckTimeout is the timeout for health check
 	HealthCheckTimeout = env.GetDuration("HEALTH_CHECK_TIMEOUT_SECONDS", 5) * time.Second
 
-	// CacheEnabled determines if cache is enabled
-	CacheEnabled = env.GetBool("CACHE_ENABLED", true)
+	// Cache determines if cache is enabled
+	Cache = env.GetBool("CACHE", true)
 	// CacheNumWorkers is the number of workers used to perform health check
 	CacheNumWorkers = env.GetInt("CACHE_NUM_WORKERS", 10)
 	// CacheBufferSize is the size of the buffered channel used to perform health check
