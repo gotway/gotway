@@ -21,8 +21,10 @@ Simple HTTP API Gateway powered with in-redis cache 🚀
 #### Installation 🌱
 
 ```bash
-$ helm repo add gotway https://charts.gotway.duckdns.org
-$ helm install gotway gotway/gotway
+helm repo add gotway https://charts.gotway.duckdns.org
+```
+```bash
+helm install gotway gotway/gotway
 ```
 
 #### Quickstart ⚡
@@ -30,7 +32,7 @@ $ helm install gotway gotway/gotway
 We will register [catalog](https://github.com/gotway/service-examples/tree/main/cmd/catalog) as an example:
 
 ```bash
-curl --request POST 'https://api.gotway.duckdns.org/api/service' \
+curl --request POST 'https://gotway.duckdns.org/api/service' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "id": "catalog",
