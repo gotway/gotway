@@ -15,8 +15,8 @@ Simple HTTP API Gateway powered with in-redis cache 🚀
 - Cache invalidation specifying the URL path
 - Health checking
 - Management REST API 
-
 - ~10MB [Docker image](https://hub.docker.com/r/gotwaygateway/gotway/tags) available for multiple architectures
+- [Helm chart](https://github.com/gotway/charts)
 
 #### Installation 🌱
 
