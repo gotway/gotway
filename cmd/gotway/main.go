@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/config"
@@ -14,7 +16,6 @@ import (
 	matchserviceMw "github.com/gotway/gotway/internal/middleware/matchservice"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/internal/service"
-	gs "github.com/gotway/gotway/pkg/gracefulshutdown"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/gotway/pkg/metrics"
 	"github.com/gotway/gotway/pkg/pprof"
@@ -62,8 +63,13 @@ func configureMiddlewares(
 }
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	shutdownHooks := []gs.ShutdownHook{}
+	ctx, _ := signal.NotifyContext(context.Background(), []os.Signal{
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGKILL,
+		syscall.SIGHUP,
+		syscall.SIGQUIT}...,
+	)
 
 	logger := log.NewLogger(log.Fields{
 		"service": "gotway",
@@ -90,7 +96,7 @@ func main() {
 			logger.WithField("type", "metrics"),
 		)
 		go m.Start()
-		shutdownHooks = append(shutdownHooks, m.Stop)
+		defer m.Stop()
 	}
 
 	if config.PProf {
@@ -99,7 +105,7 @@ func main() {
 			logger.WithField("type", "pprof"),
 		)
 		go p.Start()
-		shutdownHooks = append(shutdownHooks, p.Stop)
+		defer p.Stop()
 	}
 
 	serviceRepo := repository.NewServiceRepoRedis(redisClient)
@@ -115,6 +121,20 @@ func main() {
 	)
 	if config.Cache {
 		go cacheController.ListenResponses(ctx)
+	}
+
+	if config.HealthCheck {
+		health := health.New(
+			health.Options{
+				CheckInterval: config.HealthCheckInterval,
+				Timeout:       config.HealthCheckTimeout,
+				NumWorkers:    config.HealthNumWorkers,
+				BufferSize:    config.HealthBufferSize,
+			},
+			serviceController,
+			logger.WithField("type", "health"),
+		)
+		go health.Listen(ctx)
 	}
 
 	server := http.NewServer(
@@ -134,21 +154,7 @@ func main() {
 		logger.WithField("type", "http"),
 	)
 	go server.Start()
-	shutdownHooks = append(shutdownHooks, server.Stop)
+	defer server.Stop()
 
-	if config.HealthCheck {
-		health := health.New(
-			health.Options{
-				CheckInterval: config.HealthCheckInterval,
-				Timeout:       config.HealthCheckTimeout,
-				NumWorkers:    config.HealthNumWorkers,
-				BufferSize:    config.HealthBufferSize,
-			},
-			serviceController,
-			logger.WithField("type", "health"),
-		)
-		go health.Listen(ctx)
-	}
-
-	gs.GracefulShutdown(logger, cancel, shutdownHooks...)
+	<-ctx.Done()
 }
