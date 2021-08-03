@@ -1,0 +1,10 @@
+apiVersion: gotway.io/v1alpha1
+kind: HTTPService
+metadata:
+  name: stock
+spec:
+  match:
+    host: stock.gotway.duckdns.org
+    port: 4433
+  backend:
+    url: http://gotway-stock:80

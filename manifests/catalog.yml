@@ -1,0 +1,18 @@
+apiVersion: gotway.io/v1alpha1
+kind: HTTPService
+metadata:
+  name: catalog
+spec:
+  match:
+    host: catalog.gotway.duckdns.org
+    port: 4433
+  backend:
+    url: http://gotway-catalog:80
+  cache:
+    ttl: 30
+    statuses:
+      - 200
+      - 404
+    tags:
+      - 'catalog'
+      - 'products'
