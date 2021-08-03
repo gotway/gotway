@@ -21,3 +21,6 @@ charts/**/charts/*.tgz
 
 # Docker data volumes
 data/
+
+# Environment
+.env
