@@ -1,58 +1,137 @@
 package config
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/gotway/gotway/pkg/env"
 	"github.com/gotway/gotway/pkg/tlstest"
 )
 
-var (
-	// Port indicates the gotway API service port. It uses default K8s service port env variable
-	Port = env.Get("PORT", "11000")
-	// Env indicates the environment name
-	Env = env.Get("ENV", "local")
-	// LogLevel indicates the log level
-	LogLevel = env.Get("LOG_LEVEL", "debug")
-	// RedisUrl indicates the URL for the redis client
-	RedisUrl = env.Get("REDIS_URL", "redis://localhost:6379/11")
-	// GatewayTimeout is the timeout when requesting services
-	GatewayTimeout = env.GetDuration("GATEWAY_TIMEOUT_SECONDS", 5) * time.Second
+type Kubernetes struct {
+	KubeConfig string
+	Namespace  string
+}
 
-	// HealthCheck determines if health check is enabled
-	HealthCheck = env.GetBool("HEALTH_CHECK", true)
-	// HealthNumWorkers is the number of workers used to perform health check
-	HealthNumWorkers = env.GetInt("HEALTH_CHECK_NUM_WORKERS", 10)
-	// HealthBufferSize is the size of the buffered channel used to perform health check
-	HealthBufferSize = env.GetInt("HEALTH_CHECK_BUFFER_SIZE", 10)
-	// HealthCheckInterval is the interval between health checks
-	HealthCheckInterval = env.GetDuration("HEALTH_CHECK_INTERVAL_SECONDS", 10) * time.Second
-	// HealthCheckTimeout is the timeout for health check
-	HealthCheckTimeout = env.GetDuration("HEALTH_CHECK_TIMEOUT_SECONDS", 5) * time.Second
+type HealthCheck struct {
+	Enabled    bool
+	NumWorkers int
+	BufferSize int
+	Interval   time.Duration
+	Timeout    time.Duration
+}
 
-	// Cache determines if cache is enabled
-	Cache = env.GetBool("CACHE", true)
-	// CacheNumWorkers is the number of workers used to perform health check
-	CacheNumWorkers = env.GetInt("CACHE_NUM_WORKERS", 10)
-	// CacheBufferSize is the size of the buffered channel used to perform health check
-	CacheBufferSize = env.GetInt("CACHE_BUFFER_SIZE", 10)
+type Cache struct {
+	Enabled    bool
+	NumWorkers int
+	BufferSize int
+}
 
-	// TLS indicates if TLS is enabled
-	TLS = env.GetBool("TLS", true)
-	// TLScert is the certificate file for TLS
-	TLScert = env.Get("TLS_CERT", tlstest.Cert())
-	// TLSkey is the key file for TLS
-	TLSkey = env.Get("TLS_KEY", tlstest.Key())
+type TLS struct {
+	Enabled bool
+	Cert    string
+	Key     string
+}
+type HA struct {
+	Enabled       bool
+	NodeId        string
+	LeaseLockName string
+	LeaseDuration time.Duration
+	RenewDeadline time.Duration
+	RetryPeriod   time.Duration
+}
 
-	// Metrics indicates whether the metrics are enabled
-	Metrics = env.GetBool("METRICS", true)
-	// MetricsPath indices the metrics server path
-	MetricsPath = env.Get("METRICS_PATH", "/metrics")
-	// MetricsPort indicates the metrics server port
-	MetricsPort = env.Get("METRICS_PORT", "2112")
+type Metrics struct {
+	Enabled bool
+	Path    string
+	Port    string
+}
 
-	// PProf indicates whether profiling is enabled
-	PProf = env.GetBool("PPROF", false)
-	// PProfPort indicates the port of the profiling server
-	PProfPort = env.Get("PPROF_PORT", "6060")
-)
+type PProf struct {
+	Enabled bool
+	Port    string
+}
+
+type Config struct {
+	Port           string
+	Env            string
+	LogLevel       string
+	RedisUrl       string
+	GatewayTimeout time.Duration
+
+	Kubernetes Kubernetes
+	TLS        TLS
+	HA         HA
+
+	HealthCheck HealthCheck
+	Cache       Cache
+
+	Metrics Metrics
+	PProf   PProf
+}
+
+func GetConfig() (Config, error) {
+	ha := env.GetBool("HA_ENABLED", false)
+
+	var nodeId string
+	if ha {
+		nodeId = env.Get("HA_NODE_ID", "")
+		if nodeId == "" {
+			hostname, err := os.Hostname()
+			if err != nil {
+				return Config{}, fmt.Errorf("error getting node id %v", err)
+			}
+			nodeId = hostname
+		}
+	}
+
+	return Config{
+		Port:           env.Get("PORT", "11000"),
+		Env:            env.Get("ENV", "local"),
+		LogLevel:       env.Get("LOG_LEVEL", "debug"),
+		RedisUrl:       env.Get("REDIS_URL", "redis://localhost:6379/11"),
+		GatewayTimeout: env.GetDuration("GATEWAY_TIMEOUT_SECONDS", 5) * time.Second,
+
+		Kubernetes: Kubernetes{
+			KubeConfig: env.Get("KUBECONFIG", ""),
+			Namespace:  env.Get("KUBERNETES_NAMESPACE", "default"),
+		},
+		TLS: TLS{
+			Enabled: env.GetBool("TLS_ENABLED", true),
+			Cert:    env.Get("TLS_CERT", tlstest.Cert()),
+			Key:     env.Get("TLS_KEY", tlstest.Key()),
+		},
+		HA: HA{
+			Enabled:       ha,
+			NodeId:        nodeId,
+			LeaseLockName: env.Get("HA_LEASE_LOCK_NAME", "echoperator"),
+			LeaseDuration: env.GetDuration("HA_LEASE_DURATION_SECONDS", 15) * time.Second,
+			RenewDeadline: env.GetDuration("HA_RENEW_DEADLINE_SECONDS", 10) * time.Second,
+			RetryPeriod:   env.GetDuration("HA_RETRY_PERIOD_SECONDS", 2) * time.Second,
+		},
+
+		HealthCheck: HealthCheck{
+			Enabled:    env.GetBool("HEALTH_CHECK", true),
+			NumWorkers: env.GetInt("HEALTH_CHECK_NUM_WORKERS", 10),
+			BufferSize: env.GetInt("HEALTH_CHECK_BUFFER_SIZE", 10),
+			Interval:   env.GetDuration("HEALTH_CHECK_INTERVAL_SECONDS", 10) * time.Second,
+			Timeout:    env.GetDuration("HEALTH_CHECK_TIMEOUT_SECONDS", 5) * time.Second,
+		},
+		Cache: Cache{
+			Enabled:    env.GetBool("CACHE", true),
+			NumWorkers: env.GetInt("CACHE_NUM_WORKERS", 10),
+			BufferSize: env.GetInt("CACHE_BUFFER_SIZE", 10),
+		},
+
+		Metrics: Metrics{
+			Enabled: env.GetBool("METRICS", true),
+			Path:    env.Get("METRICS_PATH", "/metrics"),
+			Port:    env.Get("METRICS_PORT", "2112"),
+		},
+		PProf: PProf{
+			Enabled: env.GetBool("PPROF", false),
+			Port:    env.Get("PPROF_PORT", "6060"),
+		},
+	}, nil
+}

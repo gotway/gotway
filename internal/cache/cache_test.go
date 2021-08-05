@@ -20,7 +20,7 @@ import (
 
 func TestIsCacheable(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
-	controller := NewController(cacheRepo, log.Log)
+	controller := NewController(Options{10, 10}, cacheRepo, log.Log)
 
 	getReq, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/service/foo", nil)
 	postReq, _ := http.NewRequest(http.MethodPost, "http://api.gotway.com/service/foo", nil)
@@ -53,7 +53,7 @@ func TestIsCacheable(t *testing.T) {
 
 func TestGetCache(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
-	controller := NewController(cacheRepo, log.Log)
+	controller := NewController(Options{10, 10}, cacheRepo, log.Log)
 
 	reqCacheError, _ := http.NewRequest(http.MethodGet, "http://api.gotway.com/foo", nil)
 	cacheError := errors.New("Cache not found")
@@ -115,7 +115,7 @@ func TestGetCache(t *testing.T) {
 
 func TestDeleteCacheByPath(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
-	controller := NewController(cacheRepo, log.Log)
+	controller := NewController(Options{10, 10}, cacheRepo, log.Log)
 
 	paths := []model.CachePath{
 		{
@@ -133,7 +133,7 @@ func TestDeleteCacheByPath(t *testing.T) {
 
 func TestDeleteCacheByTags(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
-	controller := NewController(cacheRepo, log.Log)
+	controller := NewController(Options{10, 10}, cacheRepo, log.Log)
 
 	tags := []string{"foo"}
 	cacheRepo.On("DeleteByTags", tags).Return(nil)
@@ -146,7 +146,7 @@ func TestDeleteCacheByTags(t *testing.T) {
 
 func TestListenResponses(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
-	controller := NewController(cacheRepo, log.Log)
+	controller := NewController(Options{10, 10}, cacheRepo, log.Log)
 
 	bodyBytes := []byte("{}")
 	body := ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
@@ -197,7 +197,7 @@ func TestListenResponses(t *testing.T) {
 
 func TestListenCacheControlResponses(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
-	controller := NewController(cacheRepo, log.Log)
+	controller := NewController(Options{10, 10}, cacheRepo, log.Log)
 
 	service := model.Service{
 		ID: "foo",
@@ -269,7 +269,7 @@ func TestListenCacheControlResponses(t *testing.T) {
 
 func TestListenCacheTagsResponses(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
-	controller := NewController(cacheRepo, log.Log)
+	controller := NewController(Options{10, 10}, cacheRepo, log.Log)
 
 	service := model.Service{
 		ID: "foo",
@@ -332,7 +332,7 @@ func (errReader) Read(p []byte) (n int, err error) {
 
 func TestErrReadingBody(t *testing.T) {
 	cacheRepo := new(mocks.CacheRepo)
-	controller := NewController(cacheRepo, log.Log)
+	controller := NewController(Options{10, 10}, cacheRepo, log.Log)
 
 	url, _ := url.Parse("http://api.gotway.com/catalog/products")
 	testRequest := httptest.NewRequest(http.MethodPost, "/foo", errReader(0))

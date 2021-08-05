@@ -9,12 +9,16 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/pquerna/cachecontrol/cacheobject"
 )
+
+type Options struct {
+	NumWorkers int
+	BufferSize int
+}
 
 type Controller interface {
 	IsCacheableRequest(r *http.Request) bool
@@ -32,6 +36,7 @@ type response struct {
 }
 
 type BasicController struct {
+	options      Options
 	cacheRepo    repository.CacheRepo
 	pendingCache chan response
 	logger       log.Logger
@@ -66,7 +71,7 @@ func (c BasicController) ListenResponses(ctx context.Context) {
 	c.logger.Info("starting cache handler")
 	var logOnce sync.Once
 
-	for i := 0; i < config.CacheNumWorkers; i++ {
+	for i := 0; i < c.options.NumWorkers; i++ {
 		go func() {
 			for {
 				select {
@@ -194,13 +199,15 @@ func headersDisallowCaching(r *http.Response) bool {
 }
 
 func NewController(
+	options Options,
 	cacheRepo repository.CacheRepo,
 	logger log.Logger,
 ) Controller {
 
 	return &BasicController{
+		options:      options,
 		cacheRepo:    cacheRepo,
-		pendingCache: make(chan response, config.CacheBufferSize),
+		pendingCache: make(chan response, options.BufferSize),
 		logger:       logger,
 	}
 }
