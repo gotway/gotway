@@ -14,30 +14,30 @@ type Backend struct {
 	HealthPath string `json:"healthPath"`
 }
 
-type HTTPServiceSpec struct {
+type IngressHTTPSpec struct {
 	Match   Match   `json:"match"`
 	Backend Backend `json:"backend"`
 }
 
-type HTTPServiceStatus struct {
+type IngressHTTPStatus struct {
 	Healthy bool `json:"healthy"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type HTTPService struct {
+type IngressHTTP struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
 
-	Spec   HTTPServiceSpec   `json:"spec"`
-	Status HTTPServiceStatus `json:"status"`
+	Spec   IngressHTTPSpec   `json:"spec"`
+	Status IngressHTTPStatus `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type HTTPServiceList struct {
+type IngressHTTPList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
 
-	Items []HTTPService `json:"items"`
+	Items []IngressHTTP `json:"items"`
 }

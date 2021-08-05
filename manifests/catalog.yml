@@ -1,5 +1,5 @@
 apiVersion: gotway.io/v1alpha1
-kind: HTTPService
+kind: IngressHTTP
 metadata:
   name: catalog
 spec:

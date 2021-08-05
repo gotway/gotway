@@ -23,8 +23,8 @@ func Resource(resource string) schema.GroupResource {
 
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&HTTPService{},
-		&HTTPServiceList{},
+		&IngressHTTP{},
+		&IngressHTTPList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 

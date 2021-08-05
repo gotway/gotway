@@ -26,4 +26,4 @@ SOFTWARE.
 
 package v1alpha1
 
-type HTTPServiceExpansion interface{}
+type IngressHTTPExpansion interface{}

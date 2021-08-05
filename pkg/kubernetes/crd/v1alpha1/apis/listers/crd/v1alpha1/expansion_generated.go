@@ -26,10 +26,10 @@ SOFTWARE.
 
 package v1alpha1
 
-// HTTPServiceListerExpansion allows custom methods to be added to
-// HTTPServiceLister.
-type HTTPServiceListerExpansion interface{}
+// IngressHTTPListerExpansion allows custom methods to be added to
+// IngressHTTPLister.
+type IngressHTTPListerExpansion interface{}
 
-// HTTPServiceNamespaceListerExpansion allows custom methods to be added to
-// HTTPServiceNamespaceLister.
-type HTTPServiceNamespaceListerExpansion interface{}
+// IngressHTTPNamespaceListerExpansion allows custom methods to be added to
+// IngressHTTPNamespaceLister.
+type IngressHTTPNamespaceListerExpansion interface{}

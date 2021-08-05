@@ -32,8 +32,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// HTTPServices returns a HTTPServiceInformer.
-	HTTPServices() HTTPServiceInformer
+	// IngressHTTPs returns a IngressHTTPInformer.
+	IngressHTTPs() IngressHTTPInformer
 }
 
 type version struct {
@@ -47,7 +47,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// HTTPServices returns a HTTPServiceInformer.
-func (v *version) HTTPServices() HTTPServiceInformer {
-	return &hTTPServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// IngressHTTPs returns a IngressHTTPInformer.
+func (v *version) IngressHTTPs() IngressHTTPInformer {
+	return &ingressHTTPInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

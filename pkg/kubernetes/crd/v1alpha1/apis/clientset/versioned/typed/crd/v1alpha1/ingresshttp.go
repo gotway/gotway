@@ -38,46 +38,46 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// HTTPServicesGetter has a method to return a HTTPServiceInterface.
+// IngressHTTPsGetter has a method to return a IngressHTTPInterface.
 // A group's client should implement this interface.
-type HTTPServicesGetter interface {
-	HTTPServices(namespace string) HTTPServiceInterface
+type IngressHTTPsGetter interface {
+	IngressHTTPs(namespace string) IngressHTTPInterface
 }
 
-// HTTPServiceInterface has methods to work with HTTPService resources.
-type HTTPServiceInterface interface {
-	Create(ctx context.Context, hTTPService *v1alpha1.HTTPService, opts v1.CreateOptions) (*v1alpha1.HTTPService, error)
-	Update(ctx context.Context, hTTPService *v1alpha1.HTTPService, opts v1.UpdateOptions) (*v1alpha1.HTTPService, error)
-	UpdateStatus(ctx context.Context, hTTPService *v1alpha1.HTTPService, opts v1.UpdateOptions) (*v1alpha1.HTTPService, error)
+// IngressHTTPInterface has methods to work with IngressHTTP resources.
+type IngressHTTPInterface interface {
+	Create(ctx context.Context, ingressHTTP *v1alpha1.IngressHTTP, opts v1.CreateOptions) (*v1alpha1.IngressHTTP, error)
+	Update(ctx context.Context, ingressHTTP *v1alpha1.IngressHTTP, opts v1.UpdateOptions) (*v1alpha1.IngressHTTP, error)
+	UpdateStatus(ctx context.Context, ingressHTTP *v1alpha1.IngressHTTP, opts v1.UpdateOptions) (*v1alpha1.IngressHTTP, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.HTTPService, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.HTTPServiceList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.IngressHTTP, error)
+	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.IngressHTTPList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.HTTPService, err error)
-	HTTPServiceExpansion
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.IngressHTTP, err error)
+	IngressHTTPExpansion
 }
 
-// hTTPServices implements HTTPServiceInterface
-type hTTPServices struct {
+// ingressHTTPs implements IngressHTTPInterface
+type ingressHTTPs struct {
 	client rest.Interface
 	ns     string
 }
 
-// newHTTPServices returns a HTTPServices
-func newHTTPServices(c *GotwayV1alpha1Client, namespace string) *hTTPServices {
-	return &hTTPServices{
+// newIngressHTTPs returns a IngressHTTPs
+func newIngressHTTPs(c *GotwayV1alpha1Client, namespace string) *ingressHTTPs {
+	return &ingressHTTPs{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
-// Get takes name of the hTTPService, and returns the corresponding hTTPService object, and an error if there is any.
-func (c *hTTPServices) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.HTTPService, err error) {
-	result = &v1alpha1.HTTPService{}
+// Get takes name of the ingressHTTP, and returns the corresponding ingressHTTP object, and an error if there is any.
+func (c *ingressHTTPs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.IngressHTTP, err error) {
+	result = &v1alpha1.IngressHTTP{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("httpservices").
+		Resource("ingresshttps").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
@@ -85,16 +85,16 @@ func (c *hTTPServices) Get(ctx context.Context, name string, options v1.GetOptio
 	return
 }
 
-// List takes label and field selectors, and returns the list of HTTPServices that match those selectors.
-func (c *hTTPServices) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.HTTPServiceList, err error) {
+// List takes label and field selectors, and returns the list of IngressHTTPs that match those selectors.
+func (c *ingressHTTPs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.IngressHTTPList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
 	}
-	result = &v1alpha1.HTTPServiceList{}
+	result = &v1alpha1.IngressHTTPList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("httpservices").
+		Resource("ingresshttps").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -102,8 +102,8 @@ func (c *hTTPServices) List(ctx context.Context, opts v1.ListOptions) (result *v
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested hTTPServices.
-func (c *hTTPServices) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested ingressHTTPs.
+func (c *ingressHTTPs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -111,34 +111,34 @@ func (c *hTTPServices) Watch(ctx context.Context, opts v1.ListOptions) (watch.In
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("httpservices").
+		Resource("ingresshttps").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
 }
 
-// Create takes the representation of a hTTPService and creates it.  Returns the server's representation of the hTTPService, and an error, if there is any.
-func (c *hTTPServices) Create(ctx context.Context, hTTPService *v1alpha1.HTTPService, opts v1.CreateOptions) (result *v1alpha1.HTTPService, err error) {
-	result = &v1alpha1.HTTPService{}
+// Create takes the representation of a ingressHTTP and creates it.  Returns the server's representation of the ingressHTTP, and an error, if there is any.
+func (c *ingressHTTPs) Create(ctx context.Context, ingressHTTP *v1alpha1.IngressHTTP, opts v1.CreateOptions) (result *v1alpha1.IngressHTTP, err error) {
+	result = &v1alpha1.IngressHTTP{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("httpservices").
+		Resource("ingresshttps").
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(hTTPService).
+		Body(ingressHTTP).
 		Do(ctx).
 		Into(result)
 	return
 }
 
-// Update takes the representation of a hTTPService and updates it. Returns the server's representation of the hTTPService, and an error, if there is any.
-func (c *hTTPServices) Update(ctx context.Context, hTTPService *v1alpha1.HTTPService, opts v1.UpdateOptions) (result *v1alpha1.HTTPService, err error) {
-	result = &v1alpha1.HTTPService{}
+// Update takes the representation of a ingressHTTP and updates it. Returns the server's representation of the ingressHTTP, and an error, if there is any.
+func (c *ingressHTTPs) Update(ctx context.Context, ingressHTTP *v1alpha1.IngressHTTP, opts v1.UpdateOptions) (result *v1alpha1.IngressHTTP, err error) {
+	result = &v1alpha1.IngressHTTP{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("httpservices").
-		Name(hTTPService.Name).
+		Resource("ingresshttps").
+		Name(ingressHTTP.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(hTTPService).
+		Body(ingressHTTP).
 		Do(ctx).
 		Into(result)
 	return
@@ -146,25 +146,25 @@ func (c *hTTPServices) Update(ctx context.Context, hTTPService *v1alpha1.HTTPSer
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *hTTPServices) UpdateStatus(ctx context.Context, hTTPService *v1alpha1.HTTPService, opts v1.UpdateOptions) (result *v1alpha1.HTTPService, err error) {
-	result = &v1alpha1.HTTPService{}
+func (c *ingressHTTPs) UpdateStatus(ctx context.Context, ingressHTTP *v1alpha1.IngressHTTP, opts v1.UpdateOptions) (result *v1alpha1.IngressHTTP, err error) {
+	result = &v1alpha1.IngressHTTP{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("httpservices").
-		Name(hTTPService.Name).
+		Resource("ingresshttps").
+		Name(ingressHTTP.Name).
 		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(hTTPService).
+		Body(ingressHTTP).
 		Do(ctx).
 		Into(result)
 	return
 }
 
-// Delete takes name of the hTTPService and deletes it. Returns an error if one occurs.
-func (c *hTTPServices) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+// Delete takes name of the ingressHTTP and deletes it. Returns an error if one occurs.
+func (c *ingressHTTPs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("httpservices").
+		Resource("ingresshttps").
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -172,14 +172,14 @@ func (c *hTTPServices) Delete(ctx context.Context, name string, opts v1.DeleteOp
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *hTTPServices) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *ingressHTTPs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
 	if listOpts.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("httpservices").
+		Resource("ingresshttps").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -187,12 +187,12 @@ func (c *hTTPServices) DeleteCollection(ctx context.Context, opts v1.DeleteOptio
 		Error()
 }
 
-// Patch applies the patch and returns the patched hTTPService.
-func (c *hTTPServices) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.HTTPService, err error) {
-	result = &v1alpha1.HTTPService{}
+// Patch applies the patch and returns the patched ingressHTTP.
+func (c *ingressHTTPs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.IngressHTTP, err error) {
+	result = &v1alpha1.IngressHTTP{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("httpservices").
+		Resource("ingresshttps").
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).

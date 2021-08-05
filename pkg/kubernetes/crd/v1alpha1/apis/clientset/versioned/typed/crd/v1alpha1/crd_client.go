@@ -34,7 +34,7 @@ import (
 
 type GotwayV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	HTTPServicesGetter
+	IngressHTTPsGetter
 }
 
 // GotwayV1alpha1Client is used to interact with features provided by the gotway.io group.
@@ -42,8 +42,8 @@ type GotwayV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *GotwayV1alpha1Client) HTTPServices(namespace string) HTTPServiceInterface {
-	return newHTTPServices(c, namespace)
+func (c *GotwayV1alpha1Client) IngressHTTPs(namespace string) IngressHTTPInterface {
+	return newIngressHTTPs(c, namespace)
 }
 
 // NewForConfig creates a new GotwayV1alpha1Client for the given config.

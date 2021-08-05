@@ -40,59 +40,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// HTTPServiceInformer provides access to a shared informer and lister for
-// HTTPServices.
-type HTTPServiceInformer interface {
+// IngressHTTPInformer provides access to a shared informer and lister for
+// IngressHTTPs.
+type IngressHTTPInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.HTTPServiceLister
+	Lister() v1alpha1.IngressHTTPLister
 }
 
-type hTTPServiceInformer struct {
+type ingressHTTPInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewHTTPServiceInformer constructs a new informer for HTTPService type.
+// NewIngressHTTPInformer constructs a new informer for IngressHTTP type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewHTTPServiceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredHTTPServiceInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewIngressHTTPInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredIngressHTTPInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredHTTPServiceInformer constructs a new informer for HTTPService type.
+// NewFilteredIngressHTTPInformer constructs a new informer for IngressHTTP type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredHTTPServiceInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredIngressHTTPInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.GotwayV1alpha1().HTTPServices(namespace).List(context.TODO(), options)
+				return client.GotwayV1alpha1().IngressHTTPs(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.GotwayV1alpha1().HTTPServices(namespace).Watch(context.TODO(), options)
+				return client.GotwayV1alpha1().IngressHTTPs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&crdv1alpha1.HTTPService{},
+		&crdv1alpha1.IngressHTTP{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *hTTPServiceInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredHTTPServiceInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *ingressHTTPInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredIngressHTTPInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *hTTPServiceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&crdv1alpha1.HTTPService{}, f.defaultInformer)
+func (f *ingressHTTPInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&crdv1alpha1.IngressHTTP{}, f.defaultInformer)
 }
 
-func (f *hTTPServiceInformer) Lister() v1alpha1.HTTPServiceLister {
-	return v1alpha1.NewHTTPServiceLister(f.Informer().GetIndexer())
+func (f *ingressHTTPInformer) Lister() v1alpha1.IngressHTTPLister {
+	return v1alpha1.NewIngressHTTPLister(f.Informer().GetIndexer())
 }

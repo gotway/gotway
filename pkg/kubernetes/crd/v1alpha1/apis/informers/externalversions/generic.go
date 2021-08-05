@@ -61,8 +61,8 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=gotway.io, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("httpservices"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Gotway().V1alpha1().HTTPServices().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("ingresshttps"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Gotway().V1alpha1().IngressHTTPs().Informer()}, nil
 
 	}
 

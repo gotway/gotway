@@ -36,8 +36,8 @@ type FakeGotwayV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeGotwayV1alpha1) HTTPServices(namespace string) v1alpha1.HTTPServiceInterface {
-	return &FakeHTTPServices{c, namespace}
+func (c *FakeGotwayV1alpha1) IngressHTTPs(namespace string) v1alpha1.IngressHTTPInterface {
+	return &FakeIngressHTTPs{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
