@@ -1,4 +1,4 @@
-package health
+package healthcheck
 
 import (
 	"context"
@@ -17,7 +17,7 @@ type Options struct {
 	BufferSize    int
 }
 
-type Health struct {
+type Controller struct {
 	options           Options
 	client            client
 	pendingHealth     chan model.Service
@@ -25,69 +25,69 @@ type Health struct {
 	logger            log.Logger
 }
 
-// Listen checks for service health periodically
-func (h *Health) Listen(ctx context.Context) {
-	h.logger.Info("starting health check")
+// Start checks for service health periodically
+func (c *Controller) Start(ctx context.Context) {
+	c.logger.Info("starting health check")
 
-	for i := 0; i < h.options.NumWorkers; i++ {
-		go h.checkServices(ctx)
+	for i := 0; i < c.options.NumWorkers; i++ {
+		go c.checkServices(ctx)
 	}
 
-	ticker := time.NewTicker(h.options.CheckInterval)
+	ticker := time.NewTicker(c.options.CheckInterval)
 	for {
 		select {
 		case <-ctx.Done():
-			h.logger.Info("stopping health check")
+			c.logger.Info("stopping health check")
 			return
 		case <-ticker.C:
-			h.logger.Debug("checking health")
-			services, err := h.serviceController.GetServices()
+			c.logger.Debug("checking health")
+			services, err := c.serviceController.GetServices()
 			if err != nil && err != model.ErrServiceNotFound {
-				h.logger.Error("error getting services ", err)
+				c.logger.Error("error getting services ", err)
 				continue
 			}
 			for _, s := range services {
-				h.pendingHealth <- s
+				c.pendingHealth <- s
 			}
 		}
 	}
 }
 
-func (h *Health) checkServices(ctx context.Context) {
+func (c *Controller) checkServices(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case service := <-h.pendingHealth:
-			h.updateService(service)
+		case service := <-c.pendingHealth:
+			c.updateService(service)
 		}
 	}
 }
 
-func (h *Health) updateService(service model.Service) {
+func (c *Controller) updateService(service model.Service) {
 	healthURL, err := service.HealthURL()
 	if err != nil {
-		h.logger.Error("error getting URL ", err)
+		c.logger.Error("error getting URL ", err)
 		return
 	}
 
-	if err := h.client.healthCheck(healthURL); err != nil {
+	if err := c.client.healthCheck(healthURL); err != nil {
 		if service.Status == model.ServiceStatusHealthy {
-			h.logger.Infof("service '%s' is now idle. Cause: %v", service.ID, err)
+			c.logger.Infof("service '%s' is now idle. Cause: %v", service.ID, err)
 			service.Status = model.ServiceStatusIdle
-			h.serviceController.UpsertService(service)
+			c.serviceController.UpsertService(service)
 		}
 	} else {
 		if service.Status == model.ServiceStatusIdle {
-			h.logger.Infof("service '%s' is now healthy", service.ID)
+			c.logger.Infof("service '%s' is now healthy", service.ID)
 			service.Status = model.ServiceStatusHealthy
-			h.serviceController.UpsertService(service)
+			c.serviceController.UpsertService(service)
 		}
 	}
 }
 
-func New(options Options, serviceController service.Controller, logger log.Logger) *Health {
-	return &Health{
+func NewController(options Options, serviceController service.Controller, logger log.Logger) *Controller {
+	return &Controller{
 		options:           options,
 		client:            newClient(clientOptions{timeout: options.Timeout}),
 		pendingHealth:     make(chan model.Service, options.BufferSize),

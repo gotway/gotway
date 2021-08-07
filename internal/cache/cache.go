@@ -68,7 +68,7 @@ func (c BasicController) DeleteCacheByTags(tags []string) error {
 
 // ListenResponses starts listening for responses
 func (c BasicController) ListenResponses(ctx context.Context) {
-	c.logger.Info("starting cache handler")
+	c.logger.Info("starting cache controller")
 	var logOnce sync.Once
 
 	for i := 0; i < c.options.NumWorkers; i++ {
@@ -77,7 +77,7 @@ func (c BasicController) ListenResponses(ctx context.Context) {
 				select {
 				case <-ctx.Done():
 					logOnce.Do(func() {
-						c.logger.Info("stopping cache handler")
+						c.logger.Info("stopping cache controller")
 					})
 					return
 				case response := <-c.pendingCache:

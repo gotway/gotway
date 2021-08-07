@@ -105,7 +105,7 @@ func GetConfig() (Config, error) {
 		HA: HA{
 			Enabled:       ha,
 			NodeId:        nodeId,
-			LeaseLockName: env.Get("HA_LEASE_LOCK_NAME", "echoperator"),
+			LeaseLockName: env.Get("HA_LEASE_LOCK_NAME", "gotway"),
 			LeaseDuration: env.GetDuration("HA_LEASE_DURATION_SECONDS", 15) * time.Second,
 			RenewDeadline: env.GetDuration("HA_RENEW_DEADLINE_SECONDS", 10) * time.Second,
 			RetryPeriod:   env.GetDuration("HA_RETRY_PERIOD_SECONDS", 2) * time.Second,
