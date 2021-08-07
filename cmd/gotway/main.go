@@ -15,10 +15,9 @@ import (
 	"github.com/gotway/gotway/internal/middleware"
 	cacheMw "github.com/gotway/gotway/internal/middleware/cache"
 	gatewayMw "github.com/gotway/gotway/internal/middleware/gateway"
-	matchserviceMw "github.com/gotway/gotway/internal/middleware/matchservice"
+	matchingressMw "github.com/gotway/gotway/internal/middleware/matchingress"
 	"github.com/gotway/gotway/internal/repository"
-	"github.com/gotway/gotway/internal/service"
-	kubernetesCtrl "github.com/gotway/gotway/pkg/kubernetes/controller"
+	kubeCtrl "github.com/gotway/gotway/pkg/kubernetes/controller"
 	clientsetv1alpha1 "github.com/gotway/gotway/pkg/kubernetes/crd/v1alpha1/apis/clientset/versioned"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/gotway/pkg/metrics"
@@ -34,14 +33,14 @@ import (
 
 func configureMiddlewares(
 	config cfg.Config,
+	kubeCtrl *kubeCtrl.Controller,
 	cacheController cache.Controller,
-	serviceController service.Controller,
 	logger log.Logger,
 ) []middleware.Middleware {
 
 	middlewares := []middleware.Middleware{
-		matchserviceMw.New(
-			serviceController,
+		matchingressMw.New(
+			kubeCtrl,
 			logger.WithField("middleware", "match-service"),
 		),
 	}
@@ -71,7 +70,9 @@ func configureMiddlewares(
 	return middlewares
 }
 
-func getKubeClientSets(config cfg.Config) (*clientsetv1alpha1.Clientset, *kubernetes.Clientset, error) {
+func getKubeClientSets(
+	config cfg.Config,
+) (*clientsetv1alpha1.Clientset, *kubernetes.Clientset, error) {
 	var restConfig *rest.Config
 	var err error
 	if config.Kubernetes.KubeConfig != "" {
@@ -139,8 +140,8 @@ func main() {
 		logger.Fatal("error getting redis client: ", err)
 	}
 
-	kubeCtrl := kubernetesCtrl.New(
-		kubernetesCtrl.Options{
+	kubeCtrl := kubeCtrl.New(
+		kubeCtrl.Options{
 			Namespace:    config.Kubernetes.Namespace,
 			ResyncPeriod: config.Kubernetes.ResyncPeriod,
 		},
@@ -148,13 +149,7 @@ func main() {
 		logger.WithField("type", "kubernetes"),
 	)
 
-	serviceRepo := repository.NewServiceRepoRedis(redisClient)
 	cacheRepo := repository.NewCacheRepoRedis(redisClient)
-
-	serviceCtrl := service.NewController(
-		serviceRepo,
-		logger.WithField("type", "service-ctrl"),
-	)
 	cacheCtrl := cache.NewController(
 		cache.Options{
 			NumWorkers: config.Cache.NumWorkers,
@@ -164,7 +159,7 @@ func main() {
 		logger.WithField("type", "cache"),
 	)
 	if config.Cache.Enabled {
-		go cacheCtrl.ListenResponses(ctx)
+		go cacheCtrl.Start(ctx)
 	}
 
 	healthCtrl := healthcheck.NewController(
@@ -210,9 +205,9 @@ func main() {
 			RenewDeadline:      config.HA.RenewDeadline,
 			RetryPeriod:        config.HA.RetryPeriod,
 		},
-		healthCtrl,
 		kubeCtrl,
 		kubeClientSet,
+		healthCtrl,
 		logger.WithField("type", "leader-election"),
 	)
 	go leaderElectionCtrl.Start(ctx)
@@ -226,12 +221,12 @@ func main() {
 		},
 		configureMiddlewares(
 			config,
+			kubeCtrl,
 			cacheCtrl,
-			serviceCtrl,
 			logger.WithField("type", "middleware"),
 		),
+		kubeCtrl,
 		cacheCtrl,
-		serviceCtrl,
 		logger.WithField("type", "http"),
 	)
 	go server.Start()

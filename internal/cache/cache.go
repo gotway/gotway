@@ -20,19 +20,27 @@ type Options struct {
 	BufferSize int
 }
 
+type Params struct {
+	Service  string
+	TTL      int64
+	Statuses []int
+	Tags     []string
+}
+
 type Controller interface {
+	Start(ctx context.Context)
+	HandleResponse(r *http.Response, params Params) error
 	IsCacheableRequest(r *http.Request) bool
-	GetCache(r *http.Request, service model.Service) (model.Cache, error)
+	IsCacheableResponse(r *http.Response, params Params) bool
+	GetCache(r *http.Request, service string) (model.Cache, error)
 	DeleteCacheByPath(paths []model.CachePath) error
 	DeleteCacheByTags(tags []string) error
-	ListenResponses(ctx context.Context)
-	HandleResponse(r *http.Response, service model.Service) error
 }
 
 type response struct {
 	httpResponse *http.Response
 	bodyBytes    []byte
-	service      model.Service
+	params       Params
 }
 
 type BasicController struct {
@@ -42,32 +50,8 @@ type BasicController struct {
 	logger       log.Logger
 }
 
-// IsCacheableRequest determines if a request's response can be retrieved from cache
-func (c BasicController) IsCacheableRequest(r *http.Request) bool {
-	return r.Method == http.MethodGet
-}
-
-// GetCache gets a cached response for a request and a service
-func (c BasicController) GetCache(r *http.Request, service model.Service) (model.Cache, error) {
-	cache, err := c.cacheRepo.Get(r.URL.Path, service.ID)
-	if err != nil {
-		return model.Cache{}, err
-	}
-	return cache, nil
-}
-
-// DeleteCacheByPath deletes cache defined by its path
-func (c BasicController) DeleteCacheByPath(paths []model.CachePath) error {
-	return c.cacheRepo.DeleteByPath(paths)
-}
-
-// DeleteCacheByTags deletes cache with tags
-func (c BasicController) DeleteCacheByTags(tags []string) error {
-	return c.cacheRepo.DeleteByTags(tags)
-}
-
 // ListenResponses starts listening for responses
-func (c BasicController) ListenResponses(ctx context.Context) {
+func (c BasicController) Start(ctx context.Context) {
 	c.logger.Info("starting cache controller")
 	var logOnce sync.Once
 
@@ -92,8 +76,8 @@ func (c BasicController) ListenResponses(ctx context.Context) {
 }
 
 // HandleResponse handles a response ans sends it to the channel
-func (c BasicController) HandleResponse(r *http.Response, service model.Service) error {
-	if !c.isCacheableResponse(r, service) {
+func (c BasicController) HandleResponse(r *http.Response, params Params) error {
+	if !c.IsCacheableResponse(r, params) {
 		return nil
 	}
 
@@ -107,17 +91,23 @@ func (c BasicController) HandleResponse(r *http.Response, service model.Service)
 	c.pendingCache <- response{
 		httpResponse: r,
 		bodyBytes:    bodyBytes,
-		service:      service,
+		params:       params,
 	}
 
 	return nil
 }
 
-func (c BasicController) isCacheableResponse(r *http.Response, service model.Service) bool {
+// IsCacheableRequest determines if a request's response can be retrieved from cache
+func (c BasicController) IsCacheableRequest(r *http.Request) bool {
+	return r.Method == http.MethodGet
+}
+
+// IsCacheableResponse determines if a response can be stored in cache
+func (c BasicController) IsCacheableResponse(r *http.Response, params Params) bool {
 	if !c.IsCacheableRequest(r.Request) || headersDisallowCaching(r) {
 		return false
 	}
-	for _, s := range service.Cache.Statuses {
+	for _, s := range params.Statuses {
 		if s == r.StatusCode {
 			return true
 		}
@@ -125,10 +115,29 @@ func (c BasicController) isCacheableResponse(r *http.Response, service model.Ser
 	return false
 }
 
+// GetCache gets a cached response for a request and a service
+func (c BasicController) GetCache(r *http.Request, service string) (model.Cache, error) {
+	cache, err := c.cacheRepo.Get(r.URL.Path, service)
+	if err != nil {
+		return model.Cache{}, err
+	}
+	return cache, nil
+}
+
+// DeleteCacheByPath deletes cache defined by its path
+func (c BasicController) DeleteCacheByPath(paths []model.CachePath) error {
+	return c.cacheRepo.DeleteByPath(paths)
+}
+
+// DeleteCacheByTags deletes cache with tags
+func (c BasicController) DeleteCacheByTags(tags []string) error {
+	return c.cacheRepo.DeleteByTags(tags)
+}
+
 func (c BasicController) cacheResponse(res response) error {
 	path := getPath(res.httpResponse.Request)
-	ttl := getTTL(res.httpResponse, res.service.Cache)
-	tags := getTags(res.httpResponse, res.service.Cache)
+	ttl := getTTL(res.httpResponse, res.params)
+	tags := getTags(res.httpResponse, res.params)
 
 	cache := model.Cache{
 		Path:       path,
@@ -139,7 +148,7 @@ func (c BasicController) cacheResponse(res response) error {
 		Tags:       tags,
 	}
 
-	return c.cacheRepo.Create(cache, res.service.ID)
+	return c.cacheRepo.Create(cache, res.params.Service)
 }
 
 func getPath(r *http.Request) string {
@@ -150,21 +159,21 @@ func getPath(r *http.Request) string {
 	return path
 }
 
-func getTTL(r *http.Response, config model.CacheConfig) model.CacheTTL {
+func getTTL(r *http.Response, params Params) model.CacheTTL {
 	ttl, err := getCacheTTLHeader(r)
 	var seconds int64
 	if err != nil {
-		seconds = config.TTL
+		seconds = params.TTL
 	} else {
 		seconds = ttl
 	}
 	return model.NewCacheTTL(seconds)
 }
 
-func getTags(r *http.Response, config model.CacheConfig) []string {
+func getTags(r *http.Response, params Params) []string {
 	tags, err := getCacheTagsHeader(r)
 	if err != nil {
-		return config.Tags
+		return params.Tags
 	}
 	return tags
 }
@@ -203,7 +212,6 @@ func NewController(
 	cacheRepo repository.CacheRepo,
 	logger log.Logger,
 ) Controller {
-
 	return &BasicController{
 		options:      options,
 		cacheRepo:    cacheRepo,

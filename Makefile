@@ -73,7 +73,7 @@ cover: test ### Run tests and generate coverage
 
 .PHONY: mocks
 mocks: ### Generate mocks
-	@mockery --all --output internal/mocks
+	@mockery --all --dir internal --output internal/mocks
 
 .PHONY: codegen
 codegen: vendor ### Generate code

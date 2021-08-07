@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -20,6 +21,7 @@ type CacheRepo interface {
 }
 
 var (
+	ctx          = context.Background()
 	maxTxRetries = 1000
 )
 

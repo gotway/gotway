@@ -22,6 +22,12 @@ type Options struct {
 	ResyncPeriod time.Duration
 }
 
+type IngressMatcher = func(*crdv1alpha1.IngressHTTP) bool
+
+var (
+	ErrIngressNotFound = errors.New("ingress not found")
+)
+
 type Controller struct {
 	options Options
 
@@ -55,7 +61,7 @@ func (c *Controller) Run(ctx context.Context) error {
 	return nil
 }
 
-func (c *Controller) List() ([]crdv1alpha1.IngressHTTP, error) {
+func (c *Controller) ListIngresses() ([]crdv1alpha1.IngressHTTP, error) {
 	c.ingressMux.RLock()
 	defer c.ingressMux.RUnlock()
 
@@ -70,8 +76,28 @@ func (c *Controller) List() ([]crdv1alpha1.IngressHTTP, error) {
 	return ingresses, nil
 }
 
-func (c *Controller) UpdateIngressHealthyStatus(ctx context.Context, ingress crdv1alpha1.IngressHTTP, healthy bool) error {
-	if ingress.Status.Healthy == healthy {
+func (c *Controller) FindIngress(matchFn IngressMatcher) (crdv1alpha1.IngressHTTP, error) {
+	c.ingressMux.RLock()
+	defer c.ingressMux.RUnlock()
+
+	for _, obj := range c.ingresshttpInformer.GetIndexer().List() {
+		if ingress, ok := obj.(*crdv1alpha1.IngressHTTP); ok {
+			if matchFn(ingress) {
+				return *ingress, nil
+			}
+			continue
+		}
+		c.logger.Error(fmt.Sprintf("unexpected object %v", obj))
+	}
+	return crdv1alpha1.IngressHTTP{}, ErrIngressNotFound
+}
+
+func (c *Controller) UpdateIngressStatus(
+	ctx context.Context,
+	ingress crdv1alpha1.IngressHTTP,
+	healthy bool,
+) error {
+	if ingress.Status.IsServiceHealthy == healthy {
 		return nil
 	}
 	c.ingressMux.Lock()
@@ -93,7 +119,7 @@ func (c *Controller) UpdateIngressHealthyStatus(ctx context.Context, ingress crd
 	if !ok {
 		return fmt.Errorf("unexpected object %v", obj)
 	}
-	i.Status.Healthy = healthy
+	i.Status.IsServiceHealthy = healthy
 
 	return nil
 }
@@ -104,7 +130,10 @@ func New(
 	logger log.Logger,
 ) *Controller {
 
-	informerFactory := informersv1alpha1.NewSharedInformerFactory(ingresshttpClientSet, options.ResyncPeriod)
+	informerFactory := informersv1alpha1.NewSharedInformerFactory(
+		ingresshttpClientSet,
+		options.ResyncPeriod,
+	)
 	ingresshttpInformer := informerFactory.Gotway().V1alpha1().IngressHTTPs().Informer()
 
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())

@@ -4,8 +4,8 @@ metadata:
   name: stock
 spec:
   match:
-    host: stock.gotway.duckdns.org
-    port: 4433
-  backend:
+    host: stock:11000
+  service:
+    name: stock
     url: http://localhost:13000
     healthPath: /health

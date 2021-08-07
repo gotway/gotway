@@ -42,7 +42,7 @@ func (c *Controller) Start(ctx context.Context) {
 			return
 		case <-ticker.C:
 			c.logger.Debug("checking health")
-			services, err := c.kubeCtrl.List()
+			services, err := c.kubeCtrl.ListIngresses()
 			if err != nil {
 				c.logger.Error("error getting services ", err)
 				continue
@@ -72,31 +72,35 @@ func (c *Controller) updateService(ctx context.Context, ingress crdv1alpha1.Ingr
 		return
 	}
 	if err := c.client.healthCheck(healthURL); err != nil {
-		if ingress.Status.Healthy {
-			c.logger.Infof("service '%s' is idle: %v", ingress.Name, err)
-			if err := c.kubeCtrl.UpdateIngressHealthyStatus(ctx, ingress, false); err != nil {
-				c.logger.Errorf("error updating service '%s': %v", ingress.Name, err)
+		if ingress.Status.IsServiceHealthy {
+			c.logger.Infof("service '%s' is idle: %v", ingress.Spec.Service.Name, err)
+			if err := c.kubeCtrl.UpdateIngressStatus(ctx, ingress, false); err != nil {
+				c.logger.Errorf("error updating service '%s': %v", ingress.Spec.Service.Name, err)
 			}
 		}
 	} else {
-		if !ingress.Status.Healthy {
-			c.logger.Infof("service '%s' is healthy", ingress.Name)
-			if err := c.kubeCtrl.UpdateIngressHealthyStatus(ctx, ingress, true); err != nil {
-				c.logger.Errorf("error updating service '%s' status: %v", ingress.Name, err)
+		if !ingress.Status.IsServiceHealthy {
+			c.logger.Infof("service '%s' is healthy", ingress.Spec.Service.Name)
+			if err := c.kubeCtrl.UpdateIngressStatus(ctx, ingress, true); err != nil {
+				c.logger.Errorf("error updating service '%s' status: %v", ingress.Spec.Service.Name, err)
 			}
 		}
 	}
 }
 
 func getHealthUrl(ingress crdv1alpha1.IngressHTTP) (*url.URL, error) {
-	healthPath := ingress.Spec.Backend.HealthPath
+	healthPath := ingress.Spec.Service.HealthPath
 	if healthPath == "" {
 		healthPath = "/health"
 	}
-	return url.Parse(fmt.Sprintf("%s%s", ingress.Spec.Backend.URL, healthPath))
+	return url.Parse(fmt.Sprintf("%s%s", ingress.Spec.Service.URL, healthPath))
 }
 
-func NewController(options Options, kubeCtrl *kubernetesCtrl.Controller, logger log.Logger) *Controller {
+func NewController(
+	options Options,
+	kubeCtrl *kubernetesCtrl.Controller,
+	logger log.Logger,
+) *Controller {
 	return &Controller{
 		options:       options,
 		client:        newClient(clientOptions{timeout: options.Timeout}),

@@ -4,9 +4,9 @@ metadata:
   name: catalog
 spec:
   match:
-    host: catalog.gotway.duckdns.org
-    port: 4433
-  backend:
+    host: catalog:11000
+  service:
+    name: catalog
     url: http://localhost:12000
     healthPath: /health
   cache:
@@ -15,5 +15,5 @@ spec:
       - 200
       - 404
     tags:
-      - 'catalog'
-      - 'products'
+      - "catalog"
+      - "products"

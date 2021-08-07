@@ -28,9 +28,9 @@ type Options struct {
 
 type Controller struct {
 	options       Options
-	healthCtrl    *healthcheck.Controller
 	kubeCtrl      *kubernetesCtrl.Controller
 	kubeClientSet *kubernetes.Clientset
+	healthCtrl    *healthcheck.Controller
 	logger        log.Logger
 }
 
@@ -99,17 +99,17 @@ func (c *Controller) startKubernetesCtrl(ctx context.Context) {
 
 func NewController(
 	options Options,
-	healthCtrl *healthcheck.Controller,
 	kubeCtrl *kubernetesCtrl.Controller,
 	kubeClientSet *kubernetes.Clientset,
+	healthCtrl *healthcheck.Controller,
 	logger log.Logger,
 ) *Controller {
 
 	return &Controller{
 		options:       options,
-		healthCtrl:    healthCtrl,
 		kubeCtrl:      kubeCtrl,
 		kubeClientSet: kubeClientSet,
+		healthCtrl:    healthCtrl,
 		logger:        logger,
 	}
 }

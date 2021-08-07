@@ -5,22 +5,31 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type Match struct {
 	Method     string `json:"method"`
 	Host       string `json:"host"`
+	Port       string `json:"port"`
 	Path       string `json:"path"`
 	PathPrefix string `json:"pathPrefix"`
 }
 
-type Backend struct {
+type Service struct {
+	Name       string `json:"name"`
 	URL        string `json:"url"`
 	HealthPath string `json:"healthPath"`
 }
 
+type Cache struct {
+	TTL      int64    `json:"ttl"`
+	Statuses []int    `json:"statuses"`
+	Tags     []string `json:"tags"`
+}
+
 type IngressHTTPSpec struct {
 	Match   Match   `json:"match"`
-	Backend Backend `json:"backend"`
+	Service Service `json:"service"`
+	Cache   Cache   `json:"cache"`
 }
 
 type IngressHTTPStatus struct {
-	Healthy bool `json:"healthy"`
+	IsServiceHealthy bool `json:"isServiceHealthy"`
 }
 
 // +genclient

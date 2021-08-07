@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -11,73 +10,26 @@ import (
 	"github.com/gotway/gotway/internal/cache"
 	httpError "github.com/gotway/gotway/internal/http/error"
 	"github.com/gotway/gotway/internal/model"
-	"github.com/gotway/gotway/internal/request"
-	"github.com/gotway/gotway/internal/service"
+	"github.com/gotway/gotway/internal/requestcontext"
 	"github.com/gotway/gotway/pkg/log"
+
+	kubeCtrl "github.com/gotway/gotway/pkg/kubernetes/controller"
 )
 
 type handler struct {
-	serviceController service.Controller
-	cacheController   cache.Controller
-	logger            log.Logger
+	kubeCtrl  *kubeCtrl.Controller
+	cacheCtrl cache.Controller
+	logger    log.Logger
 }
 
-func (h *handler) getServices(w http.ResponseWriter, r *http.Request) {
-	services, err := h.serviceController.GetServices()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(services)
-}
-
-func (h *handler) createService(w http.ResponseWriter, r *http.Request) {
-	decoded := json.NewDecoder(r.Body)
-	var service model.Service
-	err := decoded.Decode(&service)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	err = service.Validate()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = h.serviceController.CreateService(service)
-	if err != nil {
-		h.logger.Error("error creating service", err)
-		if errors.Is(err, model.ErrServiceAlreadyRegistered) {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
-func (h *handler) getService(w http.ResponseWriter, r *http.Request) {
-	key := getServiceKey(r)
-	serviceDetail, err := h.serviceController.GetService(key)
+func (h *handler) getIngresses(w http.ResponseWriter, r *http.Request) {
+	ingresses, err := h.kubeCtrl.ListIngresses()
 	if err != nil {
 		httpError.Handle(err, w, h.logger)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(serviceDetail)
-}
-
-func (h *handler) deleteService(w http.ResponseWriter, r *http.Request) {
-	key := getServiceKey(r)
-	err := h.serviceController.DeleteService(key)
-	if err != nil {
-		httpError.Handle(err, w, h.logger)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(ingresses)
 }
 
 func (h *handler) deleteCache(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +49,7 @@ func (h *handler) deleteCache(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(payload.Paths) > 0 {
-		err := h.cacheController.DeleteCacheByPath(payload.Paths)
+		err := h.cacheCtrl.DeleteCacheByPath(payload.Paths)
 		if err != nil {
 			if _, ok := err.(*model.ErrCachePathNotFound); ok {
 				http.Error(w, err.Error(), http.StatusNotFound)
@@ -109,7 +61,7 @@ func (h *handler) deleteCache(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(payload.Tags) > 0 {
-		err := h.cacheController.DeleteCacheByTags(payload.Tags)
+		err := h.cacheCtrl.DeleteCacheByTags(payload.Tags)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -120,7 +72,7 @@ func (h *handler) deleteCache(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) writeResponse(w http.ResponseWriter, r *http.Request) {
-	res, err := request.GetResponse(r)
+	res, err := requestcontext.GetResponse(r)
 	if err != nil {
 		httpError.Handle(err, w, h.logger)
 		return
@@ -146,14 +98,14 @@ func getServiceKey(r *http.Request) string {
 }
 
 func newHandler(
-	serviceController service.Controller,
+	kubeCtrl *kubeCtrl.Controller,
 	cacheController cache.Controller,
 	logger log.Logger,
 ) *handler {
 
 	return &handler{
-		serviceController: serviceController,
-		cacheController:   cacheController,
-		logger:            logger,
+		kubeCtrl:  kubeCtrl,
+		cacheCtrl: cacheController,
+		logger:    logger,
 	}
 }

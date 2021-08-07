@@ -4,10 +4,10 @@ metadata:
   name: catalog
 spec:
   match:
-    host: catalog.gotway.duckdns.org
-    port: 4433
-  backend:
-    url: http://gotway-catalog:80
+    host: catalog.gotway.duckdns.org:4433
+  service:
+    name: catalog
+    url: http://gotway-catalog
     healthPath: /health
   cache:
     ttl: 30
@@ -15,5 +15,5 @@ spec:
       - 200
       - 404
     tags:
-      - 'catalog'
-      - 'products'
+      - "catalog"
+      - "products"
