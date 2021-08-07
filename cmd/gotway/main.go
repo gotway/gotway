@@ -141,7 +141,8 @@ func main() {
 
 	kubeCtrl := kubernetesCtrl.New(
 		kubernetesCtrl.Options{
-			Namespace: config.Kubernetes.Namespace,
+			Namespace:    config.Kubernetes.Namespace,
+			ResyncPeriod: config.Kubernetes.ResyncPeriod,
 		},
 		clientSet,
 		logger.WithField("type", "kubernetes"),
@@ -173,8 +174,8 @@ func main() {
 			NumWorkers:    config.HealthCheck.NumWorkers,
 			BufferSize:    config.HealthCheck.BufferSize,
 		},
-		serviceCtrl,
-		logger.WithField("type", "health"),
+		kubeCtrl,
+		logger.WithField("type", "health-check"),
 	)
 
 	if config.Metrics.Enabled {

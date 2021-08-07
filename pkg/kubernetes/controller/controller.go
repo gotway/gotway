@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	crdv1alpha1 "github.com/gotway/gotway/pkg/kubernetes/crd/v1alpha1"
@@ -17,14 +18,18 @@ import (
 )
 
 type Options struct {
-	Namespace string
+	Namespace    string
+	ResyncPeriod time.Duration
 }
 
 type Controller struct {
-	options             Options
+	options Options
+
 	ingresshttpInformer cache.SharedIndexInformer
-	queue               workqueue.RateLimitingInterface
-	logger              log.Logger
+	ingressMux          sync.RWMutex
+
+	queue  workqueue.RateLimitingInterface
+	logger log.Logger
 }
 
 func (c *Controller) Run(ctx context.Context) error {
@@ -50,16 +55,47 @@ func (c *Controller) Run(ctx context.Context) error {
 	return nil
 }
 
-func (c *Controller) List() ([]*crdv1alpha1.IngressHTTP, error) {
-	var ingresses []*crdv1alpha1.IngressHTTP
+func (c *Controller) List() ([]crdv1alpha1.IngressHTTP, error) {
+	c.ingressMux.RLock()
+	defer c.ingressMux.RUnlock()
+
+	var ingresses []crdv1alpha1.IngressHTTP
 	for _, obj := range c.ingresshttpInformer.GetIndexer().List() {
 		if ingress, ok := obj.(*crdv1alpha1.IngressHTTP); ok {
-			ingresses = append(ingresses, ingress)
+			ingresses = append(ingresses, *ingress)
 			continue
 		}
 		return nil, fmt.Errorf("unexpected object %v", obj)
 	}
 	return ingresses, nil
+}
+
+func (c *Controller) UpdateIngressHealthyStatus(ctx context.Context, ingress crdv1alpha1.IngressHTTP, healthy bool) error {
+	if ingress.Status.Healthy == healthy {
+		return nil
+	}
+	c.ingressMux.Lock()
+	defer c.ingressMux.Unlock()
+
+	key, err := cache.MetaNamespaceKeyFunc(&ingress)
+	if err != nil {
+		return err
+	}
+	obj, exists, err := c.ingresshttpInformer.GetIndexer().GetByKey(key)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("ingress %v not found", ingress.Name)
+	}
+
+	i, ok := obj.(*crdv1alpha1.IngressHTTP)
+	if !ok {
+		return fmt.Errorf("unexpected object %v", obj)
+	}
+	i.Status.Healthy = healthy
+
+	return nil
 }
 
 func New(
@@ -68,15 +104,15 @@ func New(
 	logger log.Logger,
 ) *Controller {
 
-	informerFactory := informersv1alpha1.NewSharedInformerFactory(ingresshttpClientSet, 10*time.Second)
+	informerFactory := informersv1alpha1.NewSharedInformerFactory(ingresshttpClientSet, options.ResyncPeriod)
 	ingresshttpInformer := informerFactory.Gotway().V1alpha1().IngressHTTPs().Informer()
 
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 
 	return &Controller{
+		options:             options,
 		ingresshttpInformer: ingresshttpInformer,
 		queue:               queue,
-		options:             options,
 		logger:              logger,
 	}
 }

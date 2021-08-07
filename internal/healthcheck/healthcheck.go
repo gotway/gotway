@@ -2,11 +2,12 @@ package healthcheck
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"time"
 
-	"github.com/gotway/gotway/internal/model"
-	"github.com/gotway/gotway/internal/service"
-
+	kubernetesCtrl "github.com/gotway/gotway/pkg/kubernetes/controller"
+	crdv1alpha1 "github.com/gotway/gotway/pkg/kubernetes/crd/v1alpha1"
 	"github.com/gotway/gotway/pkg/log"
 )
 
@@ -18,11 +19,11 @@ type Options struct {
 }
 
 type Controller struct {
-	options           Options
-	client            client
-	pendingHealth     chan model.Service
-	serviceController service.Controller
-	logger            log.Logger
+	options       Options
+	client        client
+	pendingHealth chan crdv1alpha1.IngressHTTP
+	kubeCtrl      *kubernetesCtrl.Controller
+	logger        log.Logger
 }
 
 // Start checks for service health periodically
@@ -41,8 +42,8 @@ func (c *Controller) Start(ctx context.Context) {
 			return
 		case <-ticker.C:
 			c.logger.Debug("checking health")
-			services, err := c.serviceController.GetServices()
-			if err != nil && err != model.ErrServiceNotFound {
+			services, err := c.kubeCtrl.List()
+			if err != nil {
 				c.logger.Error("error getting services ", err)
 				continue
 			}
@@ -59,39 +60,48 @@ func (c *Controller) checkServices(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case service := <-c.pendingHealth:
-			c.updateService(service)
+			c.updateService(ctx, service)
 		}
 	}
 }
 
-func (c *Controller) updateService(service model.Service) {
-	healthURL, err := service.HealthURL()
+func (c *Controller) updateService(ctx context.Context, ingress crdv1alpha1.IngressHTTP) {
+	healthURL, err := getHealthUrl(ingress)
 	if err != nil {
-		c.logger.Error("error getting URL ", err)
+		c.logger.Error("error getting health url ", err)
 		return
 	}
-
 	if err := c.client.healthCheck(healthURL); err != nil {
-		if service.Status == model.ServiceStatusHealthy {
-			c.logger.Infof("service '%s' is now idle. Cause: %v", service.ID, err)
-			service.Status = model.ServiceStatusIdle
-			c.serviceController.UpsertService(service)
+		if ingress.Status.Healthy {
+			c.logger.Infof("service '%s' is idle: %v", ingress.Name, err)
+			if err := c.kubeCtrl.UpdateIngressHealthyStatus(ctx, ingress, false); err != nil {
+				c.logger.Errorf("error updating service '%s': %v", ingress.Name, err)
+			}
 		}
 	} else {
-		if service.Status == model.ServiceStatusIdle {
-			c.logger.Infof("service '%s' is now healthy", service.ID)
-			service.Status = model.ServiceStatusHealthy
-			c.serviceController.UpsertService(service)
+		if !ingress.Status.Healthy {
+			c.logger.Infof("service '%s' is healthy", ingress.Name)
+			if err := c.kubeCtrl.UpdateIngressHealthyStatus(ctx, ingress, true); err != nil {
+				c.logger.Errorf("error updating service '%s' status: %v", ingress.Name, err)
+			}
 		}
 	}
 }
 
-func NewController(options Options, serviceController service.Controller, logger log.Logger) *Controller {
+func getHealthUrl(ingress crdv1alpha1.IngressHTTP) (*url.URL, error) {
+	healthPath := ingress.Spec.Backend.HealthPath
+	if healthPath == "" {
+		healthPath = "/health"
+	}
+	return url.Parse(fmt.Sprintf("%s%s", ingress.Spec.Backend.URL, healthPath))
+}
+
+func NewController(options Options, kubeCtrl *kubernetesCtrl.Controller, logger log.Logger) *Controller {
 	return &Controller{
-		options:           options,
-		client:            newClient(clientOptions{timeout: options.Timeout}),
-		pendingHealth:     make(chan model.Service, options.BufferSize),
-		serviceController: serviceController,
-		logger:            logger,
+		options:       options,
+		client:        newClient(clientOptions{timeout: options.Timeout}),
+		pendingHealth: make(chan crdv1alpha1.IngressHTTP, options.BufferSize),
+		kubeCtrl:      kubeCtrl,
+		logger:        logger,
 	}
 }

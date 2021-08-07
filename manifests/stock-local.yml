@@ -7,6 +7,5 @@ spec:
     host: stock.gotway.duckdns.org
     port: 4433
   backend:
-    url: http://gotway-stock:80
+    url: http://localhost:13000
     healthPath: /health
-

@@ -10,8 +10,9 @@ import (
 )
 
 type Kubernetes struct {
-	KubeConfig string
-	Namespace  string
+	KubeConfig   string
+	Namespace    string
+	ResyncPeriod time.Duration
 }
 
 type HealthCheck struct {
@@ -94,8 +95,9 @@ func GetConfig() (Config, error) {
 		GatewayTimeout: env.GetDuration("GATEWAY_TIMEOUT_SECONDS", 5) * time.Second,
 
 		Kubernetes: Kubernetes{
-			KubeConfig: env.Get("KUBECONFIG", ""),
-			Namespace:  env.Get("KUBERNETES_NAMESPACE", "default"),
+			KubeConfig:   env.Get("KUBECONFIG", ""),
+			Namespace:    env.Get("KUBERNETES_NAMESPACE", "default"),
+			ResyncPeriod: env.GetDuration("KUBERNETES_RESYNC_PERIOD_SECONDS", 5) * time.Second,
 		},
 		TLS: TLS{
 			Enabled: env.GetBool("TLS_ENABLED", true),

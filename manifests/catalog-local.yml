@@ -7,7 +7,7 @@ spec:
     host: catalog.gotway.duckdns.org
     port: 4433
   backend:
-    url: http://gotway-catalog:80
+    url: http://localhost:12000
     healthPath: /health
   cache:
     ttl: 30
