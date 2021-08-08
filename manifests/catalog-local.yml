@@ -1,0 +1,19 @@
+apiVersion: gotway.io/v1alpha1
+kind: IngressHTTP
+metadata:
+  name: catalog
+spec:
+  match:
+    host: catalog:11000
+  service:
+    name: catalog
+    url: http://localhost:12000
+    healthPath: /health
+  cache:
+    ttl: 30
+    statuses:
+      - 200
+      - 404
+    tags:
+      - "catalog"
+      - "products"

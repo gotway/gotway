@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/internal/cache"
 	"github.com/gotway/gotway/internal/middleware"
-	"github.com/gotway/gotway/internal/service"
+	kubeCtrl "github.com/gotway/gotway/pkg/kubernetes/controller"
 	"github.com/gotway/gotway/pkg/log"
 )
 
@@ -63,8 +63,8 @@ func (s *Server) addApiRouter(root *mux.Router) {
 	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods(http.MethodGet)
-	s.addServiceRouter(api)
-	s.addCacheRouter(api)
+	api.HandleFunc("/ingresses", s.handler.getIngresses).Methods(http.MethodGet)
+	api.HandleFunc("/cache", s.handler.deleteCache).Methods(http.MethodDelete)
 }
 
 func (s *Server) addGatewayRouter(root *mux.Router) {
@@ -75,26 +75,11 @@ func (s *Server) addGatewayRouter(root *mux.Router) {
 	gateway.PathPrefix("/").HandlerFunc(s.handler.writeResponse)
 }
 
-func (s *Server) addServiceRouter(root *mux.Router) {
-	root.HandleFunc("/services", s.handler.getServices).Methods(http.MethodGet)
-
-	service := root.PathPrefix("/service").Subrouter()
-	service.Methods(http.MethodPost).HandlerFunc(s.handler.createService)
-
-	serviceID := service.PathPrefix("/{service}").Subrouter()
-	serviceID.Methods(http.MethodGet).HandlerFunc(s.handler.getService)
-	serviceID.Methods(http.MethodDelete).HandlerFunc(s.handler.deleteService)
-}
-
-func (s *Server) addCacheRouter(root *mux.Router) {
-	root.PathPrefix("/cache").Methods(http.MethodDelete).HandlerFunc(s.handler.deleteCache)
-}
-
 func NewServer(
 	options ServerOptions,
 	middlewares []middleware.Middleware,
-	cacheController cache.Controller,
-	serviceController service.Controller,
+	kubeCtrl *kubeCtrl.Controller,
+	cacheCtrl cache.Controller,
 	logger log.Logger,
 ) *Server {
 
@@ -104,8 +89,8 @@ func NewServer(
 		options: options,
 		server:  &http.Server{Addr: addr},
 		handler: newHandler(
-			serviceController,
-			cacheController,
+			kubeCtrl,
+			cacheCtrl,
 			logger.WithField("type", "handler"),
 		),
 		middlewares: middlewares,

@@ -1,0 +1,11 @@
+apiVersion: gotway.io/v1alpha1
+kind: IngressHTTP
+metadata:
+  name: stock
+spec:
+  match:
+    host: stock.gotway.duckdns.org:4433
+  service:
+    name: stock
+    url: http://gotway-stock
+    healthPath: /health

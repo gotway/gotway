@@ -8,9 +8,10 @@ import (
 
 	httpError "github.com/gotway/gotway/internal/http/error"
 	"github.com/gotway/gotway/internal/middleware"
-	"github.com/gotway/gotway/internal/model"
-	"github.com/gotway/gotway/internal/request"
+	"github.com/gotway/gotway/internal/requestcontext"
 	"github.com/gotway/gotway/pkg/log"
+
+	crdv1alpha1 "github.com/gotway/gotway/pkg/kubernetes/crd/v1alpha1"
 )
 
 type GatewayOptions struct {
@@ -25,27 +26,32 @@ type gateway struct {
 func (g *gateway) MiddlewareFunc(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		g.logger.Debug("gateway")
-		service, err := request.GetService(r)
+		ingress, err := requestcontext.GetIngress(r)
 		if err != nil {
 			httpError.Handle(err, w, g.logger)
 			return
 		}
 
-		backendReq, err := getBackendRequest(r, service)
+		if !ingress.Status.IsServiceHealthy {
+			http.Error(w, "service not available", http.StatusServiceUnavailable)
+			return
+		}
+
+		serviceReq, err := getServiceRequest(r, ingress)
 		if err != nil {
 			httpError.Handle(err, w, g.logger)
 			return
 		}
 
-		res, err := g.client.Do(backendReq)
+		res, err := g.client.Do(serviceReq)
 		if err != nil {
 			g.logger.Error("error requesting service ", err)
 			w.WriteHeader(http.StatusBadGateway)
 			return
 		}
-		g.log(r, res, backendReq.URL)
+		g.log(r, res, serviceReq.URL)
 
-		next.ServeHTTP(w, request.WithResponse(r, res))
+		next.ServeHTTP(w, requestcontext.WithResponse(r, res))
 	})
 }
 
@@ -53,18 +59,18 @@ func (g *gateway) log(req *http.Request, res *http.Response, target *url.URL) {
 	g.logger.Infof("%s %s => %s %d", req.Method, req.URL, target, res.StatusCode)
 }
 
-func getBackendRequest(r *http.Request, service model.Service) (*http.Request, error) {
-	url := service.Backend.URL + r.URL.Path
+func getServiceRequest(r *http.Request, ingress crdv1alpha1.IngressHTTP) (*http.Request, error) {
+	url := ingress.Spec.Service.URL + r.URL.Path
 	if r.URL.RawQuery != "" {
 		url = fmt.Sprintf("%s?%s", url, r.URL.RawQuery)
 	}
-	backendReq, err := http.NewRequest(r.Method, url, r.Body)
+	serviceReq, err := http.NewRequest(r.Method, url, r.Body)
 	if err != nil {
 		return nil, err
 	}
-	backendReq.Header.Add("X-Forwarded-Host", r.Host)
-	backendReq.Header.Add("X-Origin-Host", backendReq.Host)
-	return backendReq, nil
+	serviceReq.Header.Add("X-Forwarded-Host", r.Host)
+	serviceReq.Header.Add("X-Origin-Host", serviceReq.Host)
+	return serviceReq, nil
 }
 
 func New(

@@ -9,32 +9,92 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/model"
 	"github.com/gotway/gotway/internal/repository"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/pquerna/cachecontrol/cacheobject"
 )
 
+type Options struct {
+	NumWorkers int
+	BufferSize int
+}
+
+type Params struct {
+	Service  string
+	TTL      int64
+	Statuses []int
+	Tags     []string
+}
+
 type Controller interface {
+	Start(ctx context.Context)
+	HandleResponse(r *http.Response, params Params) error
 	IsCacheableRequest(r *http.Request) bool
-	GetCache(r *http.Request, service model.Service) (model.Cache, error)
+	IsCacheableResponse(r *http.Response, params Params) bool
+	GetCache(r *http.Request, service string) (model.Cache, error)
 	DeleteCacheByPath(paths []model.CachePath) error
 	DeleteCacheByTags(tags []string) error
-	ListenResponses(ctx context.Context)
-	HandleResponse(r *http.Response, service model.Service) error
 }
 
 type response struct {
 	httpResponse *http.Response
 	bodyBytes    []byte
-	service      model.Service
+	params       Params
 }
 
 type BasicController struct {
+	options      Options
 	cacheRepo    repository.CacheRepo
 	pendingCache chan response
 	logger       log.Logger
+}
+
+// ListenResponses starts listening for responses
+func (c BasicController) Start(ctx context.Context) {
+	c.logger.Info("starting cache controller")
+	var logOnce sync.Once
+
+	for i := 0; i < c.options.NumWorkers; i++ {
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					logOnce.Do(func() {
+						c.logger.Info("stopping cache controller")
+					})
+					return
+				case response := <-c.pendingCache:
+					c.logger.Debug("caching response")
+					if err := c.cacheResponse(response); err != nil {
+						c.logger.Error("error caching response", err)
+					}
+				}
+			}
+		}()
+	}
+}
+
+// HandleResponse handles a response ans sends it to the channel
+func (c BasicController) HandleResponse(r *http.Response, params Params) error {
+	if !c.IsCacheableResponse(r, params) {
+		return nil
+	}
+
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+	r.Body.Close()
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	c.pendingCache <- response{
+		httpResponse: r,
+		bodyBytes:    bodyBytes,
+		params:       params,
+	}
+
+	return nil
 }
 
 // IsCacheableRequest determines if a request's response can be retrieved from cache
@@ -42,9 +102,22 @@ func (c BasicController) IsCacheableRequest(r *http.Request) bool {
 	return r.Method == http.MethodGet
 }
 
+// IsCacheableResponse determines if a response can be stored in cache
+func (c BasicController) IsCacheableResponse(r *http.Response, params Params) bool {
+	if !c.IsCacheableRequest(r.Request) || headersDisallowCaching(r) {
+		return false
+	}
+	for _, s := range params.Statuses {
+		if s == r.StatusCode {
+			return true
+		}
+	}
+	return false
+}
+
 // GetCache gets a cached response for a request and a service
-func (c BasicController) GetCache(r *http.Request, service model.Service) (model.Cache, error) {
-	cache, err := c.cacheRepo.Get(r.URL.Path, service.ID)
+func (c BasicController) GetCache(r *http.Request, service string) (model.Cache, error) {
+	cache, err := c.cacheRepo.Get(r.URL.Path, service)
 	if err != nil {
 		return model.Cache{}, err
 	}
@@ -61,69 +134,10 @@ func (c BasicController) DeleteCacheByTags(tags []string) error {
 	return c.cacheRepo.DeleteByTags(tags)
 }
 
-// ListenResponses starts listening for responses
-func (c BasicController) ListenResponses(ctx context.Context) {
-	c.logger.Info("starting cache handler")
-	var logOnce sync.Once
-
-	for i := 0; i < config.CacheNumWorkers; i++ {
-		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					logOnce.Do(func() {
-						c.logger.Info("stopping cache handler")
-					})
-					return
-				case response := <-c.pendingCache:
-					c.logger.Debug("caching response")
-					if err := c.cacheResponse(response); err != nil {
-						c.logger.Error("error caching response", err)
-					}
-				}
-			}
-		}()
-	}
-}
-
-// HandleResponse handles a response ans sends it to the channel
-func (c BasicController) HandleResponse(r *http.Response, service model.Service) error {
-	if !c.isCacheableResponse(r, service) {
-		return nil
-	}
-
-	bodyBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
-	r.Body.Close()
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
-
-	c.pendingCache <- response{
-		httpResponse: r,
-		bodyBytes:    bodyBytes,
-		service:      service,
-	}
-
-	return nil
-}
-
-func (c BasicController) isCacheableResponse(r *http.Response, service model.Service) bool {
-	if !c.IsCacheableRequest(r.Request) || headersDisallowCaching(r) {
-		return false
-	}
-	for _, s := range service.Cache.Statuses {
-		if s == r.StatusCode {
-			return true
-		}
-	}
-	return false
-}
-
 func (c BasicController) cacheResponse(res response) error {
 	path := getPath(res.httpResponse.Request)
-	ttl := getTTL(res.httpResponse, res.service.Cache)
-	tags := getTags(res.httpResponse, res.service.Cache)
+	ttl := getTTL(res.httpResponse, res.params)
+	tags := getTags(res.httpResponse, res.params)
 
 	cache := model.Cache{
 		Path:       path,
@@ -134,7 +148,7 @@ func (c BasicController) cacheResponse(res response) error {
 		Tags:       tags,
 	}
 
-	return c.cacheRepo.Create(cache, res.service.ID)
+	return c.cacheRepo.Create(cache, res.params.Service)
 }
 
 func getPath(r *http.Request) string {
@@ -145,21 +159,21 @@ func getPath(r *http.Request) string {
 	return path
 }
 
-func getTTL(r *http.Response, config model.CacheConfig) model.CacheTTL {
+func getTTL(r *http.Response, params Params) model.CacheTTL {
 	ttl, err := getCacheTTLHeader(r)
 	var seconds int64
 	if err != nil {
-		seconds = config.TTL
+		seconds = params.TTL
 	} else {
 		seconds = ttl
 	}
 	return model.NewCacheTTL(seconds)
 }
 
-func getTags(r *http.Response, config model.CacheConfig) []string {
+func getTags(r *http.Response, params Params) []string {
 	tags, err := getCacheTagsHeader(r)
 	if err != nil {
-		return config.Tags
+		return params.Tags
 	}
 	return tags
 }
@@ -194,13 +208,14 @@ func headersDisallowCaching(r *http.Response) bool {
 }
 
 func NewController(
+	options Options,
 	cacheRepo repository.CacheRepo,
 	logger log.Logger,
 ) Controller {
-
 	return &BasicController{
+		options:      options,
 		cacheRepo:    cacheRepo,
-		pendingCache: make(chan response, config.CacheBufferSize),
+		pendingCache: make(chan response, options.BufferSize),
 		logger:       logger,
 	}
 }

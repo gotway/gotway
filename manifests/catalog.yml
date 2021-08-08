@@ -1,0 +1,19 @@
+apiVersion: gotway.io/v1alpha1
+kind: IngressHTTP
+metadata:
+  name: catalog
+spec:
+  match:
+    host: catalog.gotway.duckdns.org:4433
+  service:
+    name: catalog
+    url: http://gotway-catalog
+    healthPath: /health
+  cache:
+    ttl: 30
+    statuses:
+      - 200
+      - 404
+    tags:
+      - "catalog"
+      - "products"

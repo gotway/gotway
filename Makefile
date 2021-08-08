@@ -38,6 +38,10 @@ run: ### Quick run
 deps: ### Optimize dependencies
 	@go mod tidy
 
+.PHONY: vendor
+vendor: ### Vendor dependencies
+	@go mod vendor
+
 .PHONY: install
 install: ### Install binary in your system
 	@go install -v cmd/gotway/*.go
@@ -69,4 +73,8 @@ cover: test ### Run tests and generate coverage
 
 .PHONY: mocks
 mocks: ### Generate mocks
-	@mockery --all --output internal/mocks
+	@mockery --all --dir internal --output internal/mocks
+
+.PHONY: codegen
+codegen: vendor ### Generate code
+	@bash ./codegen/codegen.sh
