@@ -75,6 +75,6 @@ cover: test ### Run tests and generate coverage
 mocks: ### Generate mocks
 	@mockery --all --dir internal --output internal/mocks
 
-.PHONY: codegen
-codegen: vendor ### Generate code
-	@bash ./codegen/codegen.sh
+.PHONY: generate-code
+generate-code: vendor ### Generate code
+	@bash ./hack/hack.sh
