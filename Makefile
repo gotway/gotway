@@ -20,7 +20,14 @@ else
 		$(MAKEFILE_LIST) | grep -v '@awk' | sort
 endif
 
-.PHONY: clean
+.PHONY: generate
+generate: vendor ### Generate code
+	@bash ./hack/hack.sh
+
+.PHONY: install
+install: ## Install CRDs
+	@kubectl apply -f manifests/crds
+
 clean: ### Clean build files
 	@rm -rf ./bin
 	@go clean
@@ -31,7 +38,7 @@ build: clean ### Build binary
 	@chmod +x ./bin/*
 
 .PHONY: run
-run: ### Quick run
+run: install ### Quick run
 	@CGO_ENABLED=1 go run -race cmd/gotway/*.go
 
 .PHONY: deps
@@ -41,10 +48,6 @@ deps: ### Optimize dependencies
 .PHONY: vendor
 vendor: ### Vendor dependencies
 	@go mod vendor
-
-.PHONY: install
-install: ### Install binary in your system
-	@go install -v cmd/gotway/*.go
 
 .PHONY: fmt
 fmt: ### Format
@@ -74,7 +77,3 @@ cover: test ### Run tests and generate coverage
 .PHONY: mocks
 mocks: ### Generate mocks
 	@mockery --all --dir internal --output internal/mocks
-
-.PHONY: generate-code
-generate-code: vendor ### Generate code
-	@bash ./hack/hack.sh
