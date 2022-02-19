@@ -7,14 +7,14 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/gotway/gotway.svg)](https://pkg.go.dev/github.com/gotway/gotway)
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/gotway)](https://artifacthub.io/packages/search?repo=gotway)
 
-Simple HTTP API Gateway powered with in-redis cache 🚀
+☸️ Cloud native API Gateway powered with in-redis cache.
 
 - API composition: expose your services to the internet using a single endpoint
-- Configurable cache in redis 
+- Cloud native: configure routing and cache using [Kubernetes CRDs](./manifests/examples/catalog.yml)
+- In-memory cache using redis 
 - Cache invalidation using tags
-- Cache invalidation specifying the URL path
 - Health checking
-- Management REST API 
+- Management [REST API](#management-rest-api-)
 - ~10MB [Docker image](https://hub.docker.com/r/gotwaygateway/gotway/tags) available for multiple architectures
 - [Helm chart](https://github.com/gotway/charts)
 
@@ -29,35 +29,78 @@ helm install gotway gotway/gotway
 
 #### Quickstart ⚡
 
-We will register [catalog](https://github.com/gotway/service-examples/tree/main/cmd/catalog) as an example:
+Let's register the [catalog](https://github.com/gotway/service-examples/tree/main/cmd/catalog) service into Gotway by creating an `IngressHTTP` CRD:
 
 ```bash
-curl --request POST 'https://gotway.duckdns.org/api/service' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "id": "catalog",
-    "match": {
-        "host": "catalog.gotway.duckdns.org"
-    },
-    "backend": {
-        "url": "http://catalog:80"
-    },
-    "cache": {
-        "ttl": 30,
-        "statuses": [200, 404],
-        "tags": ["catalog", "products"]
-     }
-}'
+kubectl apply -f ./manifests/examples/catalog.yml 
+``` 
+```yaml
+apiVersion: gotway.io/v1alpha1
+kind: IngressHTTP
+metadata:
+  name: catalog
+spec:
+  match:
+    host: catalog.gotway.duckdns.org:4433
+  service:
+    name: catalog
+    url: http://gotway-catalog
+    healthPath: /health
+  cache:
+    ttl: 30
+    statuses:
+      - 200
+      - 404
+    tags:
+      - "catalog"
+      - "products"
 ```
 
-After executing that command, our service will be available at
-[https://catalog.gotway.duckdns.org](https://catalog.gotway.duckdns.org). The following endpoints will be routed through gotway:
+We are now able to route requests through Gotway, let's create a product:
 
-- **GET** https://catalog.gotway.duckdns.org/products
-- **POST** https://catalog.gotway.duckdns.org/product
-- **GET** https://catalog.gotway.duckdns.org/product/1
-- **DELETE** https://catalog.gotway.duckdns.org/product/1
-- **PUT** https://catalog.gotway.duckdns.org/product/1
+```bash 
+curl -k --request POST 'https://catalog.gotway.duckdns.org:4433/product' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	"name": "sneakers",
+	"price": 69000,
+	"color": "white",
+	"size": "42"
+}'
+```
+```json
+{
+    "id": 911902081
+}
+``` 
+```bash
+curl -k --request GET 'https://catalog.gotway.duckdns.org:4433/products'
+```
+```json
+{
+    "products": [
+        {
+            "id": 911902081,
+            "name": "sneakers",
+            "price": 69000,
+            "color": "white",
+            "size": "42"
+        }
+    ],
+    "totalCount": 1
+}
+``` 
+
+This response has a TTL of 30 seconds, let's invalidate the cache for the catalog service by providing one of its tags:
+
+```bash
+curl -k --request DELETE 'https://gotway.duckdns.org:4433/api/cache' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "tags": ["catalog"]
+}'
+``` 
+
 
 #### Management REST API ⚡
 
