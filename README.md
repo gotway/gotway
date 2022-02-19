@@ -15,7 +15,7 @@
 - Cache invalidation using tags
 - Health checking
 - Management [REST API](#management-rest-api-)
-- ~10MB [Docker image](https://hub.docker.com/r/gotwaygateway/gotway/tags) available for multiple architectures
+- ~6MB [Docker image](https://hub.docker.com/r/gotwaygateway/gotway/tags) available for multiple architectures
 - [Helm chart](https://github.com/gotway/charts)
 
 #### Installation 🌱
