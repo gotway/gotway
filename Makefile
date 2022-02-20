@@ -33,7 +33,7 @@ clean: ### Clean build files
 	@go clean
 
 .PHONY: build
-build: clean ### Build binary
+build: generate clean ### Build binary
 	@go build -tags netgo -a -v -ldflags "${LD_FLAGS}" -o ./bin/gotway ./cmd/gotway/*.go
 	@chmod +x ./bin/*
 

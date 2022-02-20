@@ -13,4 +13,4 @@ helm repo add "$repo" https://charts.gotway.duckdns.org
 helm repo update
 
 echo "🚀 Deploying '$chart' with image version '$tag'..."
-helm upgrade --install "$release" "$chart" --set image.tag=$tag
+helm upgrade --install "$release" "$chart" --set image.tag=$tag --namespace gotway
