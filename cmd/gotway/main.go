@@ -11,7 +11,6 @@ import (
 	cfg "github.com/gotway/gotway/internal/config"
 	"github.com/gotway/gotway/internal/healthcheck"
 	"github.com/gotway/gotway/internal/http"
-	leaderElection "github.com/gotway/gotway/internal/leaderelection"
 	"github.com/gotway/gotway/internal/middleware"
 	cacheMw "github.com/gotway/gotway/internal/middleware/cache"
 	gatewayMw "github.com/gotway/gotway/internal/middleware/gateway"
@@ -23,7 +22,6 @@ import (
 	"github.com/gotway/gotway/pkg/metrics"
 	"github.com/gotway/gotway/pkg/pprof"
 	"github.com/gotway/gotway/pkg/redis"
-	"k8s.io/client-go/kubernetes"
 
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -70,9 +68,9 @@ func configureMiddlewares(
 	return middlewares
 }
 
-func getKubeClientSets(
+func getClientSet(
 	config cfg.Config,
-) (*clientsetv1alpha1.Clientset, *kubernetes.Clientset, error) {
+) (*clientsetv1alpha1.Clientset, error) {
 	var restConfig *rest.Config
 	var err error
 	if config.Kubernetes.KubeConfig != "" {
@@ -81,27 +79,9 @@ func getKubeClientSets(
 		restConfig, err = rest.InClusterConfig()
 	}
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	clientSet, err := clientsetv1alpha1.NewForConfig(restConfig)
-	if err != nil {
-		return nil, nil, err
-	}
-	kubeClientSet, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		return nil, nil, err
-	}
-	return clientSet, kubeClientSet, nil
-}
-
-func getLogger(config cfg.Config) log.Logger {
-	logger := log.NewLogger(log.Fields{
-		"service": "gotway",
-	}, config.Env, config.LogLevel, os.Stdout)
-	if config.HA.Enabled {
-		return logger.WithField("node", config.HA.NodeId)
-	}
-	return logger
+	return clientsetv1alpha1.NewForConfig(restConfig)
 }
 
 func getRedisClient(ctx context.Context, config cfg.Config) (redis.Cmdable, error) {
@@ -122,7 +102,9 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("error getting config %v", err))
 	}
-	logger := getLogger(config)
+	logger := log.NewLogger(log.Fields{
+		"service": "gotway",
+	}, config.Env, config.LogLevel, os.Stdout)
 	ctx, _ := signal.NotifyContext(context.Background(), []os.Signal{
 		syscall.SIGINT,
 		syscall.SIGTERM,
@@ -131,7 +113,7 @@ func main() {
 		syscall.SIGQUIT}...,
 	)
 
-	clientSet, kubeClientSet, err := getKubeClientSets(config)
+	clientSet, err := getClientSet(config)
 	if err != nil {
 		logger.Fatal("error getting kubernetes client set ", err)
 	}
@@ -194,23 +176,10 @@ func main() {
 		defer p.Stop()
 	}
 
-	leaderElectionCtrl := leaderElection.NewController(
-		leaderElection.Options{
-			HealthCheckEnabled: config.HealthCheck.Enabled,
-			HAEnabled:          config.HA.Enabled,
-			Namespace:          config.Kubernetes.Namespace,
-			NodeId:             config.HA.NodeId,
-			LeaseLockName:      config.HA.LeaseLockName,
-			LeaseDuration:      config.HA.LeaseDuration,
-			RenewDeadline:      config.HA.RenewDeadline,
-			RetryPeriod:        config.HA.RetryPeriod,
-		},
-		kubeCtrl,
-		kubeClientSet,
-		healthCtrl,
-		logger.WithField("type", "leader-election"),
-	)
-	go leaderElectionCtrl.Start(ctx)
+	if config.HealthCheck.Enabled {
+		go healthCtrl.Start(ctx)
+	}
+	go kubeCtrl.Run(ctx)
 
 	server := http.NewServer(
 		http.ServerOptions{

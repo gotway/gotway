@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/gotway/gotway/pkg/env"
@@ -34,14 +32,6 @@ type TLS struct {
 	Cert    string
 	Key     string
 }
-type HA struct {
-	Enabled       bool
-	NodeId        string
-	LeaseLockName string
-	LeaseDuration time.Duration
-	RenewDeadline time.Duration
-	RetryPeriod   time.Duration
-}
 
 type Metrics struct {
 	Enabled bool
@@ -61,32 +51,15 @@ type Config struct {
 	RedisUrl       string
 	GatewayTimeout time.Duration
 
-	Kubernetes Kubernetes
-	TLS        TLS
-	HA         HA
-
+	Kubernetes  Kubernetes
+	TLS         TLS
 	HealthCheck HealthCheck
 	Cache       Cache
-
-	Metrics Metrics
-	PProf   PProf
+	Metrics     Metrics
+	PProf       PProf
 }
 
 func GetConfig() (Config, error) {
-	ha := env.GetBool("HA_ENABLED", false)
-
-	var nodeId string
-	if ha {
-		nodeId = env.Get("HA_NODE_ID", "")
-		if nodeId == "" {
-			hostname, err := os.Hostname()
-			if err != nil {
-				return Config{}, fmt.Errorf("error getting node id %v", err)
-			}
-			nodeId = hostname
-		}
-	}
-
 	return Config{
 		Port:           env.Get("PORT", "11000"),
 		Env:            env.Get("ENV", "local"),
@@ -104,15 +77,6 @@ func GetConfig() (Config, error) {
 			Cert:    env.Get("TLS_CERT", tlstest.Cert()),
 			Key:     env.Get("TLS_KEY", tlstest.Key()),
 		},
-		HA: HA{
-			Enabled:       ha,
-			NodeId:        nodeId,
-			LeaseLockName: env.Get("HA_LEASE_LOCK_NAME", "gotway"),
-			LeaseDuration: env.GetDuration("HA_LEASE_DURATION_SECONDS", 15) * time.Second,
-			RenewDeadline: env.GetDuration("HA_RENEW_DEADLINE_SECONDS", 10) * time.Second,
-			RetryPeriod:   env.GetDuration("HA_RETRY_PERIOD_SECONDS", 2) * time.Second,
-		},
-
 		HealthCheck: HealthCheck{
 			Enabled:    env.GetBool("HEALTH_CHECK", true),
 			NumWorkers: env.GetInt("HEALTH_CHECK_NUM_WORKERS", 10),
@@ -125,7 +89,6 @@ func GetConfig() (Config, error) {
 			NumWorkers: env.GetInt("CACHE_NUM_WORKERS", 10),
 			BufferSize: env.GetInt("CACHE_BUFFER_SIZE", 10),
 		},
-
 		Metrics: Metrics{
 			Enabled: env.GetBool("METRICS", true),
 			Path:    env.Get("METRICS_PATH", "/metrics"),
