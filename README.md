@@ -29,7 +29,7 @@ helm install gotway gotway/gotway
 
 ### Quickstart
 
-We will need microservices to route to in order to test gotway, you can deploy some by running:
+We will need microservices to route to in order to test Gotway, you can deploy some by running:
 
 ```bash
 helm upgrade --install gotway gotway/gotway --set examples.enabled=true
