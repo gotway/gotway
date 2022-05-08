@@ -4,7 +4,7 @@ metadata:
   name: stock
 spec:
   match:
-    host: stock.gotway.duckdns.org:4433
+    host: stock.gotway.duckdns.org:9111
   service:
     name: stock
     url: http://gotway-stock
