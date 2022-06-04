@@ -1,24 +1,51 @@
+ROOT := $(shell git rev-parse --show-toplevel)
+OS := $(shell uname -s | awk '{print tolower($$0)}')
+ARCH := amd64
 PROJECT := gotway
 VERSION := $(git describe --abbrev=0 --tags)
 LD_FLAGS := -X main.version=$(VERSION) -s -w
 SOURCE_FILES ?= ./internal/... ./pkg/... ./cmd/...
-UNAME := $(uname -s)
 
-export CGO_ENABLED=0
-export GO111MODULE=on
+# go
+export CGO_ENABLED := 0
+export GO111MODULE := on
+
+# gotway
+export PORT ?= 11000
+export ENV ?= local
+export LOG_LEVEL ?= debug
+export REDIS_URL ?= redis://localhost:6379/11
+export KUBECONFIG ?= $(HOME)/.kube/config
+export METRICS ?= true
+export METRICS_PATH ?= /metrics
+export METRICS_PORT ?= 2112
+export PPROF ?= false
+export PPROF_PORT ?= 6060
+
+# bin
+BIN := $(ROOT)/bin
+KIND := $(BIN)/kind
+KIND_VERSION := v0.12.0
 
 .PHONY: all
 all: help
 
 .PHONY: help
 help:	### Show targets documentation
-ifeq ($(UNAME), Linux)
+ifeq ($(OS), linux)
 	@grep -P '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 else
 	@awk -F ':.*###' '$$0 ~ FS {printf "%15s%s\n", $$1 ":", $$2}' \
 		$(MAKEFILE_LIST) | grep -v '@awk' | sort
 endif
+
+$(BIN):
+	@mkdir -p $(BIN)
+
+$(KIND): $(BIN)
+	@curl -Lo $(KIND) https://kind.sigs.k8s.io/dl/$(KIND_VERSION)/kind-$(OS)-$(ARCH)
+	@chmod +x $(KIND)
 
 .PHONY: generate
 generate: vendor ### Generate code
@@ -27,6 +54,14 @@ generate: vendor ### Generate code
 .PHONY: install
 install: ## Install CRDs
 	@kubectl apply -f manifests/crds
+
+.PHONY: cluster
+cluster: $(KIND) ### Create a KIND cluster
+	$(KIND) create cluster --name $(PROJECT)
+
+.PHONY: docker
+docker: ### Spin up docker dependencies
+	@docker compose up -d
 
 clean: ### Clean build files
 	@rm -rf ./bin
@@ -38,7 +73,7 @@ build: generate clean ### Build binary
 	@chmod +x ./bin/*
 
 .PHONY: run
-run: install ### Quick run
+run: docker install ### Quick run
 	@CGO_ENABLED=1 go run -race cmd/gotway/*.go
 
 .PHONY: deps
