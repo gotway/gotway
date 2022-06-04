@@ -192,7 +192,7 @@ func TestListenResponses(t *testing.T) {
 
 	for _, r := range []cacheResponse{cacheableRes, nonCacheableRes} {
 		if err := controller.HandleResponse(r.httpResponse, r.params); err != nil {
-			t.Errorf("got unexpected error: %w", err)
+			t.Errorf("got unexpected error: %v", err)
 		}
 	}
 
@@ -262,7 +262,7 @@ func TestListenCacheControlResponses(t *testing.T) {
 
 	for _, r := range []cacheResponse{TTLRes, noTTLRes, zeroTTLRes} {
 		if err := controller.HandleResponse(r.httpResponse, r.params); err != nil {
-			t.Errorf("Got unexpected error: %w", err)
+			t.Errorf("Got unexpected error: %v", err)
 		}
 	}
 
@@ -317,7 +317,7 @@ func TestListenCacheTagsResponses(t *testing.T) {
 
 	for _, r := range []cacheResponse{tagsRes, noTagsRes} {
 		if err := controller.HandleResponse(r.httpResponse, r.params); err != nil {
-			t.Errorf("got unexpected error: %w", err)
+			t.Errorf("got unexpected error: %v", err)
 		}
 	}
 
