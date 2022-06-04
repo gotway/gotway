@@ -26,6 +26,8 @@ export PPROF_PORT ?= 6060
 BIN := $(ROOT)/bin
 KIND := $(BIN)/kind
 KIND_VERSION := v0.12.0
+MOCKERY := $(BIN)/mockery
+MOCKERY_VERSION := 2.12.3
 
 .PHONY: all
 all: help
@@ -46,6 +48,12 @@ $(BIN):
 $(KIND): $(BIN)
 	@curl -Lo $(KIND) https://kind.sigs.k8s.io/dl/$(KIND_VERSION)/kind-$(OS)-$(ARCH)
 	@chmod +x $(KIND)
+
+$(MOCKERY): $(BIN)
+	@curl -Lo mockery.tar.gz https://github.com/vektra/mockery/releases/download/v$(MOCKERY_VERSION)/mockery_$(MOCKERY_VERSION)_$(shell uname -s)_$(shell uname -m).tar.gz
+	@tar -C /tmp -zxvf mockery.tar.gz 
+	@mv /tmp/mockery $(MOCKERY)
+	@chmod +x $(MOCKERY)
 
 .PHONY: generate
 generate: vendor ### Generate code
@@ -110,5 +118,5 @@ cover: test ### Run tests and generate coverage
 	@go tool cover -html=cover.out -o=cover.html
 
 .PHONY: mocks
-mocks: ### Generate mocks
-	@mockery --all --dir internal --output internal/mocks
+mocks: $(MOCKERY) ### Generate mocks
+	$(MOCKERY) --all --dir internal --output internal/mocks
