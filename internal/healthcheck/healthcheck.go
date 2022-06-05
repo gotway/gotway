@@ -71,21 +71,30 @@ func (c *Controller) updateService(ctx context.Context, ingress crdv1alpha1.Ingr
 		c.logger.Error("error getting health url ", err)
 		return
 	}
-	if err := c.client.healthCheck(healthURL); err != nil {
-		if ingress.Status.IsServiceHealthy {
-			c.logger.Infof("service '%s' is idle: %v", ingress.Spec.Service.Name, err)
-			if err := c.kubeCtrl.UpdateIngressStatus(ctx, ingress, false); err != nil {
-				c.logger.Errorf("error updating service '%s': %v", ingress.Spec.Service.Name, err)
-			}
+
+	updateIngressStatus := func(healthy bool) {
+		status := "unhealthy"
+		if healthy {
+			status = "healthy"
 		}
-	} else {
-		if !ingress.Status.IsServiceHealthy {
-			c.logger.Infof("service '%s' is healthy", ingress.Spec.Service.Name)
-			if err := c.kubeCtrl.UpdateIngressStatus(ctx, ingress, true); err != nil {
-				c.logger.Errorf("error updating service '%s' status: %v", ingress.Spec.Service.Name, err)
-			}
+
+		if err := c.kubeCtrl.UpdateIngressStatus(ctx, ingress, healthy); err != nil {
+			c.logger.Errorf("error updating service '%s' status to %s: %v", ingress.Spec.Service.Name, status, err)
 		}
+		c.logger.Infof("service '%s' is now %s", ingress.Spec.Service.Name, status)
 	}
+
+	healthy, err := c.client.healthCheck(healthURL)
+	if err != nil {
+		c.logger.Errorf("error performing health check in service '%s': %v", ingress.Spec.Service.Name, err)
+		updateIngressStatus(false)
+		return
+	}
+
+	if ingress.Status.IsServiceHealthy == healthy {
+		return
+	}
+	updateIngressStatus(healthy)
 }
 
 func getHealthUrl(ingress crdv1alpha1.IngressHTTP) (*url.URL, error) {

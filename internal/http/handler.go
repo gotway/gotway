@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/gotway/gotway/internal/cache"
 	httpError "github.com/gotway/gotway/internal/http/error"
 	"github.com/gotway/gotway/internal/model"
@@ -29,7 +28,7 @@ func (h *handler) getIngresses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(ingresses)
+	_ = json.NewEncoder(w).Encode(ingresses)
 }
 
 func (h *handler) deleteCache(w http.ResponseWriter, r *http.Request) {
@@ -89,12 +88,7 @@ func (h *handler) writeResponse(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(key, strings.Join(header[:], ","))
 	}
 	w.WriteHeader(res.StatusCode)
-	w.Write(bytes)
-}
-
-func getServiceKey(r *http.Request) string {
-	params := mux.Vars(r)
-	return params["service"]
+	_, _ = w.Write(bytes)
 }
 
 func newHandler(

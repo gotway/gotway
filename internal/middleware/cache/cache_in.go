@@ -47,7 +47,7 @@ func (c *cacheIn) MiddlewareFunc(next http.Handler) http.Handler {
 			w.Header().Set(key, strings.Join(header[:], ","))
 		}
 		w.WriteHeader(cache.StatusCode)
-		w.Write(cache.Body)
+		_, _ = w.Write(cache.Body)
 	})
 }
 

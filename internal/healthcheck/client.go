@@ -1,7 +1,6 @@
 package healthcheck
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
 	"time"
@@ -15,15 +14,12 @@ type client struct {
 	client http.Client
 }
 
-func (c client) healthCheck(url *url.URL) error {
+func (c client) healthCheck(url *url.URL) (bool, error) {
 	res, err := c.client.Get(url.String())
 	if err != nil {
-		return err
+		return false, nil
 	}
-	if res.StatusCode != http.StatusOK {
-		return errors.New("service not available")
-	}
-	return nil
+	return res.StatusCode == http.StatusOK, nil
 }
 
 func newClient(options clientOptions) client {

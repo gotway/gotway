@@ -179,7 +179,11 @@ func main() {
 	if config.HealthCheck.Enabled {
 		go healthCtrl.Start(ctx)
 	}
-	go kubeCtrl.Run(ctx)
+	go func() {
+		if err := kubeCtrl.Run(ctx); err != nil {
+			logger.Fatalf("error starting Kubernetes controller: %v", err)
+		}
+	}()
 
 	server := http.NewServer(
 		http.ServerOptions{

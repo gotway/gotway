@@ -93,8 +93,8 @@ func (r CacheRepoRedis) DeleteByTags(tags []string) error {
 	if err := r.redis.SAdd(ctx, tmpTagsToDeleteKey, tags).Err(); err != nil {
 		return err
 	}
-	defer func() error {
-		return r.redis.Del(ctx, tmpTagsToDeleteKey).Err()
+	defer func() {
+		_ = r.redis.Del(ctx, tmpTagsToDeleteKey).Err()
 	}()
 
 	var cursor uint64
@@ -124,7 +124,7 @@ func (r CacheRepoRedis) DeleteByTags(tags []string) error {
 				for index, cmd := range cmds {
 					intersection := cmd.Val()
 					if len(intersection) > 0 {
-						r.deleteCacheByCacheTagsKey(keys[index])
+						_ = r.deleteCacheByCacheTagsKey(keys[index])
 					}
 				}
 			}(keys)
