@@ -96,7 +96,7 @@ test-clean: ### Clean test cache
 	@go clean -testcache ./...
 
 .PHONY: test
-test: lint ### Run tests
+test: ### Run tests
 	@go test -v -coverprofile=cover.out -timeout 10s ./...
 
 .PHONY: cover
