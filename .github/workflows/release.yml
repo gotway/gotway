@@ -47,7 +47,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64
+          platforms: linux/arm64,linux/amd64
           tags: |
             docker.io/gotwaygateway/gotway:${{ steps.prep.outputs.VERSION }}
             docker.io/gotwaygateway/gotway:latest
