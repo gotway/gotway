@@ -2,15 +2,13 @@ ROOT := $(shell git rev-parse --show-toplevel)
 OS := $(shell uname -s | awk '{print tolower($$0)}')
 ARCH := amd64
 PROJECT := gotway
-VERSION := $(git describe --abbrev=0 --tags)
+VERSION := $(shell git describe --abbrev=0 --tags)
 LD_FLAGS := -X main.version=$(VERSION) -s -w
 SOURCE_FILES ?= ./internal/... ./pkg/... ./cmd/...
 
-# go
 export CGO_ENABLED := 0
 export GO111MODULE := on
-
-# gotway
+export GOBIN := $(shell pwd)/bin
 export PORT ?= 11000
 export ENV ?= local
 export LOG_LEVEL ?= debug
@@ -21,13 +19,6 @@ export METRICS_PATH ?= /metrics
 export METRICS_PORT ?= 2112
 export PPROF ?= false
 export PPROF_PORT ?= 6060
-
-# bin
-BIN := $(ROOT)/bin
-KIND := $(BIN)/kind
-KIND_VERSION := v0.12.0
-MOCKERY := $(BIN)/mockery
-MOCKERY_VERSION := 2.12.3
 
 .PHONY: all
 all: help
@@ -42,29 +33,31 @@ else
 		$(MAKEFILE_LIST) | grep -v '@awk' | sort
 endif
 
-$(BIN):
-	@mkdir -p $(BIN)
+KIND := $(GOBIN)/kind
+KIND_VERSION := v0.14.0
+kind:
+	$(call go-install,sigs.k8s.io/kind@$(KIND_VERSION))
 
-$(KIND): $(BIN)
-	@curl -Lo $(KIND) https://kind.sigs.k8s.io/dl/$(KIND_VERSION)/kind-$(OS)-$(ARCH)
-	@chmod +x $(KIND)
+GOLANCI_LINT := $(GOBIN)/golangci-lint
+GOLANCI_LINT_VERSION := v1.46.2
+golangci-lint:
+	$(call go-install,github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANCI_LINT_VERSION))
 
-$(MOCKERY): $(BIN)
-	@curl -Lo mockery.tar.gz https://github.com/vektra/mockery/releases/download/v$(MOCKERY_VERSION)/mockery_$(MOCKERY_VERSION)_$(shell uname -s)_$(shell uname -m).tar.gz
-	@tar -C /tmp -zxvf mockery.tar.gz 
-	@mv /tmp/mockery $(MOCKERY)
-	@chmod +x $(MOCKERY)
+MOCKERY := $(GOBIN)/mockery
+MOCKERY_VERSION := v2.12.3
+mockery:
+	$(call go-install,github.com/vektra/mockery/v2@$(MOCKERY_VERSION))
 
 .PHONY: generate
 generate: vendor ### Generate code
 	@bash ./hack/hack.sh
 
-.PHONY: install
-install: ## Install CRDs
+.PHONY: install-crds
+install-crds: ## Install CRDs
 	@kubectl apply -f manifests/crds
 
 .PHONY: cluster
-cluster: $(KIND) ### Create a KIND cluster
+cluster: kind ### Create a KIND cluster
 	$(KIND) create cluster --name $(PROJECT)
 
 .PHONY: docker
@@ -81,7 +74,7 @@ build: generate clean ### Build binary
 	@chmod +x ./bin/*
 
 .PHONY: run
-run: docker install ### Quick run
+run: lint docker install-crds ### Quick run
 	@CGO_ENABLED=1 go run -race cmd/gotway/*.go
 
 .PHONY: deps
@@ -92,17 +85,10 @@ deps: ### Optimize dependencies
 vendor: ### Vendor dependencies
 	@go mod vendor
 
-.PHONY: fmt
-fmt: ### Format
-	@gofmt -s -w .
-
-.PHONY: vet
-vet: ### Vet
-	@go vet ./...
-
 ### Lint
 .PHONY: lint
-lint: fmt vet
+lint: golangci-lint
+	$(GOLANCI_LINT) run
 
 ### Clean test 
 .PHONY: test-clean
@@ -111,12 +97,20 @@ test-clean: ### Clean test cache
 
 .PHONY: test
 test: lint ### Run tests
-	@go test -v  -coverprofile=cover.out -timeout 10s ./...
+	@go test -v -coverprofile=cover.out -timeout 10s ./...
 
 .PHONY: cover
 cover: test ### Run tests and generate coverage
 	@go tool cover -html=cover.out -o=cover.html
 
 .PHONY: mocks
-mocks: $(MOCKERY) ### Generate mocks
+mocks: mockery ### Generate mocks
 	$(MOCKERY) --all --dir internal --output internal/mocks
+
+# go-get-tool will 'go get' any package $2 and install it to $1.
+PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
+define go-install
+@[ -f $(1) ] || { \
+go install $(1) ; \
+}
+endef

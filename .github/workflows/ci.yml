@@ -13,54 +13,50 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Setup Go
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Lint
-        run: make lint
+      - name: GolangCI Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.46.2
 
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Setup Go
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Build
         run: make build
 
-      - name: Bin
-        uses: actions/upload-artifact@v2
-        with:
-          name: gotway
-          path: ./bin/gotway
-
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Setup Go
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
 
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Test
         run: make cover
 
-      - name: Cover
+      - name: Coverage
         uses: actions/upload-artifact@v2
         with:
           name: cover
