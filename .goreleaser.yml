@@ -3,10 +3,8 @@ builds:
   - main: ./cmd/gotway
     binary: gotway
     goos:
-      - darwin
       - linux
     goarch:
-      - arm
       - arm64
       - amd64
     env:
