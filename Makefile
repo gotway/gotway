@@ -38,10 +38,15 @@ KIND_VERSION := v0.14.0
 kind:
 	$(call go-install,sigs.k8s.io/kind@$(KIND_VERSION))
 
-GOLANCI_LINT := $(GOBIN)/golangci-lint
-GOLANCI_LINT_VERSION := v1.46.2
+GOLANGCI_LINT := $(GOBIN)/golangci-lint
+GOLANGCI_LINT_VERSION := v1.46.2
 golangci-lint:
-	$(call go-install,github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANCI_LINT_VERSION))
+	$(call go-install,github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION))
+
+GORELEASER := $(GOBIN)/goreleaser
+GORELEASER_VERSION := v1.9.2
+goreleaser:
+	$(call go-install,github.com/goreleaser/goreleaser@$(GORELEASER_VERSION))
 
 MOCKERY := $(GOBIN)/mockery
 MOCKERY_VERSION := v2.12.3
@@ -85,10 +90,13 @@ deps: ### Optimize dependencies
 vendor: ### Vendor dependencies
 	@go mod vendor
 
-### Lint
 .PHONY: lint
-lint: golangci-lint
-	$(GOLANCI_LINT) run
+lint: golangci-lint ### Lint
+	$(GOLANGCI_LINT) run
+
+.PHONY: release
+release: goreleaser ### Dry-run release
+	$(GORELEASER) release --snapshot --rm-dist
 
 ### Clean test 
 .PHONY: test-clean

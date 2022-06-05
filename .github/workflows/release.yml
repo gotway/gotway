@@ -35,7 +35,7 @@ jobs:
           echo ::set-output name=BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
           echo ::set-output name=VERSION::${VERSION}
 
-      - name: Publish multi-arch image
+      - name: Publish multi-arch Docker image
         uses: docker/build-push-action@v2
         with:
           push: true
@@ -55,13 +55,10 @@ jobs:
             org.opencontainers.image.version=${{ steps.prep.outputs.VERSION }}
             org.opencontainers.image.created=${{ steps.prep.outputs.BUILD_DATE }}
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          version: latest
+          args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        with:
-          tag_name: ${{ steps.prep.outputs.VERSION }}
-          release_name: ${{ steps.prep.outputs.VERSION }}
-          draft: false
-          prerelease: false
