@@ -4,7 +4,7 @@ metadata:
   name: stock
 spec:
   match:
-    host: stock:11000
+    host: stock:9111
   service:
     name: stock
     url: http://localhost:13000

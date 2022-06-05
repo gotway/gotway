@@ -4,7 +4,7 @@ metadata:
   name: catalog
 spec:
   match:
-    host: catalog:11000
+    host: catalog:9111
   service:
     name: catalog
     url: http://localhost:12000

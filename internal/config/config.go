@@ -61,7 +61,7 @@ type Config struct {
 
 func GetConfig() (Config, error) {
 	return Config{
-		Port:           env.Get("PORT", "11000"),
+		Port:           env.Get("PORT", "9111"),
 		Env:            env.Get("ENV", "local"),
 		LogLevel:       env.Get("LOG_LEVEL", "debug"),
 		RedisUrl:       env.Get("REDIS_URL", "redis://localhost:6379/11"),

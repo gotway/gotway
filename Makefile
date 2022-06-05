@@ -9,7 +9,7 @@ SOURCE_FILES ?= ./internal/... ./pkg/... ./cmd/...
 export CGO_ENABLED := 0
 export GO111MODULE := on
 export GOBIN := $(shell pwd)/bin
-export PORT ?= 11000
+export PORT ?= 9111
 export ENV ?= local
 export LOG_LEVEL ?= debug
 export REDIS_URL ?= redis://localhost:6379/11
@@ -98,7 +98,6 @@ lint: golangci-lint ### Lint
 release: goreleaser ### Dry-run release
 	$(GORELEASER) release --snapshot --rm-dist
 
-### Clean test 
 .PHONY: test-clean
 test-clean: ### Clean test cache
 	@go clean -testcache ./...
