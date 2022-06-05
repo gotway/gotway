@@ -74,7 +74,7 @@ clean: ### Clean build files
 	@go clean
 
 .PHONY: build
-build: generate clean ### Build binary
+build: clean ### Build binary
 	@go build -tags netgo -a -v -ldflags "${LD_FLAGS}" -o ./bin/gotway ./cmd/gotway/*.go
 	@chmod +x ./bin/*
 
