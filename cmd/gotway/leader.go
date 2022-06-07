@@ -10,31 +10,34 @@ import (
 )
 
 type leader struct {
-	config   cfg.Config
-	kubeCtrl *kubeCtrl.Controller
-	logger   log.Logger
+	config     cfg.Config
+	kubeCtrl   *kubeCtrl.Controller
+	healthCtrl *healthcheck.Controller
+	logger     log.Logger
 }
 
-func (l *leader) run(ctx context.Context) {
-	healthCtrl := healthcheck.NewController(
-		healthcheck.Options{
-			CheckInterval: l.config.HealthCheck.Interval,
-			Timeout:       l.config.HealthCheck.Timeout,
-			NumWorkers:    l.config.HealthCheck.NumWorkers,
-			BufferSize:    l.config.HealthCheck.BufferSize,
-		},
-		l.kubeCtrl,
-		l.logger,
-	)
-	if l.config.HealthCheck.Enabled {
-		healthCtrl.Start(ctx)
-	}
+func (l *leader) start(ctx context.Context) {
+	l.healthCtrl.Start(ctx)
+}
+
+func (l *leader) hasFeaturesEnabled() bool {
+	return l.config.HealthCheck.Enabled
 }
 
 func newLeader(config cfg.Config, kubeCtrl *kubeCtrl.Controller, logger log.Logger) *leader {
 	return &leader{
 		config:   config,
 		kubeCtrl: kubeCtrl,
-		logger:   logger,
+		healthCtrl: healthcheck.NewController(
+			healthcheck.Options{
+				CheckInterval: config.HealthCheck.Interval,
+				Timeout:       config.HealthCheck.Timeout,
+				NumWorkers:    config.HealthCheck.NumWorkers,
+				BufferSize:    config.HealthCheck.BufferSize,
+			},
+			kubeCtrl,
+			logger,
+		),
+		logger: logger,
 	}
 }

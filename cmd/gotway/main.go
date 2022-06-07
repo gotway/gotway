@@ -191,5 +191,9 @@ func main() {
 	defer server.Stop()
 
 	leader := newLeader(config, kubeCtrl, logger)
-	leader.run(ctx)
+	if leader.hasFeaturesEnabled() {
+		leader.start(ctx)
+	}
+
+	<-ctx.Done()
 }
