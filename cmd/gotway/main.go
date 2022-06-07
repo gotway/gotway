@@ -9,7 +9,6 @@ import (
 
 	"github.com/gotway/gotway/internal/cache"
 	cfg "github.com/gotway/gotway/internal/config"
-	"github.com/gotway/gotway/internal/healthcheck"
 	"github.com/gotway/gotway/internal/http"
 	"github.com/gotway/gotway/internal/middleware"
 	cacheMw "github.com/gotway/gotway/internal/middleware/cache"
@@ -144,17 +143,6 @@ func main() {
 		go cacheCtrl.Start(ctx)
 	}
 
-	healthCtrl := healthcheck.NewController(
-		healthcheck.Options{
-			CheckInterval: config.HealthCheck.Interval,
-			Timeout:       config.HealthCheck.Timeout,
-			NumWorkers:    config.HealthCheck.NumWorkers,
-			BufferSize:    config.HealthCheck.BufferSize,
-		},
-		kubeCtrl,
-		logger.WithField("type", "health-check"),
-	)
-
 	if config.Metrics.Enabled {
 		m := metrics.New(
 			metrics.Options{
@@ -176,9 +164,6 @@ func main() {
 		defer p.Stop()
 	}
 
-	if config.HealthCheck.Enabled {
-		go healthCtrl.Start(ctx)
-	}
 	go func() {
 		if err := kubeCtrl.Run(ctx); err != nil {
 			logger.Fatalf("error starting Kubernetes controller: %v", err)
@@ -205,5 +190,6 @@ func main() {
 	go server.Start()
 	defer server.Stop()
 
-	<-ctx.Done()
+	leader := newLeader(config, kubeCtrl, logger)
+	leader.run(ctx)
 }
