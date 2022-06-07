@@ -165,7 +165,7 @@ func main() {
 	}
 
 	go func() {
-		if err := kubeCtrl.Run(ctx); err != nil {
+		if err := kubeCtrl.Start(ctx); err != nil {
 			logger.Fatalf("error starting Kubernetes controller: %v", err)
 		}
 	}()

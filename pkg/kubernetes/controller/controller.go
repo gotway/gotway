@@ -38,7 +38,7 @@ type Controller struct {
 	logger log.Logger
 }
 
-func (c *Controller) Run(ctx context.Context) error {
+func (c *Controller) Start(ctx context.Context) error {
 	defer utilruntime.HandleCrash()
 	defer c.queue.ShutDown()
 
