@@ -9,92 +9,15 @@ import (
 
 	"github.com/gotway/gotway/internal/cache"
 	cfg "github.com/gotway/gotway/internal/config"
+	"github.com/gotway/gotway/internal/healthcheck"
 	"github.com/gotway/gotway/internal/http"
-	"github.com/gotway/gotway/internal/middleware"
-	cacheMw "github.com/gotway/gotway/internal/middleware/cache"
-	gatewayMw "github.com/gotway/gotway/internal/middleware/gateway"
-	matchingressMw "github.com/gotway/gotway/internal/middleware/matchingress"
 	"github.com/gotway/gotway/internal/repository"
 	kubeCtrl "github.com/gotway/gotway/pkg/kubernetes/controller"
-	clientsetv1alpha1 "github.com/gotway/gotway/pkg/kubernetes/crd/v1alpha1/apis/clientset/versioned"
+	"github.com/gotway/gotway/pkg/kubernetes/leaderelection"
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/gotway/pkg/metrics"
 	"github.com/gotway/gotway/pkg/pprof"
-	"github.com/gotway/gotway/pkg/redis"
-
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-
-	goRedis "github.com/go-redis/redis/v8"
 )
-
-func configureMiddlewares(
-	config cfg.Config,
-	kubeCtrl *kubeCtrl.Controller,
-	cacheController cache.Controller,
-	logger log.Logger,
-) []middleware.Middleware {
-
-	middlewares := []middleware.Middleware{
-		matchingressMw.New(
-			kubeCtrl,
-			logger.WithField("middleware", "match-service"),
-		),
-	}
-	if config.Cache.Enabled {
-		middlewares = append(middlewares,
-			cacheMw.NewCacheIn(
-				cacheController,
-				logger.WithField("middleware", "cache-in"),
-			),
-		)
-	}
-	middlewares = append(middlewares,
-		gatewayMw.New(
-			gatewayMw.GatewayOptions{Timeout: config.GatewayTimeout},
-			logger.WithField("middleware", "gateway"),
-		),
-	)
-	if config.Cache.Enabled {
-		middlewares = append(middlewares,
-			cacheMw.NewCacheOut(
-				cacheController,
-				logger.WithField("middleware", "cache-out"),
-			),
-		)
-	}
-
-	return middlewares
-}
-
-func getClientSet(
-	config cfg.Config,
-) (*clientsetv1alpha1.Clientset, error) {
-	var restConfig *rest.Config
-	var err error
-	if config.Kubernetes.KubeConfig != "" {
-		restConfig, err = clientcmd.BuildConfigFromFlags("", config.Kubernetes.KubeConfig)
-	} else {
-		restConfig, err = rest.InClusterConfig()
-	}
-	if err != nil {
-		return nil, err
-	}
-	return clientsetv1alpha1.NewForConfig(restConfig)
-}
-
-func getRedisClient(ctx context.Context, config cfg.Config) (redis.Cmdable, error) {
-	opts, err := goRedis.ParseURL(config.RedisUrl)
-	if err != nil {
-		return nil, fmt.Errorf("error getting redis options %v", err)
-	}
-	client := goRedis.NewClient(opts)
-	if err := client.Ping(ctx).Err(); err != nil {
-		client.Close()
-		return nil, fmt.Errorf("error connecting to redis %v", err)
-	}
-	return redis.New(client), nil
-}
 
 func main() {
 	config, err := cfg.GetConfig()
@@ -112,7 +35,7 @@ func main() {
 		syscall.SIGQUIT}...,
 	)
 
-	clientSet, err := getClientSet(config)
+	clientSets, err := getClientSets(config)
 	if err != nil {
 		logger.Fatal("error getting kubernetes client set ", err)
 	}
@@ -126,7 +49,7 @@ func main() {
 			Namespace:    config.Kubernetes.Namespace,
 			ResyncPeriod: config.Kubernetes.ResyncPeriod,
 		},
-		clientSet,
+		clientSets.gotway,
 		logger.WithField("type", "kubernetes"),
 	)
 
@@ -170,6 +93,48 @@ func main() {
 		}
 	}()
 
+	if config.HealthCheck.Enabled {
+		healthCtrl := healthcheck.NewController(
+			healthcheck.Options{
+				CheckInterval: config.HealthCheck.Interval,
+				Timeout:       config.HealthCheck.Timeout,
+				NumWorkers:    config.HealthCheck.NumWorkers,
+				BufferSize:    config.HealthCheck.BufferSize,
+			},
+			kubeCtrl,
+			logger,
+		)
+
+		if config.HA.Enabled {
+			identity, err := os.Hostname()
+			if err != nil {
+				logger.Fatalf("error getting hostname: %v", err)
+			}
+			instanceLogger := logger.WithField("instance", identity)
+
+			le := leaderelection.New(kubeCtrl, clientSets.kubernetes, instanceLogger,
+				leaderelection.Config{
+					Identity:           identity,
+					LeaseLockName:      config.HA.LeaseLockName,
+					LeaseLockNamespace: config.HA.LeaseLockNamespace,
+					LeaseDuration:      config.HA.LeaseDuration,
+					RenewDeadline:      config.HA.RenewDeadline,
+					RetryPeriod:        config.HA.RetryPeriod,
+					OnStartedLeading: func(ctx context.Context) {
+						instanceLogger.Info("started leading")
+						healthCtrl.Start(ctx)
+					},
+					OnStoppedLeading: func() {
+						instanceLogger.Info("stopped leading")
+					},
+				},
+			)
+			go le.Start(ctx)
+		} else {
+			go healthCtrl.Start(ctx)
+		}
+	}
+
 	server := http.NewServer(
 		http.ServerOptions{
 			Port:       config.Port,
@@ -189,11 +154,6 @@ func main() {
 	)
 	go server.Start()
 	defer server.Stop()
-
-	leader := newLeader(config, kubeCtrl, logger)
-	if leader.hasFeaturesEnabled() {
-		leader.start(ctx)
-	}
 
 	<-ctx.Done()
 }

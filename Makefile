@@ -14,11 +14,11 @@ export ENV ?= local
 export LOG_LEVEL ?= debug
 export REDIS_URL ?= redis://localhost:6379/11
 export KUBECONFIG ?= $(HOME)/.kube/config
+export HA ?= true
+export HEALTH_CHECK ?= true
+export CACHE ?= true
 export METRICS ?= true
-export METRICS_PATH ?= /metrics
-export METRICS_PORT ?= 2112
 export PPROF ?= false
-export PPROF_PORT ?= 6060
 
 .PHONY: all
 all: help

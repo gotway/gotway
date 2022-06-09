@@ -81,7 +81,7 @@ func (c *Controller) updateService(ctx context.Context, ingress crdv1alpha1.Ingr
 		if err := c.kubeCtrl.UpdateIngressStatus(ctx, ingress, healthy); err != nil {
 			c.logger.Errorf("error updating service '%s' status to %s: %v", ingress.Spec.Service.Name, status, err)
 		}
-		c.logger.Infof("service '%s' is now %s", ingress.Spec.Service.Name, status)
+		c.logger.Infof("service '%s' is %s", ingress.Spec.Service.Name, status)
 	}
 
 	healthy, err := c.client.healthCheck(healthURL)

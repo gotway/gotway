@@ -33,6 +33,15 @@ type TLS struct {
 	Key     string
 }
 
+type HA struct {
+	Enabled            bool
+	LeaseLockName      string
+	LeaseLockNamespace string
+	LeaseDuration      time.Duration
+	RenewDeadline      time.Duration
+	RetryPeriod        time.Duration
+}
+
 type Metrics struct {
 	Enabled bool
 	Path    string
@@ -53,6 +62,7 @@ type Config struct {
 
 	Kubernetes  Kubernetes
 	TLS         TLS
+	HA          HA
 	HealthCheck HealthCheck
 	Cache       Cache
 	Metrics     Metrics
@@ -73,9 +83,17 @@ func GetConfig() (Config, error) {
 			ResyncPeriod: env.GetDuration("KUBERNETES_RESYNC_PERIOD_SECONDS", 5) * time.Second,
 		},
 		TLS: TLS{
-			Enabled: env.GetBool("TLS_ENABLED", true),
+			Enabled: env.GetBool("TLS", true),
 			Cert:    env.Get("TLS_CERT", tlstest.Cert()),
 			Key:     env.Get("TLS_KEY", tlstest.Key()),
+		},
+		HA: HA{
+			Enabled:            env.GetBool("HA", false),
+			LeaseLockName:      env.Get("HA_LEASE_LOCK_NAME", "gotway"),
+			LeaseLockNamespace: env.Get("HA_LEASE_LOCK_NAMESPACE", "gotway-system"),
+			LeaseDuration:      env.GetDuration("HA_LEASE_DURATION_SECONDS", 15) * time.Second,
+			RenewDeadline:      env.GetDuration("HA_RENEW_DEADLINE_SECONDS", 10) * time.Second,
+			RetryPeriod:        env.GetDuration("HA_RETRY_PERIOD_SECONDS", 2) * time.Second,
 		},
 		HealthCheck: HealthCheck{
 			Enabled:    env.GetBool("HEALTH_CHECK", true),
