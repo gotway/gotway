@@ -17,7 +17,7 @@ export KUBECONFIG ?= $(HOME)/.kube/config
 export HA ?= true
 export HEALTH_CHECK ?= true
 export CACHE ?= true
-export METRICS ?= true
+export METRICS ?= false
 export PPROF ?= false
 
 .PHONY: all

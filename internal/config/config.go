@@ -35,6 +35,7 @@ type TLS struct {
 
 type HA struct {
 	Enabled            bool
+	NodeId             string
 	LeaseLockName      string
 	LeaseLockNamespace string
 	LeaseDuration      time.Duration
@@ -89,6 +90,7 @@ func GetConfig() (Config, error) {
 		},
 		HA: HA{
 			Enabled:            env.GetBool("HA", false),
+			NodeId:             env.Get("HA_NODE_ID", ""),
 			LeaseLockName:      env.Get("HA_LEASE_LOCK_NAME", "gotway"),
 			LeaseLockNamespace: env.Get("HA_LEASE_LOCK_NAMESPACE", "gotway-system"),
 			LeaseDuration:      env.GetDuration("HA_LEASE_DURATION_SECONDS", 15) * time.Second,

@@ -19,6 +19,17 @@ import (
 	"github.com/gotway/gotway/pkg/pprof"
 )
 
+func getIdentity(config cfg.Config) (string, error) {
+	if config.HA.NodeId != "" {
+		return config.HA.NodeId, nil
+	}
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+	return hostname, nil
+}
+
 func main() {
 	config, err := cfg.GetConfig()
 	if err != nil {
@@ -106,9 +117,9 @@ func main() {
 		)
 
 		if config.HA.Enabled {
-			identity, err := os.Hostname()
+			identity, err := getIdentity(config)
 			if err != nil {
-				logger.Fatalf("error getting hostname: %v", err)
+				logger.Fatalf("error getting identity: %v", err)
 			}
 			instanceLogger := logger.WithField("instance", identity)
 
