@@ -62,8 +62,12 @@ install-crds: ## Install CRDs
 	@kubectl apply -f manifests/crds
 
 .PHONY: cluster
-cluster: kind ### Create a KIND cluster
-	$(KIND) create cluster --name $(PROJECT)
+cluster: kind ### Create the KIND cluster
+	$(KIND) create cluster --name $(PROJECT) --config kind.yml
+
+.PHONY: cluster-delete
+cluster-delete: kind ### Delete the KIND cluster
+	$(KIND) delete cluster --name $(PROJECT)
 
 .PHONY: docker
 docker: ### Spin up docker dependencies
