@@ -20,7 +20,7 @@ Cloud native API Gateway powered with in-redis cache.
 ### Installation
 
 ```bash
-helm repo add mmontes https://charts.mmontes-dev.duckdns.org
+helm repo add mmontes https://charts.mmontes.duckdns.org
 helm install redis mmontes/redis
 helm install gotway mmontes/gotway
 ```
