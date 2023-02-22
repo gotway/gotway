@@ -8,6 +8,7 @@
 <a href="https://github.com/gotway/gotway/actions/workflows/release.yml"><img src="https://github.com/gotway/gotway/actions/workflows/release.yml/badge.svg" alt="Release"></a>
 <a href="https://goreportcard.com/report/github.com/gotway/gotway"><img src="https://goreportcard.com/badge/github.com/gotway/gotway" alt="Go Report Card"></a>
 <a href="https://pkg.go.dev/github.com/gotway/gotway"><img src="https://pkg.go.dev/badge/github.com/gotway/gotway.svg" alt="Go Reference"></a>
+<a href="https://artifacthub.io/packages/helm/gotway/gotway"><img src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/gotway" alt="Artifact Hub"></a>
 </p>
 
 # ☸️ gotway 
