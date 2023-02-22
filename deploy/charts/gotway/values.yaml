@@ -1,0 +1,173 @@
+nameOverride: ""
+fullnameOverride: ""
+
+env: production
+
+logLevel: info
+
+image:
+  repository: gotwaygateway/gotway
+  pullPolicy: IfNotPresent
+  tag: "v0.0.11"
+
+service:
+  type: LoadBalancer
+  port: 443
+  annotations:
+    {}
+    # metallb.universe.tf/loadBalancerIPs: 192.168.0.91
+  spec:
+    {}
+    # externalTrafficPolicy: Local
+
+rbac:
+  create: true
+
+secretRef: {}
+
+redisUrl: &redisUrl "redis://redis:6379/11"
+
+tlsEnabled: true
+
+gatewayTimeout: 5
+
+healthCheck:
+  enabled: true
+  numWorkers: 10
+  bufferSize: 10
+  intervalSeconds: 10
+  timeoutSeconds: 5
+
+cache:
+  enabled: true
+  numWorkers: 10
+  bufferSize: 10
+
+monitoring:
+  enabled: false
+  path: /metrics
+  port: 2112
+  interval: 10s
+  labels:
+    release: kube-prometheus-stack
+
+pprof:
+  enabled: false
+  port: 6060
+
+livenessProbe:
+  initialDelaySeconds: 10
+  timeoutSeconds: 3
+  periodSeconds: 15
+
+readinessProbe:
+  initialDelaySeconds: 10
+  timeoutSeconds: 3
+  periodSeconds: 15
+
+resources:
+  requests:
+    cpu: 100m
+    memory: "128Mi"
+  limits:
+    cpu: 300m
+    memory: "512Mi"
+
+nodeSelector: {}
+
+examples:
+  enabled: false
+
+  catalog:
+    image:
+      repository: gotwaygateway/catalog
+      pullPolicy: IfNotPresent
+      tag: "v0.0.4"
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    ingresshttp:
+      host: catalog.gotway.duckdns.org:9111
+      healthPath: /health
+
+    livenessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+
+    readinessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+
+    resources: {}
+
+    nodeSelector: {}
+
+  stock:
+    image:
+      repository: gotwaygateway/stock
+      pullPolicy: IfNotPresent
+      tag: "v0.0.4"
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    ingresshttp:
+      host: stock.gotway.duckdns.org:9111
+      healthPath: /health
+      cache:
+        ttl: 30
+        statuses:
+          - 200
+          - 404
+        tags:
+          - "catalog"
+          - "products"
+
+    redis:
+      url: *redisUrl
+      prefix: "stock::"
+      ttlDefault: 300
+      ttlMax: 86400
+
+    livenessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+
+    readinessProbe:
+      initialDelaySeconds: 10
+      timeoutSeconds: 3
+      periodSeconds: 15
+
+    resources: {}
+
+    nodeSelector: {}
+
+  traffic:
+    enabled: false
+
+    image:
+      repository: gotwaygateway/traffic
+      pullPolicy: IfNotPresent
+      tag: "v0.0.1"
+
+    gotwayHost: "gotway.duckdns.org:9111"
+    catalogHost: "catalog.gotway.duckdns.org:9111"
+    stockHost: "stock.gotway.duckdns.org:9111"
+
+    clientTimeout: 10
+
+    numWorkers: 5
+
+    numClients: 2
+
+    requestInterval: 10
+
+    resources: {}
+
+    nodeSelector: {}

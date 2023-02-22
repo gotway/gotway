@@ -1,0 +1,42 @@
+{{ if $.Values.examples.enabled }}
+{{ with $.Values.examples.traffic }}
+{{ if .enabled }}
+{{ $fullName := include "gotway.fullnameTraffic" $ }}
+{{ $selectorLabels := include "gotway.selectorLabelsTraffic" $ }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{ include "gotway.labelsTraffic" $ | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{ $selectorLabels | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ $selectorLabels | nindent 8  }}
+    spec:
+      containers:
+        - name: {{ $fullName }}
+          image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ .image.pullPolicy }}
+          {{ with .resources }}
+          resources:
+          {{ toYaml . | nindent 12 }}
+          {{ end }}
+          {{ with .nodeSelector }}
+          nodeSelector:
+          {{ toYaml . | nindent 12 }}
+          {{ end}}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}
+            {{ with .Values.secretRef }}
+            - secretRef:
+                {{ toYaml . | nindent 18 }}
+            {{ end }}
+{{ end }}
+{{ end }}
+{{ end }}

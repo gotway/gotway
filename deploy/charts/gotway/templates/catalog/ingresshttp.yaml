@@ -1,0 +1,15 @@
+{{ if $.Values.examples.enabled }}
+{{ with $.Values.examples.catalog }}
+apiVersion: gotway.io/v1alpha1
+kind: IngressHTTP
+metadata:
+  name: {{ include "gotway.fullnameCatalog" $ }}-ingresshttp
+spec:
+  match:
+    host: {{ .ingresshttp.host }}
+  service:
+    name: {{ include "gotway.fullnameCatalog" $ }}
+    url: http://{{ include "gotway.fullnameCatalog" $ }}
+    healthPath: {{ .ingresshttp.healthPath }}
+{{ end }}
+{{ end }}

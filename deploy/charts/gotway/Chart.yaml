@@ -1,0 +1,19 @@
+apiVersion: v2
+name: gotway
+description: Cloud native API Gateway powered with in-redis cache.
+type: application
+home: https://github.com/gotway/gotway
+icon: https://gotway.github.io/gotway/assets/gotway.png
+version: 0.6.0
+appVersion: "v0.0.12"
+kubeVersion: ">= 1.16.0-0"
+maintainers:
+  - name: mmontes11
+    email: martin11lrx@gmail.com
+keywords:
+  - "gotway"
+  - "api-gateway"
+  - "networking"
+  - "gateway"
+  - "cache"
+  - "redis"
