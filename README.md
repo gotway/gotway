@@ -1,10 +1,16 @@
-# ☸️ gotway 
+<p align="center">
+<img src="https://gotway.github.io/gotway/assets/gotway.png" alt="mariadb" width="250"/>
+</p>
 
-[![CI](https://github.com/gotway/gotway/actions/workflows/ci.yml/badge.svg)](https://github.com/gotway/gotway/actions/workflows/ci.yml)
-[![Release](https://github.com/gotway/gotway/actions/workflows/release.yml/badge.svg)](https://github.com/gotway/gotway/actions/workflows/release.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gotway/gotway)](https://goreportcard.com/report/github.com/gotway/gotway)
-[![Go Reference](https://pkg.go.dev/badge/github.com/gotway/gotway.svg)](https://pkg.go.dev/github.com/gotway/gotway)
-[![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/gotway)](https://artifacthub.io/packages/search?repo=gotway)
+<p align="center">
+<a href="https://github.com/gotway/gotway/actions/workflows/ci.yml"><img src="https://github.com/gotway/gotway/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="https://github.com/gotway/gotway/actions/workflows/helm.yml"><img src="https://github.com/gotway/gotway/actions/workflows/helm.yml/badge.svg" alt="Helm"></a>
+<a href="https://github.com/gotway/gotway/actions/workflows/release.yml"><img src="https://github.com/gotway/gotway/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+<a href="https://goreportcard.com/report/github.com/gotway/gotway"><img src="https://goreportcard.com/badge/github.com/gotway/gotway" alt="Go Report Card"></a>
+<a href="https://pkg.go.dev/github.com/gotway/gotway"><img src="https://pkg.go.dev/badge/github.com/gotway/gotway.svg" alt="Go Reference"></a>
+</p>
+
+# ☸️ gotway 
 
 Cloud native API Gateway powered with in-redis cache.
 
@@ -21,8 +27,9 @@ Cloud native API Gateway powered with in-redis cache.
 
 ```bash
 helm repo add mmontes https://charts.mmontes.duckdns.org
+helm repo add gotway https://gotway.github.io/gotway
 helm install redis mmontes/redis
-helm install gotway mmontes/gotway
+helm install gotway gotway/gotway
 ```
 
 ### Quickstart
