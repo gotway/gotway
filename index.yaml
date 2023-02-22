@@ -3,6 +3,29 @@ entries:
   gotway:
   - apiVersion: v2
     appVersion: v0.0.12
+    created: "2023-02-22T20:07:45.409957875Z"
+    description: Cloud native API Gateway powered with in-redis cache.
+    digest: dd52f4d130f389c0c74e053493d61eb21121b0086b6596140afefba58df2d362
+    home: https://github.com/gotway/gotway
+    icon: https://gotway.github.io/gotway/assets/gotway.png
+    keywords:
+    - gotway
+    - api-gateway
+    - networking
+    - gateway
+    - cache
+    - redis
+    kubeVersion: '>= 1.16.0-0'
+    maintainers:
+    - email: martin11lrx@gmail.com
+      name: mmontes11
+    name: gotway
+    type: application
+    urls:
+    - https://github.com/gotway/gotway/releases/download/helm-chart-0.7.0/gotway-0.7.0.tgz
+    version: 0.7.0
+  - apiVersion: v2
+    appVersion: v0.0.12
     created: "2023-02-22T18:46:26.923291628Z"
     description: Cloud native API Gateway powered with in-redis cache.
     digest: e7d34453e7572ca1a5aac70964f9e89079f1fbf02aa7d1cd841c6ba90d4e0d28
@@ -24,4 +47,4 @@ entries:
     urls:
     - https://github.com/gotway/gotway/releases/download/helm-chart-0.6.0/gotway-0.6.0.tgz
     version: 0.6.0
-generated: "2023-02-22T18:46:26.923302928Z"
+generated: "2023-02-22T20:07:45.409967275Z"
