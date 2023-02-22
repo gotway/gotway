@@ -114,6 +114,11 @@ cover: test ### Run tests and generate coverage
 mocks: mockery ### Generate mocks
 	$(MOCKERY) --all --dir internal --output internal/mocks
 
+CT_IMG ?= quay.io/helmpack/chart-testing:v3.5.0 
+.PHONY: helm-lint
+helm-lint: ## Lint Helm charts.
+	docker run --rm --workdir /repo -v $(shell pwd):/repo $(CT_IMG) ct lint --config .github/config/ct.yml 
+
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 define go-install

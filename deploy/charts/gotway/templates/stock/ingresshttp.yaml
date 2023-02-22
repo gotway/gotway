@@ -1,0 +1,17 @@
+{{ if $.Values.examples.enabled }}
+{{ with $.Values.examples.stock }}
+apiVersion: gotway.io/v1alpha1
+kind: IngressHTTP
+metadata:
+  name: {{ include "gotway.fullnameStock" $ }}-ingresshttp
+spec:
+  match:
+    host: {{ .ingresshttp.host }}
+  service:
+    name: {{ include "gotway.fullnameStock" $ }}
+    url: http://{{ include "gotway.fullnameStock" $ }}
+    healthPath: {{ .ingresshttp.healthPath }}
+  cache:
+    {{ toYaml .ingresshttp.cache | nindent 12 }}
+{{ end }}
+{{ end }}

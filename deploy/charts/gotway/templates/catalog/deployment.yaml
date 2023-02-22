@@ -1,0 +1,57 @@
+{{ if $.Values.examples.enabled }}
+{{ with $.Values.examples.catalog }}
+{{ $fullName := include "gotway.fullnameCatalog" $ }}
+{{ $selectorLabels := include "gotway.selectorLabelsCatalog" $ }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{ include "gotway.labelsCatalog" $ | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{ $selectorLabels | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ $selectorLabels | nindent 8  }}
+    spec:
+      containers:
+        - name: {{ $fullName }}
+          image: "{{ .image.repository }}:{{ .image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ .image.pullPolicy }}
+          ports:
+            - name: service
+              containerPort: {{ .service.port }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: service
+            {{ with .livenessProbe}}
+            {{ toYaml . | nindent 12 }}
+            {{ end }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: service
+            {{ with .readinessProbe }}
+              {{ toYaml . | nindent 12  }}
+            {{ end }}
+          {{ with .resources }}
+          resources:
+          {{ toYaml . | nindent 12 }}
+          {{ end }}
+          {{ with .nodeSelector }}
+          nodeSelector:
+          {{ toYaml . | nindent 12 }}
+          {{ end}}
+          envFrom:
+            - configMapRef:
+                name: {{ $fullName }}
+            {{ with $.Values.secretRef }}
+            - secretRef:
+                {{ toYaml . | nindent 18 }}
+            {{ end }}
+{{ end }}
+{{ end }}

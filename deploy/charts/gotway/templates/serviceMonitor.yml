@@ -1,0 +1,24 @@
+{{ $fullName := include "gotway.fullname" . }}
+{{ $selectorLabels := include "gotway.selectorLabels" . }}
+{{ with .Values.monitoring }}
+{{ if .enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $fullName }}
+  {{ with .labels }}
+  labels:
+    {{ toYaml . | nindent 4 }}
+  {{ end }}
+spec:
+  selector:
+      matchLabels:
+        {{ $selectorLabels | nindent 8 }}
+  namespaceSelector:
+    any: true
+  endpoints:
+    - port: metrics
+      path: {{ .path }}
+      interval: {{ .interval }}
+{{ end }}
+{{ end }}

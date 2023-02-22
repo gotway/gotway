@@ -1,0 +1,81 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: ingresshttps.gotway.io
+spec:
+  group: gotway.io
+  names:
+    kind: IngressHTTP
+    listKind: IngressHTTPList
+    plural: ingresshttps
+    singular: ingresshttp
+    shortNames:
+      - ih
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                match:
+                  type: object
+                  properties:
+                    method:
+                      type: string
+                    host:
+                      type: string
+                    path:
+                      type: string
+                    pathPrefix:
+                      type: string
+                  anyOf:
+                    - required: [method]
+                    - required: [host]
+                    - required: [path]
+                    - required: [pathPrefix]
+                service:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    url:
+                      type: string
+                      format: uri
+                    healthPath:
+                      type: string
+                  required:
+                    - name
+                    - url
+                cache:
+                  type: object
+                  properties:
+                    ttl:
+                      type: integer
+                      format: int64
+                    statuses:
+                      type: array
+                      items:
+                        type: integer
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                  required:
+                    - ttl
+                    - statuses
+                    - tags
+              required:
+                - match
+                - service
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

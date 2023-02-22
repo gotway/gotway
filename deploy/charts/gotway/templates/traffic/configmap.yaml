@@ -1,0 +1,23 @@
+{{ if $.Values.examples.enabled }}
+{{ with $.Values.examples.traffic }}
+{{ if .enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gotway.fullnameTraffic" $ }}
+  labels:
+    {{ include "gotway.labelsTraffic" $ | nindent 4 }}
+data:
+  ENV: {{ $.Values.env }}
+  LOG_LEVEL: {{ $.Values.logLevel }}
+  GOTWAY_HOST: {{ .gotwayHost }}
+  CATALOG_HOST: {{ .catalogHost }}
+  STOCK_HOST: {{ .stockHost }}
+  CLIENT_TIMEOUT: {{ .clientTimeout | quote }}
+  NUM_WORKERS: {{ .numWorkers | quote }}
+  NUM_CLIENTS: {{ .numClients | quote }}
+  REQUEST_INTERVAL: {{ .requestInterval | quote }}
+  TLS: {{ $.Values.tlsEnabled | quote }}
+{{ end }}
+{{ end }}
+{{ end }}

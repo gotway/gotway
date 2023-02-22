@@ -1,0 +1,17 @@
+{{ if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "gotway.fullname" . }}
+  labels:
+    {{ include "gotway.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - gotway.io
+    resources:
+      - ingresshttps
+    verbs:
+      - get
+      - list
+      - watch
+{{ end }}
