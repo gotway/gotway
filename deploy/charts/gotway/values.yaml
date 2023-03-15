@@ -6,9 +6,9 @@ env: production
 logLevel: info
 
 image:
-  repository: gotwaygateway/gotway
+  repository: ghcr.io/gotway/gotway
   pullPolicy: IfNotPresent
-  tag: "v0.0.11"
+  tag: ""
 
 service:
   type: LoadBalancer
@@ -80,9 +80,9 @@ examples:
 
   catalog:
     image:
-      repository: gotwaygateway/catalog
+      repository: ghcr.io/gotway/catalog
       pullPolicy: IfNotPresent
-      tag: "v0.0.4"
+      tag: "v0.0.6"
 
     service:
       type: ClusterIP
@@ -108,9 +108,9 @@ examples:
 
   stock:
     image:
-      repository: gotwaygateway/stock
+      repository: ghcr.io/gotway/stock
       pullPolicy: IfNotPresent
-      tag: "v0.0.4"
+      tag: "v0.0.6"
 
     service:
       type: ClusterIP
@@ -152,9 +152,9 @@ examples:
     enabled: false
 
     image:
-      repository: gotwaygateway/traffic
+      repository: ghcr.io/gotway/traffic
       pullPolicy: IfNotPresent
-      tag: "v0.0.1"
+      tag: "v0.0.3"
 
     gotwayHost: "gotway.duckdns.org:9111"
     catalogHost: "catalog.gotway.duckdns.org:9111"
