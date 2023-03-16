@@ -21,8 +21,8 @@ Cloud native API Gateway powered with in-redis cache.
 - Cache invalidation using tags
 - Health checking
 - Management [REST API](#management-rest-api)
-- ~6MB [Docker image](https://hub.docker.com/r/gotwaygateway/gotway/tags) available for multiple architectures
-- [Helm chart](https://github.com/gotway/charts)
+- ~6MB [Docker image](https://github.com/gotway/gotway/pkgs/container/gotway) available for multiple architectures
+- [Helm chart](https://artifacthub.io/packages/helm/gotway/gotway)
 
 ### Installation
 
